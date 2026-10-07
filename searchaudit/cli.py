@@ -4,6 +4,7 @@
     uv run python -m searchaudit judge audits/stackai/audit.yaml
     uv run python -m searchaudit assemble audits/stackai/audit.yaml
     uv run python -m searchaudit probe audits/stackai/audit.yaml
+    uv run python -m searchaudit querygen audits/<slug>/audit.yaml --target 60 [--pilot exa,keen]
 """
 
 import argparse
@@ -237,7 +238,77 @@ async def cmd_probe(config: AuditConfig, settings: Settings, args: argparse.Name
     return 0
 
 
-COMMANDS = {"run": cmd_run, "judge": cmd_judge, "assemble": cmd_assemble, "probe": cmd_probe}
+async def cmd_querygen(config: AuditConfig, settings: Settings, args: argparse.Namespace,
+                       http: httpx.AsyncClient, registry: Registry) -> int:
+    """Generate prompts.json for an audit (see searchaudit/querygen.py for the stages)."""
+    from searchaudit.agent import run_agent, run_one
+    from searchaudit.providers.none import NoSearchProvider
+    from searchaudit.querygen import AUDITED_ENGINES, Deps, OpenRouterLLM, QueryGen
+
+    if not settings.openrouter_api_key:
+        log.error("OPENROUTER_API_KEY is not set (add it to .env)")
+        return 1
+    if not args.target:
+        log.error("--target N is required for querygen")
+        return 1
+    q = config.querygen
+    if q.search_engine in AUDITED_ENGINES:
+        log.error("querygen.search_engine %r is an audited provider; research must use another engine",
+                  q.search_engine)
+        return 1
+    client = OpenRouterClient(http, settings.openrouter_api_key)
+    for model in (q.model, config.judge_model):
+        if not await client.model_exists(model):
+            log.error("model %s is not listed on OpenRouter", model)
+            return 1
+    agent_model, _ = await pin_model(config, client)
+    ctx = ProviderContext(settings, http, client, agent_model, config.router_model, config.budget.max_tool_calls)
+    agent = AgentSettings(agent_model, config.temperature, config.budget.max_tool_calls,
+                          config.budget.max_seconds, await pricing_for(client, agent_model))
+    bundle = JudgeBundle(config.judge_model)
+    judge_pricing = await pricing_for(client, bundle.model)
+    baseline = NoSearchProvider()
+
+    async def closed_book(prompt):
+        async with baseline.open(ctx) as session:
+            return (await run_agent(prompt, "none", session, client, agent)).run
+
+    async def judge(prompt, run, evidence):
+        return await judge_run(client, bundle, prompt, run, evidence, judge_pricing)
+
+    pilot_ids = args.pilot or []
+    try:
+        pilot_providers = {p.id: p for p in available_providers(config, registry, ctx, pilot_ids)} if pilot_ids else {}
+    except ValueError as exc:  # pilot provider not in audit.yaml
+        log.error("%s", exc)
+        return 1
+    missing = set(pilot_ids) - set(pilot_providers)
+    if missing:
+        log.error("pilot provider(s) unavailable: %s", ", ".join(sorted(missing)))
+        return 1
+
+    async def pilot(prompt, provider_id):
+        result = await run_one(Job(prompt, pilot_providers[provider_id]), ctx, agent)
+        return result.run, result.evidence
+
+    deps = Deps(
+        llm=OpenRouterLLM(client, q.model, q.search_engine, await pricing_for(client, q.model)),
+        closed_book=closed_book, judge=judge, pilot=pilot if pilot_ids else None,
+        engine=q.search_engine, model=q.model,
+    )
+    if args.max_usd:
+        config.querygen.max_usd = args.max_usd
+    gen = QueryGen(config, deps, args.target, pilot=pilot_ids, force=args.force)
+    try:
+        await gen.run()
+    except FileExistsError as exc:
+        log.error("%s", exc)
+        return 1
+    return 0
+
+
+COMMANDS = {"run": cmd_run, "judge": cmd_judge, "assemble": cmd_assemble, "probe": cmd_probe,
+            "querygen": cmd_querygen}
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -248,6 +319,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--providers", type=lambda s: [p.strip() for p in s.split(",") if p.strip()],
                         help="comma-separated provider ids, e.g. exa,keen")
     parser.add_argument("--retry-errors", action="store_true", help="re-run pairs whose last run errored")
+    parser.add_argument("--target", type=int, default=0, help="querygen: number of prompts to produce")
+    parser.add_argument("--pilot", type=lambda s: [p.strip() for p in s.split(",") if p.strip()],
+                        help="querygen: providers for the optional pilot stage, e.g. exa,keen")
+    parser.add_argument("--max-usd", type=float, default=0.0, help="querygen: spend cap (default from audit.yaml)")
+    parser.add_argument("--force", action="store_true", help="querygen: overwrite prompts.json even if runs exist")
     return parser.parse_args(argv)
 
 

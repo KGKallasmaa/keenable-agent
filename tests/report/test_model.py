@@ -130,3 +130,73 @@ def test_no_router_without_select(results_factory):
     vm = build_view_model(res)
     assert vm["guide"]["available"] is False
     assert all(r["id"] != "router" for r in vm["guide"]["volumes"])
+
+
+# ---------------------------------------------------------------- no-search baseline
+
+
+def _with_baseline(grades: dict[str, str], base: str, n: int = 40, tiers: bool = False):
+    from searchaudit.models import Judgment, ProviderInfo, Run
+
+    from .conftest import CHECKS, make_results
+
+    res = make_results(grades, n=n)
+    info = ProviderInfo(id="none", label="No search (model memory)", short="No search", domain="", hex="#9ca3af")
+    runs, judgments = list(res.runs), list(res.judgments)
+    for i in range(1, n + 1):
+        g = base[(i - 1) % len(base)]
+        runs.append(Run(prompt_id=i, provider="none", answer="from memory", latency_ms=300, cost_usd=0.0001))
+        judgments.append(Judgment(prompt_id=i, provider="none", grade=g, checks=CHECKS[g],
+                                  failure_mode=None if g == "c" else "outdated"))
+    prompts = [p.model_copy(update={"tier": "hard" if tiers and p.id % 2 else "routine" if tiers else None})
+               for p in res.prompts]
+    return res.model_copy(update={"providers": [*res.providers, info], "runs": runs,
+                                  "judgments": judgments, "prompts": prompts})
+
+
+def test_baseline_is_shown_but_never_recommended():
+    # The baseline ties exa on accuracy and is far cheaper and faster: it must still not lead anything.
+    res = _with_baseline({"exa": "c", "keen": "ccw", "select": "w"}, base="c")
+    vm = build_view_model(res)
+    assert "none" in vm["ids"] and "none" in vm["by_score"] and vm["baseline"] == "none"
+    assert vm["by_score"][0] == "none"  # it is the best value on paper ...
+    assert "No search" not in vm["headline"]["text"]  # ... but the headline names a search provider
+    assert vm["leader"] != "none" and "none" not in vm["tied"]
+    named = [i for f in vm["facts"] for i in f["ids"]]
+    assert "none" not in named
+    assert vm["h2h_default"][0] != "none"
+    assert all(r["id"] != "none" for r in vm["guide"]["volumes"])
+    assert all(t["best"] != "none" for t in vm["types"])
+    assert vm["guide"]["fallback"] != "none"
+    added = vm["facts"][-1]
+    assert added["key"] == "Search added" and added["value"] == "Exa: +0 prompts over no search"
+    assert "within chance" in added["detail"]
+    assert vm["client"]["baseline"] == ["none"]
+
+
+def test_search_lift_counts_prompts_baseline_missed():
+    res = _with_baseline({"exa": "c", "keen": "ccw", "select": "w"}, base="w", tiers=True)
+    vm = build_view_model(res)
+    lift = {r["id"]: r for r in vm["lift"]["rows"]}
+    assert lift["exa"]["gained"] == 40 and lift["keen"]["gained"] == 27 and lift["select"]["gained"] == 0
+    assert lift["exa"]["tiers"] == {"routine": 20, "hard": 20}
+    assert "significantly better" in vm["facts"][-1]["detail"]
+    assert all("none" not in t["tied"] and t["value_winner"] != "none" for t in vm["tiers"])
+
+
+def test_baseline_does_not_change_other_providers_scores():
+    plain = build_view_model(_with_baseline({"exa": "c", "keen": "ccw", "select": "w"}, base="c"))
+    from .conftest import make_results
+
+    without = build_view_model(make_results({"exa": "c", "keen": "ccw", "select": "w"}))
+    for pid in ("exa", "keen", "select"):
+        assert plain["summary"][pid]["score"] == pytest.approx(without["summary"][pid]["score"])
+    assert [i for i in plain["by_score"] if i != "none"] == without["by_score"]
+
+
+def test_no_baseline_means_no_lift():
+    from .conftest import make_results
+
+    vm = build_view_model(make_results({"exa": "c", "keen": "ccw", "select": "w"}))
+    assert vm["lift"] == {"available": False, "facts": []} and vm["baseline"] is None
+    assert [f["key"] for f in vm["facts"]] == ["Most correct", "Cheapest of the most correct", "Fastest"]

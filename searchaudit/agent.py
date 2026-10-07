@@ -113,8 +113,9 @@ async def run_agent(
     started = clock()
     deadline = started + settings.max_seconds
     trace = _Trace()
+    extra = session.instructions()
     messages: list[dict] = [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": f"{SYSTEM_PROMPT}\n\n{extra}" if extra else SYSTEM_PROMPT},
         {"role": "user", "content": prompt.text},
     ]
     answer, error, budget_hit = "", "", False

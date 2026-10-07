@@ -68,6 +68,13 @@ def method_notes(
             "search for each search call, and when it picks SELECT the agent model writes the SQL. Router and "
             "SQL-writing calls are counted in its search cost."
         )
+    if "none" in ran:
+        notes.append(
+            "No search (model memory) is a baseline, not a provider: the same agent, model, system prompt and "
+            "budget with zero tools, told to say when it cannot know something. The judge grades its claims "
+            "against the reference without requiring sources. Search lift = prompts a provider got right that "
+            "the baseline got wrong. It is never recommended in the headline or the implementation guide."
+        )
     for pid in sorted(ran):
         trouble = _trouble(runs, pid)
         if trouble:

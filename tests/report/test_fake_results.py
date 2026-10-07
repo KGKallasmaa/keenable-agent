@@ -1,11 +1,15 @@
 from fake_results import generate  # scripts/, put on sys.path by conftest
 
+from searchaudit.models import AuditResults
+
 from .conftest import FIXTURE
 
 
 def test_fixture_file_is_the_generator_output():
-    """audits/fixture/results.json must be regenerated when the generator changes."""
-    assert FIXTURE.read_text() == generate().model_dump_json(indent=1) + "\n"
+    """audits/fixture/results.json must be regenerated when the generator changes.
+
+    Compared as parsed models, so new optional fields with defaults do not force a regeneration."""
+    assert AuditResults.model_validate_json(FIXTURE.read_text()) == generate()
 
 
 def test_generator_is_seeded_and_complete():

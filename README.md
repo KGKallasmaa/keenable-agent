@@ -15,6 +15,19 @@ across five types: lookup, freshness, multi-hop, list-building and regulation.
 | Keenable search | `keen` | Keenable REST search and fetch as function tools in our own agent loop |
 | Keenable SELECT | `select` | Keenable SELECT MCP. The agent writes one SQL query per call |
 | Keenable routed | `routed` | A router model picks SELECT or Keenable search for each call |
+| No search (baseline) | `none` | Same agent, model, prompt and budget with zero tools: the model answers from memory |
+
+### The no-search baseline
+
+`none` is a control, not a provider. It runs the same agent loop with no tools and is told to say when
+it cannot know something; the judge grades its claims against the reference without requiring sources.
+Add it to an audit with one line, `- {id: none}` (label, colour and "model tokens only" price note
+default). The report shows it in the ranking, chart and prompts like any provider, but it never sets the
+cost/speed bar of the value score (so adding it cannot reorder the others), is never named in the
+headline or the "most correct / cheapest / fastest" facts, and is ignored by the implementation guide.
+It adds a **Search added** fact (prompts the best provider got right that no-search got wrong, and
+whether that gain is within chance) and a **Search lift** line per provider (split by routine/hard when
+both tiers exist). If no-search scores like the providers, the prompt set measures the model, not search.
 
 The design is in `docs/designs/search-audit.md`, and the approved report UI is in
 `docs/prototype/index.html`.
@@ -24,11 +37,12 @@ The design is in `docs/designs/search-audit.md`, and the approved report UI is i
 ```
 searchaudit/
   models.py        shared contract: AuditResults (meta, providers, prompts, runs, judgments)
-  cli.py           probe / run / judge / assemble
+  cli.py           probe / run / judge / assemble / querygen
+  querygen.py      prompt-set generation pipeline (use cases -> tasks -> closed-book filter -> verify -> pilot)
   agent.py         the agent loop, concurrency limits, cost cap
   judge.py         judge prompt, JSON schema, rule checks
   notes.py         methodology caveats written into meta.notes
-  providers/       exa, parallel (server tools), keen, select, routed
+  providers/       exa, parallel (server tools), keen, select, routed, none (no-search baseline)
   stats.py         Wilson intervals, McNemar + Holm, bootstrap, scoring
   report/          view model for the report
   web/             FastAPI app, templates, static assets
@@ -80,6 +94,36 @@ The audit's directory name is its URL slug, so `audits/stackai/` is served at `/
 Settings live in `audit.yaml`: agent model, judge model, router model, budget (15 tool calls and 180 s
 by default), cost cap, concurrency and the provider list. `KEENABLE_USD_PER_REQUEST` sets the
 Keenable list price used for cost (default $0.004).
+
+## Generating the prompt set (querygen)
+
+The prompt set decides what an audit measures. If the agent model can answer a prompt from memory, every
+provider gets it right and the audit measures the model. `querygen` builds prompts that need search:
+
+```
+uv run python -m searchaudit querygen audits/<slug>/audit.yaml --target 60
+uv run python -m searchaudit querygen audits/<slug>/audit.yaml --target 60 --pilot exa,keen   # + pilot stage
+```
+
+| Stage | What it does | Output |
+|---|---|---|
+| 1. Use cases | An LLM with web search researches the company (`company`, `category`, `company_url`, `use_case_hints`) and lists 6-10 real agent workflows with the persona who runs them | `querygen/use_cases.json` |
+| 2. Tasks | Per use case, tasks phrased as an end user instructs an agent, spread over the five types, each with `expected_searches` (1, 2-3, 4+) and a draft answer; prefers fresh (last `fresh_days`), long-tail, multi-step and list tasks; `oversample` x target | `prompts.candidates.jsonl` |
+| 3. Closed book | Every candidate runs through the pinned agent model with no tools (`none`) and is judged against the draft. Known ones are dropped, except `routine_share` (10%) kept as `tier: routine` controls | `querygen/closed_book.jsonl` |
+| 4. Verify | A verifier with web search writes the reference (answer, partly-correct rule, wrong-answer traps, >= 2 sources on different domains, `as_of`) or rejects (ambiguous, sources disagree, unverifiable). The closed-book answer is re-judged against the verified reference | `querygen/verified.jsonl` |
+| 5. Pilot (optional) | Runs the `--pilot` providers; drops prompts every provider gets wrong when a review finds the reference is the problem | `querygen/pilot.jsonl`, `pilot_review.jsonl` |
+| Select | N prompts balanced by type and use case, ids 1..N, with `tier`, `use_case`, `expected_searches` | `prompts.json`, `PROMPTS.md`, `querygen/funnel.json` |
+
+Every stage logs its in/out counts and each drop reason (also in `funnel.json` and `PROMPTS.md`); if
+too few prompts survive it says so instead of padding. Stages resume: rerunning skips finished work, so
+a run stopped by `querygen.max_usd` (default $5, or `--max-usd`) continues where it stopped. It refuses
+to overwrite `prompts.json` of an audit that already has `runs.jsonl` unless you pass `--force`.
+
+Research and verification use OpenRouter's `openrouter:web_search` with engine `native` (the model
+provider's own search, Anthropic's for the default `anthropic/claude-sonnet-5.5`), so the prompt set is
+not biased toward an audited provider; `exa` and `parallel` are refused as `querygen.search_engine`.
+Settings live under `querygen:` in `audit.yaml` (`model`, `search_engine`, `oversample`,
+`routine_share`, `fresh_days`, `max_usd`, `concurrency`); see `audits/demo-querygen/audit.yaml`.
 
 ## Serving the report locally
 

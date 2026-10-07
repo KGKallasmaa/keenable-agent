@@ -52,8 +52,9 @@
 {%- endmacro %}
 
 {% macro tiers(vm) -%}
-{% if vm.tiers %}
+{% if vm.tiers or vm.lift.available %}
 <div class="panel pad tiers">
+{% if vm.tiers %}
 <p class="ptitle">Routine vs hard prompts</p>
 <p class="hint" style="margin:0 0 10px">Routine prompts are everyday lookups any good search handles. Hard prompts were built to separate providers: very fresh facts, long-tail due diligence, non-English sources and big lists. Tied = gap within chance (McNemar, Holm) inside that slice.</p>
 <div class="tablewrap"><table><thead><tr><th>Provider</th>{% for t in vm.tiers %}<th class="r">{{ t.name }} ({{ t.n }})</th><th class="r">$ / prompt</th>{% endfor %}</tr></thead><tbody>
@@ -66,6 +67,14 @@
 {% endfor %}
 </tbody></table></div>
 <ul class="takeaways">{% for t in vm.tiers %}<li><b>{{ t.name }}:</b> {{ t.takeaway }}</li>{% endfor %}</ul>
+{% else %}
+<p class="ptitle">Search lift</p>
+{% endif %}
+{% if vm.lift.available %}{% set L = vm.lift %}
+<p class="hint lift" style="margin:10px 0 0"><b>Search lift</b> (prompts right that {{ vm.labels[L.id] }}, {{ L.k }}/{{ L.n }} correct, got wrong):
+{% for r in L.rows %}{{ vm.provider[r.id].short }} <span class="num">+{{ r.gained }}</span>{% if r.tiers %} <span class="small">({% for t, x in r.tiers.items() %}{{ t }} +{{ x }}{{ ", " if not loop.last }}{% endfor %})</span>{% endif %}{{ " · " if not loop.last }}{% endfor %}.
+{% if L.within_chance %}The best provider's gain over the model's memory is within chance.{% endif %}</p>
+{% endif %}
 </div>
 {% endif %}
 {%- endmacro %}

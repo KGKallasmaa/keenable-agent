@@ -119,3 +119,20 @@ def test_cache_reloads_when_results_change(audits, client):
     st = path.stat()
     os.utime(path, (st.st_atime, st.st_mtime + 5))
     assert "Renamed Co" in client.get("/r/mini").text
+
+
+def test_report_with_no_search_baseline_renders_lift(audits):
+    from .test_model import _with_baseline
+
+    (audits / "base").mkdir()
+    (audits / "base" / "results.json").write_text(
+        _with_baseline({"exa": "c", "keen": "ccw", "select": "w"}, base="w", tiers=True).model_dump_json()
+    )
+    c = TestClient(create_app(audits, show_fixture=False))
+    for path in ("/r/base", "/r/base/print", "/r/base/q/1"):
+        assert c.get(path).status_code == 200, path
+    html = c.get("/r/base").text
+    assert "Search lift" in html and "Search added" in html and "No search (model memory)" in html
+    assert 'class="mono-badge"' in html  # no domain -> monogram
+    h1 = html.split('id="headline"', 1)[1].split("</h1>", 1)[0]
+    assert "No search" not in h1

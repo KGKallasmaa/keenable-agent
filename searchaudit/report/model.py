@@ -16,7 +16,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from searchaudit import stats
-from searchaudit.models import FAILURE_MODES, PROMPT_TYPE_NAMES, RUBRIC, AuditResults, Judgment, Run
+from searchaudit.models import BASELINE, FAILURE_MODES, PROMPT_TYPE_NAMES, RUBRIC, AuditResults, Judgment, Run
 from searchaudit.report.chart import pareto_chart
 from searchaudit.stats import DEFAULT_WEIGHTS, Outcome, Weights
 
@@ -38,21 +38,28 @@ def build_view_model(results: AuditResults, weights: Weights = DEFAULT_WEIGHTS) 
     cells = _cells(results, ids)
     outcomes = [{pid: _outcome(cells[(p.id, pid)]) for pid in ids} for p in prompts]
     correct = {pid: [cells[(p.id, pid)]["grade"] == "c" for p in prompts] for pid in ids}
+    # The no-search baseline is shown like any provider, but never ranked for the headline, facts or guide.
+    base = [i for i in ids if i == BASELINE]
+    sids = [i for i in ids if i not in base] or ids
+    skip = frozenset(base)
 
-    summary = _summary(prompts, ids, cells, outcomes, weights)
+    summary = _summary(prompts, ids, cells, outcomes, weights, skip)
     by_accuracy = sorted(ids, key=lambda i: (-summary[i]["k"], _or_inf(summary[i]["per_correct"]), labels[i]))
     by_score = sorted(ids, key=lambda i: (-summary[i]["score"], -summary[i]["k"], summary[i]["per_prompt"]))
-    ties = stats.accuracy_ties(correct, by_accuracy)
+    s_accuracy = [i for i in by_accuracy if i in sids]
+    s_score = [i for i in by_score if i in sids]
+    ties = stats.accuracy_ties(correct, s_accuracy)
     front = stats.pareto_front({i: (summary[i]["acc"], summary[i]["per_prompt"]) for i in ids})
-    failed = {i: summary[i]["errors"] for i in ids}
+    failed = {i: summary[i]["errors"] for i in sids}
     head = stats.headline(
-        results.meta.company, labels, n, {i: summary[i]["k"] for i in ids}, by_score, ties, failed
+        results.meta.company, labels, n, {i: summary[i]["k"] for i in ids}, s_score, ties, failed
     )
 
-    prompt_rows = _prompt_rows(prompts, ids, cells, outcomes, weights)
-    tiers = _tiers(prompts, ids, labels, cells, outcomes, weights)
-    types = _types(prompt_rows, ids)
-    guide = _guide(types, ids, labels, summary, prompt_rows)
+    prompt_rows = _prompt_rows(prompts, ids, cells, outcomes, weights, skip)
+    tiers = _tiers(prompts, ids, sids, labels, cells, outcomes, weights, skip)
+    types = _types(prompt_rows, ids, sids)
+    guide = _guide(types, sids, labels, summary, prompt_rows)
+    lift = _lift(prompts, sids, base, correct, labels, ties.leader, n)
     log.info(
         "report model %s: headline=%s leader=%s tied=%s",
         results.meta.slug,
@@ -71,7 +78,9 @@ def build_view_model(results: AuditResults, weights: Weights = DEFAULT_WEIGHTS) 
         "weights": {"a": weights.accuracy, "c": weights.cost, "s": weights.speed},
         "n": n,
         "headline": {"kind": head.kind, "text": head.text},
-        "facts": _facts(summary, ties, labels, n),
+        "facts": _facts({i: summary[i] for i in sids}, ties, labels, n) + lift["facts"],
+        "lift": lift,
+        "baseline": base[0] if base else None,
         "tiers": tiers,
         "summary": summary,
         "highlight": {
@@ -96,12 +105,12 @@ def build_view_model(results: AuditResults, weights: Weights = DEFAULT_WEIGHTS) 
         },
         "types": types,
         "h2h": _head_to_head(ids, correct, outcomes, labels),
-        "h2h_default": _default_pair(by_score, by_accuracy, providers),
+        "h2h_default": _default_pair(s_score, s_accuracy, providers, by_score),
         "failures": _failures(prompt_rows, ids),
         "guide": guide,
         "judge": _judge(results, prompt_rows, ids),
         "client": _client(
-            results.meta.company, ids, providers, prompt_rows, summary, ties, head.kind, weights, n
+            results.meta.company, ids, providers, prompt_rows, summary, ties, head.kind, weights, n, base
         ),
     }
 
@@ -208,9 +217,9 @@ def _extremes(values: Mapping[str, float], lower_is_better: bool) -> dict[str, s
 # ---------------------------------------------------------------- summary
 
 
-def _summary(prompts, ids, cells, outcomes, weights: Weights) -> dict[str, VM]:
+def _summary(prompts, ids, cells, outcomes, weights: Weights, skip=frozenset()) -> dict[str, VM]:
     n = len(prompts)
-    scores = stats.value_scores(outcomes, weights)
+    scores = stats.value_scores(outcomes, weights, skip)
     out: dict[str, VM] = {}
     for pid in ids:
         xs = [cells[(p.id, pid)] for p in prompts]
@@ -284,11 +293,11 @@ def _join(items: Sequence[str]) -> str:
 # ---------------------------------------------------------------- prompts
 
 
-def _prompt_rows(prompts, ids, cells, outcomes, weights: Weights) -> list[VM]:
+def _prompt_rows(prompts, ids, cells, outcomes, weights: Weights, skip=frozenset()) -> list[VM]:
     rows = []
     for p, oc in zip(prompts, outcomes, strict=True):
         row_cells = {pid: dict(cells[(p.id, pid)]) for pid in ids}
-        scores = stats.prompt_scores(oc, weights)
+        scores = stats.prompt_scores(oc, weights, skip)
         domain_count = Counter(d for c in row_cells.values() for d in {s["domain"] for s in c["sources"]})
         for pid, c in row_cells.items():
             c["score"] = scores[pid]
@@ -324,7 +333,8 @@ def _prompt_rows(prompts, ids, cells, outcomes, weights: Weights) -> list[VM]:
 # ---------------------------------------------------------------- prompt types and the guide
 
 
-def _types(rows: Sequence[VM], ids: Sequence[str]) -> list[VM]:
+def _types(rows: Sequence[VM], ids: Sequence[str], sids: Sequence[str] | None = None) -> list[VM]:
+    sids = list(sids or ids)  # the best provider of a type is never the no-search baseline
     out = []
     for tid, name in PROMPT_TYPE_NAMES.items():
         ps = [r for r in rows if r["type"] == tid]
@@ -334,7 +344,7 @@ def _types(rows: Sequence[VM], ids: Sequence[str]) -> list[VM]:
         k = {i: sum(1 for r in ps if r["cells"][i]["grade"] == "c") for i in ids}
         score = {i: 100 * sum(r["cells"][i]["score"] for r in ps) / m for i in ids}
         cost = {i: sum(r["cells"][i]["cost"] for r in ps) / m for i in ids}
-        best = max(ids, key=lambda i: score[i])
+        best = max(sids, key=lambda i: score[i])
         t: VM = {
             "id": tid,
             "name": name,
@@ -464,10 +474,10 @@ def _head_to_head(ids, correct, outcomes, labels) -> dict[str, VM]:
     return out
 
 
-def _default_pair(by_score, by_accuracy, providers) -> list[str]:
+def _default_pair(by_score, by_accuracy, providers, all_ids=()) -> list[str]:
     a = by_score[0]
     today = next((p["id"] for p in providers if p["uses_today"] and p["id"] != a), None)
-    b = today or next(i for i in by_accuracy if i != a)
+    b = today or next((i for i in by_accuracy if i != a), None) or next(i for i in all_ids if i != a)
     return [a, b]
 
 
@@ -553,7 +563,7 @@ def _meta(results: AuditResults, n: int, providers: int) -> VM:
     }
 
 
-def _client(company, ids, providers, rows, summary, ties, kind, weights: Weights, n) -> VM:
+def _client(company, ids, providers, rows, summary, ties, kind, weights: Weights, n, base=()) -> VM:
     """The minimum report.js needs to recompute value scores, the ranking and the headline."""
     return {
         "company": company,
@@ -565,6 +575,7 @@ def _client(company, ids, providers, rows, summary, ties, kind, weights: Weights
         "leader": ties.leader,
         "tied": sorted(ties.tied),
         "headlineFixed": kind == "insufficient",
+        "baseline": list(base),
         "weights": {"a": weights.accuracy, "c": weights.cost, "s": weights.speed},
         "prompts": [
             {
@@ -581,7 +592,7 @@ def _client(company, ids, providers, rows, summary, ties, kind, weights: Weights
 TIER_NAMES = {"routine": "Routine prompts", "hard": "Hard prompts"}
 
 
-def _tiers(prompts, ids, labels, cells, outcomes, weights: Weights) -> list[VM]:
+def _tiers(prompts, ids, sids, labels, cells, outcomes, weights: Weights, skip=frozenset()) -> list[VM]:
     """Routine vs hard slices: accuracy ties and value winner within each slice (empty if one slice)."""
     present = [t for t in TIER_NAMES if any(p.tier == t for p in prompts)]
     if len(present) < 2:
@@ -590,15 +601,15 @@ def _tiers(prompts, ids, labels, cells, outcomes, weights: Weights) -> list[VM]:
     for tier in present:
         idx = [i for i, p in enumerate(prompts) if p.tier == tier]
         sub = [prompts[i] for i in idx]
-        summary = _summary(sub, ids, cells, [outcomes[i] for i in idx], weights)
-        by_accuracy = sorted(ids, key=lambda i: (-summary[i]["k"], summary[i]["per_prompt"], labels[i]))
+        summary = _summary(sub, ids, cells, [outcomes[i] for i in idx], weights, skip)
+        by_accuracy = sorted(sids, key=lambda i: (-summary[i]["k"], summary[i]["per_prompt"], labels[i]))
         correct = {pid: [cells[(p.id, pid)]["grade"] == "c" for p in sub] for pid in ids}
         ties = stats.accuracy_ties(correct, by_accuracy)
-        by_score = sorted(ids, key=lambda i: (-summary[i]["score"], -summary[i]["k"], summary[i]["per_prompt"]))
+        by_score = sorted(sids, key=lambda i: (-summary[i]["score"], -summary[i]["k"], summary[i]["per_prompt"]))
         tied = [i for i in by_accuracy if i in ties.tied]
         cheapest_tied = min(tied, key=lambda i: summary[i]["per_prompt"])
-        if len(tied) == len(ids):
-            takeaway = (f"All {len(ids)} providers tie on accuracy here, so price decides: "
+        if len(tied) == len(sids):
+            takeaway = (f"All {len(sids)} providers tie on accuracy here, so price decides: "
                         f"{labels[cheapest_tied]} is cheapest.")
         elif len(tied) == 1:
             takeaway = (f"{labels[ties.leader]} is clearly most accurate here "
@@ -621,3 +632,35 @@ def _tiers(prompts, ids, labels, cells, outcomes, weights: Weights) -> list[VM]:
             "k_hl": _extremes({i: summary[i]["k"] for i in ids}, lower_is_better=False),
         })
     return out
+
+
+def _lift(prompts, sids, base, correct, labels, leader, n) -> VM:
+    """Search lift: per provider, prompts it got right that the no-search baseline got wrong.
+
+    Also a fact line for the search leader, and a plain warning when its gain over the model's memory
+    is within chance (then the prompt set measures the model more than search)."""
+    if not base:
+        return {"available": False, "facts": []}
+    b = base[0]
+    tiers = [t for t in TIER_NAMES if any(p.tier == t for p in prompts)]
+    rows = []
+    for pid in sids:
+        gained, lost = stats.discordant(correct[pid], correct[b])
+        by_tier = {
+            t: sum(1 for i, p in enumerate(prompts) if p.tier == t and correct[pid][i] and not correct[b][i])
+            for t in tiers
+        } if len(tiers) > 1 else {}
+        rows.append({"id": pid, "gained": gained, "lost": lost, "tiers": by_tier})
+    gained, lost = stats.discordant(correct[leader], correct[b])
+    p = stats.mcnemar_exact(gained, lost)
+    k_base, k_lead = sum(correct[b]), sum(correct[leader])
+    if p < stats.ALPHA and gained > lost:
+        detail = (f"{labels[b]} got {k_base} of {n} right from memory. Search is significantly better "
+                  f"(McNemar p {_p(p)}).")
+    else:
+        detail = (f"{labels[b]} got {k_base} of {n} right from memory, within chance of {labels[leader]} "
+                  f"({k_lead}): on this prompt set search added little over what the model already knows.")
+    fact = {"key": "Search added", "ids": [leader],
+            "value": f"{labels[leader]}: +{gained} prompts over no search", "detail": detail}
+    return {"available": True, "id": b, "k": k_base, "n": n, "rows": rows, "tiers": tiers,
+            "within_chance": not (p < stats.ALPHA and gained > lost), "p": p, "facts": [fact]}

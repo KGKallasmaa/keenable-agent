@@ -8,7 +8,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-ProviderId = Literal["exa", "parallel", "keen", "select", "routed"]
+ProviderId = Literal["exa", "parallel", "keen", "select", "routed", "none"]  # "none" = no-search baseline
+BASELINE: ProviderId = "none"  # same agent, zero tools: what the model knows from memory
 PromptType = Literal["lookup", "fresh", "multihop", "wide", "domain"]
 Grade = Literal["c", "p", "w"]  # correct, partly correct, wrong
 FailureMode = Literal[
@@ -56,6 +57,8 @@ class Prompt(BaseModel):
     origin: Literal["generated", "uploaded", "hand"] = "generated"
     as_of: str = ""  # date the reference was checked, ISO
     tier: Literal["routine", "hard"] | None = None  # prompt-set slice shown as "routine vs hard" in the report
+    use_case: str = ""  # querygen: the company workflow this task comes from
+    expected_searches: int | None = None  # querygen: searches a good agent needs (1, 2-3 -> 2, 4+ -> 4)
 
 
 class ToolCall(BaseModel):

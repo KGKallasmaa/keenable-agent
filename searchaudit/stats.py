@@ -15,6 +15,7 @@ from __future__ import annotations
 import math
 import random
 from collections.abc import Mapping, Sequence
+from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
 from typing import Literal
 
@@ -114,21 +115,26 @@ def paired_bootstrap_diff(
 
 
 def _ratio(best: float, x: float) -> float:
-    return 1.0 if x <= 0 else best / x
+    return 1.0 if x <= 0 else min(1.0, best / x)
 
 
-def prompt_scores(outcomes: Mapping[str, Outcome], w: Weights = DEFAULT_WEIGHTS) -> dict[str, float]:
+def prompt_scores(
+    outcomes: Mapping[str, Outcome], w: Weights = DEFAULT_WEIGHTS, bar_exclude: AbstractSet[str] = frozenset()
+) -> dict[str, float]:
     """Value score in [0, 1] per provider on one prompt.
 
     Wrong answers score 0. Otherwise credit x (wA + wC * cheapness + wS * speed) / (wA + wC + wS),
     where cheapness and speed are measured against the cheapest and fastest NON-WRONG answer on this
-    prompt: a fast wrong answer never sets the bar (eng review R1).
+    prompt: a fast wrong answer never sets the bar (eng review R1). Providers in `bar_exclude` (the
+    no-search baseline) never set the bar either, unless nobody else answered; a ratio is capped at 1,
+    so adding the baseline cannot reorder the other providers.
     """
     live = [o for o in outcomes.values() if o.grade != "w"]
+    setters = [o for pid, o in outcomes.items() if o.grade != "w" and pid not in bar_exclude] or live
     if not live:
         return {pid: 0.0 for pid in outcomes}
-    min_cost = min(o.cost for o in live)
-    min_time = min(o.seconds for o in live)
+    min_cost = min(o.cost for o in setters)
+    min_time = min(o.seconds for o in setters)
     total = (w.accuracy + w.cost + w.speed) or 1
     scores: dict[str, float] = {}
     for pid, o in outcomes.items():
@@ -141,13 +147,16 @@ def prompt_scores(outcomes: Mapping[str, Outcome], w: Weights = DEFAULT_WEIGHTS)
     return scores
 
 
-def value_scores(prompts: Sequence[Mapping[str, Outcome]], w: Weights = DEFAULT_WEIGHTS) -> dict[str, float]:
+def value_scores(
+    prompts: Sequence[Mapping[str, Outcome]], w: Weights = DEFAULT_WEIGHTS,
+    bar_exclude: AbstractSet[str] = frozenset(),
+) -> dict[str, float]:
     """Mean value score per provider over prompts, on a 0-100 scale."""
     if not prompts:
         return {}
     totals: dict[str, float] = {pid: 0.0 for pid in prompts[0]}
     for outcomes in prompts:
-        for pid, s in prompt_scores(outcomes, w).items():
+        for pid, s in prompt_scores(outcomes, w, bar_exclude).items():
             totals[pid] += s
     return {pid: 100 * t / len(prompts) for pid, t in totals.items()}
 

@@ -68,6 +68,10 @@ class ProviderSession:
     def account_response(self, response: dict) -> ServerUsage:
         return ServerUsage()
 
+    def instructions(self) -> str:
+        """Extra system-prompt text for this run ('' = none). The no-search baseline uses it."""
+        return ""
+
     def start(self, task: str) -> None:
         """Called once with the user's prompt before the first model turn (routed uses it as context)."""
 

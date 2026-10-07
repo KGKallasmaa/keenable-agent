@@ -25,6 +25,7 @@ class Registry:
 
 def default_registry() -> Registry:
     from searchaudit.providers.keenable import KeenableSearchProvider
+    from searchaudit.providers.none import NoSearchProvider
     from searchaudit.providers.routed import RoutedProvider
     from searchaudit.providers.select import SelectProvider
     from searchaudit.providers.server_tools import ServerToolProvider
@@ -35,4 +36,5 @@ def default_registry() -> Registry:
     registry.register(KeenableSearchProvider())
     registry.register(SelectProvider())
     registry.register(RoutedProvider())
+    registry.register(NoSearchProvider())
     return registry

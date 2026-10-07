@@ -6,13 +6,20 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from searchaudit.models import Prompt, ProviderId, ProviderInfo
 
 DEFAULT_JUDGE_MODEL = "anthropic/claude-sonnet-5.5"
 DEFAULT_ROUTER_MODEL = "typesafe/jev-1.13"
+DEFAULT_QUERYGEN_MODEL = "anthropic/claude-sonnet-5.5"
 DEFAULT_KEENABLE_USD_PER_REQUEST = 0.004
+
+
+# Display defaults for providers that need none in audit.yaml (`- {id: none}` is enough).
+PROVIDER_DEFAULTS: dict[str, dict] = {
+    "none": {"label": "No search (model memory)", "short": "No search", "domain": "", "hex": "#9ca3af"},
+}
 
 
 class ProviderConfig(BaseModel):
@@ -23,6 +30,13 @@ class ProviderConfig(BaseModel):
     hex: str
     uses_today: bool = False
     enabled: bool = True
+
+    @model_validator(mode="before")
+    @classmethod
+    def _defaults(cls, data: object) -> object:
+        if isinstance(data, dict) and data.get("id") in PROVIDER_DEFAULTS:
+            return {**PROVIDER_DEFAULTS[data["id"]], **data}
+        return data
 
 
 class Budget(BaseModel):
@@ -39,10 +53,27 @@ class Concurrency(BaseModel):
         return self.per_provider.get(provider, self.default_per_provider)
 
 
+class QuerygenConfig(BaseModel):
+    """Settings for `searchaudit querygen` (all optional)."""
+
+    model: str = DEFAULT_QUERYGEN_MODEL  # researches use cases, writes tasks, verifies references
+    # Search for research/verification. Must not be an audited provider's engine, or the prompt set is
+    # biased toward it: "native" = the model provider's own search (Anthropic's for Claude models).
+    search_engine: str = "native"
+    oversample: float = 3.0  # candidates generated per final prompt
+    routine_share: float = 0.10  # share of the final set kept as "routine" controls the model knows
+    fresh_days: int = 90  # "fresh" means published within this many days
+    max_usd: float = 5.0  # querygen stops launching calls at this spend
+    concurrency: int = 6
+
+
 class AuditConfig(BaseModel):
     slug: str
     company: str
     category: str
+    company_url: str = ""  # querygen: the company's site, to research its agent workflows
+    use_case_hints: list[str] = Field(default_factory=list)  # querygen: workflows to make sure are covered
+    querygen: QuerygenConfig = Field(default_factory=QuerygenConfig)
     prompts_file: str = "prompts.json"
     model: str = "openrouter/auto"
     temperature: float = 0.2
@@ -78,6 +109,10 @@ class AuditConfig(BaseModel):
     @property
     def pinned_path(self) -> Path:
         return self.base_dir / "pinned.json"
+
+    @property
+    def querygen_dir(self) -> Path:
+        return self.base_dir / "querygen"
 
     @property
     def probes_dir(self) -> Path:

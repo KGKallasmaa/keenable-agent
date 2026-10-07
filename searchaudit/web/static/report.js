@@ -8,14 +8,17 @@
 
 const SA = (() => {
   const CREDIT = { c: 1, p: 0.5, w: 0 };
-  const ratio = (best, x) => (x <= 0 ? 1 : best / x);
+  const ratio = (best, x) => (x <= 0 ? 1 : Math.min(1, best / x));
 
-  /** Value score in [0, 1] per provider index on one prompt. g/c/t: grade, cost, seconds per provider. */
-  function promptScores(g, c, t, w) {
+  /** Value score in [0, 1] per provider index on one prompt. g/c/t: grade, cost, seconds per provider.
+   *  skip[i] true = never sets the bar (the no-search baseline), unless nobody else answered. */
+  function promptScores(g, c, t, w, skip) {
     const live = g.map((x, i) => i).filter((i) => g[i] !== "w"); // a wrong answer never sets the bar
     if (!live.length) return g.map(() => 0);
-    const minC = Math.min(...live.map((i) => c[i]));
-    const minT = Math.min(...live.map((i) => t[i]));
+    const kept = live.filter((i) => !(skip && skip[i]));
+    const setters = kept.length ? kept : live;
+    const minC = Math.min(...setters.map((i) => c[i]));
+    const minT = Math.min(...setters.map((i) => t[i]));
     const tot = w.a + w.c + w.s || 1;
     return g.map((grade, i) => {
       const credit = CREDIT[grade];
@@ -27,7 +30,8 @@ const SA = (() => {
   /** Mean value score per provider id, 0-100. */
   function valueScores(data, w) {
     const tot = data.ids.map(() => 0);
-    for (const p of data.prompts) promptScores(p.g, p.c, p.t, w).forEach((s, i) => (tot[i] += s));
+    const skip = skipOf(data);
+    for (const p of data.prompts) promptScores(p.g, p.c, p.t, w, skip).forEach((s, i) => (tot[i] += s));
     const n = data.prompts.length || 1;
     return Object.fromEntries(data.ids.map((id, i) => [id, (100 * tot[i]) / n]));
   }
@@ -37,9 +41,15 @@ const SA = (() => {
     return [...data.ids].sort((a, b) => scores[b] - scores[a] || data.k[b] - data.k[a] || data.perPrompt[a] - data.perPrompt[b]);
   }
 
-  /** stats.headline for the weight-dependent branches (tradeoff / sole / tie). */
+  /** Per provider index: true for the baseline (never sets the bar, never named in the headline). */
+  function skipOf(data) {
+    return data.ids.map((id) => (data.baseline || []).includes(id));
+  }
+
+  /** stats.headline for the weight-dependent branches (tradeoff / sole / tie). Ignores the baseline. */
   function headline(data, order) {
-    const L = data.labels, best = order[0], leader = data.leader, n = data.n, co = data.company;
+    const base = data.baseline || [];
+    const L = data.labels, best = order.filter((id) => !base.includes(id))[0], leader = data.leader, n = data.n, co = data.company;
     if (!data.tied.includes(best)) {
       return `${L[best]} is the best value for ${co} at these weights, but ${L[leader]} answers significantly more prompts correctly (${data.k[leader]} vs ${data.k[best]} of ${n}).`;
     }
@@ -59,7 +69,7 @@ const SA = (() => {
     return Object.fromEntries(Object.entries(vals).map(([k, v]) => [k, v === best ? "best" : v === worst ? "worst" : ""]));
   }
 
-  return { promptScores, valueScores, byScore, headline, extremes };
+  return { promptScores, valueScores, byScore, headline, extremes, skipOf };
 })();
 
 if (typeof module !== "undefined") module.exports = SA;
@@ -206,7 +216,7 @@ if (typeof document !== "undefined") {
       });
       if (!data.headlineFixed) $("#headline").textContent = SA.headline(data, order);
       for (const p of data.prompts) {
-        const s = SA.promptScores(p.g, p.c, p.t, weights);
+        const s = SA.promptScores(p.g, p.c, p.t, weights, SA.skipOf(data));
         const vals = Object.fromEntries(data.ids.map((id, i) => [id, Math.round(s[i] * 1000) / 1000]));
         const phl = SA.extremes(vals, false);
         data.ids.forEach((id, i) => {

@@ -5,7 +5,7 @@ import re
 from dataclasses import dataclass
 
 from searchaudit.cost import ModelPricing, model_cost
-from searchaudit.models import FAILURE_MODES, RUBRIC, Judgment, Prompt, Run
+from searchaudit.models import BASELINE, FAILURE_MODES, RUBRIC, Judgment, Prompt, Run
 from searchaudit.providers.openrouter import OpenRouterClient, OpenRouterError
 
 BUNDLE_VERSION = "judge-v1"
@@ -66,11 +66,20 @@ class JudgeBundle:
     version: str = BUNDLE_VERSION
 
 
+NO_SEARCH_NOTE = (
+    "NOTE: this answer comes from the no-search baseline: the same model with no search tools, by design. "
+    "It cannot cite sources. Grade facts and currency against the reference as usual, and set "
+    "\"Sources support it\" to true when the claims it makes are correct per the reference (false when it "
+    "invents or misstates facts). An honest \"I cannot know this\" is not correct.\n\n"
+)
+
+
 def judge_messages(bundle: JudgeBundle, prompt: Prompt, run: Run, evidence: list[str]) -> list[dict]:
     citations = "\n".join(f"- {c.url}" + (f" ({c.title})" if c.title else "") for c in run.citations) or "(none)"
     data = "\n\n---\n\n".join(evidence)[:EVIDENCE_CHARS] or "(no tool output recorded)"
     data = data.replace("<<<DATA", "<<DATA").replace("DATA>>>", "DATA>>")  # untrusted text cannot close the fence
     user = (
+        f"{NO_SEARCH_NOTE if run.provider == BASELINE else ''}"
         f"PROMPT:\n{prompt.text}\n\n"
         f"REFERENCE (checked {prompt.as_of or 'date unknown'}):\n{prompt.reference}\n\n"
         f"ANSWER:\n{run.answer or '(empty)'}\n\n"

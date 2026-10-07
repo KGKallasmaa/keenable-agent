@@ -23,7 +23,7 @@ console.log(JSON.stringify(weights.map(([a, c, s]) => {
   const scores = SA.valueScores(data, w);
   const order = SA.byScore(data, scores);
   return {scores, order, headline: SA.headline(data, order),
-          first: SA.promptScores(data.prompts[0].g, data.prompts[0].c, data.prompts[0].t, w)};
+          first: SA.promptScores(data.prompts[0].g, data.prompts[0].c, data.prompts[0].t, w, SA.skipOf(data))};
 })));
 """
 
@@ -39,15 +39,18 @@ def _run_js(client: dict) -> list[dict]:
     return json.loads(out.stdout)
 
 
-@pytest.mark.parametrize("which", ["fixture", "tradeoff"])
+@pytest.mark.parametrize("which", ["fixture", "tradeoff", "baseline"])
 def test_js_matches_python(which, fixture_results, results_factory):
-    results = (
-        fixture_results
-        if which == "fixture"
-        else results_factory(
+    if which == "baseline":
+        from .test_model import _with_baseline
+
+        results = _with_baseline({"exa": "c", "keen": "ccw", "select": "w"}, base="cpw")
+    elif which == "fixture":
+        results = fixture_results
+    else:
+        results = results_factory(
             {"exa": "c", "keen": "ccw", "select": "w"}, cost={"exa": 2.0, "keen": 0.01, "select": 0.01}
         )
-    )
     js = _run_js(build_view_model(results)["client"])
     for (a, c, s), got in zip(WEIGHTS, js, strict=True):
         vm = build_view_model(results, stats.Weights(a, c, s))

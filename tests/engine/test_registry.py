@@ -38,8 +38,8 @@ class EchoProvider(Provider):
         return static_session(EchoSession())
 
 
-def test_default_registry_has_all_five():
-    assert default_registry().ids() == ["exa", "parallel", "keen", "select", "routed"]
+def test_default_registry_has_all_five_plus_baseline():
+    assert default_registry().ids() == ["exa", "parallel", "keen", "select", "routed", "none"]
 
 
 def test_duplicate_and_unknown_ids_are_rejected():
