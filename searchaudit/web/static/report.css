@@ -246,3 +246,4 @@ tr.link:hover td { background: var(--soft); }
 .tiers { margin-top: 18px; }
 .takeaways { margin: 12px 0 0; padding-left: 18px; font-size: 14px; }
 .takeaways li { margin: 4px 0; }
+.src-chip { display: inline-block; margin: 0 6px 4px 0; padding: 1px 6px; border: 1px solid var(--line); border-radius: 6px; font-size: 12px; white-space: nowrap; }

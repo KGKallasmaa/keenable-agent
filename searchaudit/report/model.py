@@ -82,6 +82,8 @@ def build_view_model(results: AuditResults, weights: Weights = DEFAULT_WEIGHTS) 
         "lift": lift,
         "baseline": base[0] if base else None,
         "tiers": tiers,
+        "economics": _economics(prompts, ids, labels, cells, results.providers),
+        "sources_view": _sources_view(prompts, ids, cells),
         "summary": summary,
         "highlight": {
             "score": _extremes({i: round(summary[i]["score"], 1) for i in ids}, lower_is_better=False),
@@ -156,6 +158,7 @@ def _cell(run: Run | None, j: Judgment | None) -> VM:
         "seconds": round(run.latency_ms / 1000, 2) if run else 0.0,
         "searches": run.searches if run else 0,
         "fetches": run.fetches if run else 0,
+        "cost_search": round(run.cost_search_usd, 6) if run else 0.0,
         "answer": run.answer if run else "",
         "error": run.error if run else "missing run",
         "budget_hit": bool(run and run.budget_hit),
@@ -664,3 +667,86 @@ def _lift(prompts, sids, base, correct, labels, leader, n) -> VM:
             "value": f"{labels[leader]}: +{gained} prompts over no search", "detail": detail}
     return {"available": True, "id": b, "k": k_base, "n": n, "rows": rows, "tiers": tiers,
             "within_chance": not (p < stats.ALPHA and gained > lost), "p": p, "facts": [fact]}
+
+
+# ---------------------------------------------------------------- cost break-even and sources
+
+
+def _economics(prompts, ids, labels, cells, providers) -> VM | None:
+    """Requests per prompt vs price per request, against the provider the company uses today.
+
+    A provider is cheaper on search than the reference when its request ratio is below the
+    reference's price-per-request ratio (e.g. Exa $7 / Keenable $4 = 1.75x).
+    """
+    searchers = [i for i in ids if i != "none"]
+    ref = next((p.id for p in providers if p.uses_today and p.id in searchers), None)
+    ref = ref or ("exa" if "exa" in searchers else (searchers[0] if searchers else None))
+    if ref is None or not prompts:
+        return None
+
+    def agg(pid: str, ps) -> VM:
+        xs = [cells[(p.id, pid)] for p in ps]
+        req = sum(x["searches"] + x["fetches"] for x in xs)
+        spend = sum(x["cost_search"] for x in xs)
+        k = sum(1 for x in xs if x["grade"] == "c")
+        return {
+            "requests": req / len(xs),
+            "price": spend / req if req else None,
+            "search_per_prompt": spend / len(xs),
+            "search_per_correct": spend / k if k else None,
+            "requests_per_correct": req / k if k else None,
+            "est": any(x["est"] for x in xs),
+        }
+
+    rows = {pid: agg(pid, prompts) for pid in searchers}
+    base = rows[ref]
+
+    def verdict(r: VM, b: VM) -> VM:
+        if not r["price"] or not b["price"] or not b["requests"]:
+            return {"price_ratio": None, "request_ratio": None, "cheaper": None}
+        price_ratio = b["price"] / r["price"]
+        request_ratio = r["requests"] / b["requests"]
+        return {"price_ratio": price_ratio, "request_ratio": request_ratio,
+                "cheaper": request_ratio < price_ratio}
+
+    for pid in searchers:
+        rows[pid].update(verdict(rows[pid], base))
+    by_type = []
+    for tid, name in PROMPT_TYPE_NAMES.items():
+        ps = [p for p in prompts if p.type == tid]
+        if not ps:
+            continue
+        tb = agg(ref, ps)
+        by_type.append({"id": tid, "name": name, "n": len(ps),
+                        "cells": {pid: {**agg(pid, ps), **verdict(agg(pid, ps), tb)} for pid in searchers}})
+    return {"ref": ref, "ref_label": labels[ref], "ids": searchers, "rows": rows, "by_type": by_type}
+
+
+def _sources_view(prompts, ids, cells) -> VM:
+    """Which domains each provider's answers cite, and how much of that only it found."""
+    by_pid: dict[str, Counter] = {pid: Counter() for pid in ids}
+    for p in prompts:
+        for pid in ids:
+            for d in {s["domain"] for s in cells[(p.id, pid)]["sources"] if s["domain"]}:
+                by_pid[pid][d] += 1
+    owners: dict[str, set[str]] = {}
+    for pid, c in by_pid.items():
+        for d in c:
+            owners.setdefault(d, set()).add(pid)
+    out = {}
+    for pid in ids:
+        xs = [cells[(p.id, pid)] for p in prompts]
+        wrong = [x for x in xs if x["grade"] == "w"]
+        unique = sorted(d for d in by_pid[pid] if owners[d] == {pid})
+        out[pid] = {
+            "top": by_pid[pid].most_common(6),
+            "distinct": len(by_pid[pid]),
+            "unique": len(unique),
+            "unique_examples": unique[:5],
+            "per_answer": sum(len(x["sources"]) for x in xs) / len(xs) if xs else 0,
+            "uncited": sum(1 for x in xs if not x["sources"]),
+            "wrong_uncited": sum(1 for x in wrong if not x["sources"]),
+            "wrong": len(wrong),
+            "n": len(xs),
+        }
+    return out

@@ -79,6 +79,49 @@
 {% endif %}
 {%- endmacro %}
 
+{% macro econ(vm) -%}
+{% set e = vm.economics %}
+{% if e %}
+<div class="panel pad" style="margin-top:18px">
+<p class="ptitle">Cost break-even vs {{ e.ref_label }}</p>
+<p class="hint" style="margin:0 0 10px">A cheaper price per request only wins if the agent doesn't need proportionally more requests. A provider is cheaper on search than {{ e.ref_label }} when its <b>request ratio</b> (its requests per prompt ÷ {{ e.ref_label }}'s) is below its <b>price advantage</b> ({{ e.ref_label }}'s price per request ÷ its own). Requests = searches + page fetches (+ SQL queries for SELECT). Model tokens are excluded here; they are in the ranking.</p>
+<div class="tablewrap"><table><thead><tr><th>Provider</th><th class="r">Price / 1k requests</th><th class="r">Requests / prompt</th><th class="r">Price advantage</th><th class="r">Request ratio</th><th class="r">Search $ / prompt</th><th class="r">Search $ / correct answer</th></tr></thead><tbody>
+{% for id in e.ids %}{% set r = e.rows[id] %}
+<tr><td>{{ pv(vm.provider[id]) }}{{ today(vm.provider[id]) }}</td>
+<td class="r num">{% if r.price %}{{ (r.price * 1000) | money(2, r.est) }}{% else %}—{% endif %}</td>
+<td class="r num">{{ "%.1f" | format(r.requests) }}</td>
+<td class="r num">{% if r.price_ratio %}{{ "%.2f" | format(r.price_ratio) }}×{% else %}—{% endif %}</td>
+<td class="r num">{% if r.request_ratio %}<span class="{{ 'best' if r.cheaper and id != e.ref else ('worst' if id != e.ref else '') }}">{{ "%.2f" | format(r.request_ratio) }}×</span>{% else %}—{% endif %}</td>
+<td class="r num">{{ r.search_per_prompt | money(4, r.est) }}</td>
+<td class="r num">{% if r.search_per_correct %}{{ r.search_per_correct | money(4, r.est) }}{% else %}—{% endif %}</td></tr>
+{% endfor %}
+</tbody></table></div>
+<p class="ptitle" style="margin-top:16px">By prompt type: request ratio vs price advantage</p>
+<p class="hint" style="margin:0 0 8px">Green = cheaper on search than {{ e.ref_label }} for that type (request ratio below price advantage); grey = more expensive.</p>
+<div class="tablewrap"><table><thead><tr><th>Type</th>{% for id in e.ids if id != e.ref %}<th class="r">{{ vm.provider[id].short }}</th>{% endfor %}</tr></thead><tbody>
+{% for t in e.by_type %}<tr><td>{{ t.name }} <span class="hint num">· {{ t.n }}</span></td>
+{% for id in e.ids if id != e.ref %}{% set c = t.cells[id] %}<td class="r num">{% if c.request_ratio %}<span class="{{ 'best' if c.cheaper else 'worst' }}">{{ "%.2f" | format(c.request_ratio) }}×</span><span class="hint"> / {{ "%.2f" | format(c.price_ratio) }}×</span>{% else %}—{% endif %}</td>{% endfor %}</tr>
+{% endfor %}
+</tbody></table></div>
+</div>
+{% endif %}
+<div class="panel pad" style="margin-top:18px">
+<p class="ptitle">Sources each provider's answers cite</p>
+<p class="hint" style="margin:0 0 10px">Domains cited in final answers. "Only here" = domains no other provider cited anywhere in this audit, a rough measure of index coverage. "Wrong, uncited" = wrong answers with no source at all (often answered from memory after search failed).</p>
+<div class="tablewrap"><table><thead><tr><th>Provider</th><th class="r">Sources / answer</th><th class="r">Distinct domains</th><th class="r">Only here</th><th class="r">Uncited answers</th><th class="r">Wrong, uncited</th><th>Most cited</th></tr></thead><tbody>
+{% for id in vm.ids %}{% set s = vm.sources_view[id] %}
+<tr><td>{{ pv(vm.provider[id]) }}</td>
+<td class="r num">{{ "%.1f" | format(s.per_answer) }}</td>
+<td class="r num">{{ s.distinct }}</td>
+<td class="r num" title="{{ s.unique_examples | join(', ') }}">{{ s.unique }}</td>
+<td class="r num">{{ s.uncited }}/{{ s.n }}</td>
+<td class="r num">{{ s.wrong_uncited }}/{{ s.wrong }}</td>
+<td class="small">{% for d, c in s.top %}<span class="src-chip">{{ d }} <span class="hint">{{ c }}</span></span>{% endfor %}</td></tr>
+{% endfor %}
+</tbody></table></div>
+</div>
+{%- endmacro %}
+
 {% macro measured(vm) -%}
 {% set m = vm.meta %}
 <div class="two">

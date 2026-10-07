@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "macros.html" import fav, pv, hfav, gicon, icon %}
-{% from "_sections.html" import ranking, chart, facts, tiers, measured, failures, h2h_pair, guide, judge %}
+{% from "_sections.html" import ranking, chart, facts, tiers, econ, measured, failures, h2h_pair, guide, judge %}
 {% from "_prompt.html" import prompt_table %}
 {% block title %}{{ vm.meta.company }} · Search Audit{% endblock %}
 {% block main %}
@@ -22,7 +22,7 @@
 {{ tiers(vm) }}
 
 <div class="tabs" role="tablist" aria-label="Report sections">
-{% for id, label, count in [("prompts", "Prompts", vm.n), ("h2h", "Head-to-head", None), ("failures", "Failure modes", None), ("guide", "Implementation guide", None), ("judge", "Judge", None), ("measured", "How we measured", None)] %}
+{% for id, label, count in [("prompts", "Prompts", vm.n), ("h2h", "Head-to-head", None), ("failures", "Failure modes", None), ("econ", "Cost & sources", None), ("guide", "Implementation guide", None), ("judge", "Judge", None), ("measured", "How we measured", None)] %}
   <button role="tab" type="button" id="tab-{{ id }}" aria-controls="panel-{{ id }}" aria-selected="{{ 'true' if loop.first else 'false' }}" tabindex="{{ 0 if loop.first else -1 }}">{{ label }}{% if count %}<span class="count">{{ count }}</span>{% endif %}</button>
 {% endfor %}
 </div>
@@ -71,6 +71,7 @@
 </section>
 
 <section role="tabpanel" id="panel-failures" aria-labelledby="tab-failures" tabindex="0" hidden>{{ failures(vm) }}</section>
+<section role="tabpanel" id="panel-econ" aria-labelledby="tab-econ" tabindex="0" hidden>{{ econ(vm) }}</section>
 <section role="tabpanel" id="panel-guide" aria-labelledby="tab-guide" tabindex="0" hidden>{{ guide(vm) }}</section>
 <section role="tabpanel" id="panel-judge" aria-labelledby="tab-judge" tabindex="0" hidden>{{ judge(vm) }}</section>
 <section role="tabpanel" id="panel-measured" aria-labelledby="tab-measured" tabindex="0" hidden><div style="margin-top:18px">{{ measured(vm) }}</div></section>

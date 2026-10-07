@@ -43,7 +43,7 @@ def test_report_page(client):
     html = r.text
     assert "StackAI" in html and "Enterprise AI agent platform" in html
     assert 'id="report-data"' in html and "/static/report.js" in html
-    assert html.count('role="tab"') == 6
+    assert html.count('role="tab"') == 7
     assert 'role="button"' in html and 'aria-expanded="false"' in html
     assert 'aria-modal="true"' in html
     assert "Not measured yet" in html  # human_agreement is null

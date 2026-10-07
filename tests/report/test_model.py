@@ -200,3 +200,19 @@ def test_no_baseline_means_no_lift():
     vm = build_view_model(make_results({"exa": "c", "keen": "ccw", "select": "w"}))
     assert vm["lift"] == {"available": False, "facts": []} and vm["baseline"] is None
     assert [f["key"] for f in vm["facts"]] == ["Most correct", "Cheapest of the most correct", "Fastest"]
+
+
+def test_economics_break_even_against_uses_today() -> None:
+    import json
+    from pathlib import Path
+
+    from searchaudit.models import AuditResults
+    from searchaudit.report.model import build_view_model
+
+    results = AuditResults(**json.loads(Path("audits/fixture/results.json").read_text()))
+    e = build_view_model(results)["economics"]
+    ref = e["ref"]
+    assert e["rows"][ref]["request_ratio"] == 1.0
+    for r in e["rows"].values():
+        if r["price_ratio"] and r["request_ratio"]:
+            assert r["cheaper"] == (r["request_ratio"] < r["price_ratio"])
