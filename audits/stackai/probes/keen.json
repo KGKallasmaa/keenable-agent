@@ -1,0 +1,46 @@
+{
+  "provider": "keen",
+  "probed_at": "2026-10-07T13:21:52.743946+00:00",
+  "via": "Keenable REST /v1/search + /v1/fetch as function tools",
+  "server_tools": [],
+  "function_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "search",
+        "description": "Search the web. Returns titles, URLs, publish dates and snippets.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "The search query."
+            }
+          },
+          "required": [
+            "query"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "fetch",
+        "description": "Fetch the readable text of a web page by URL.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "Absolute http(s) URL."
+            }
+          },
+          "required": [
+            "url"
+          ]
+        }
+      }
+    }
+  ]
+}

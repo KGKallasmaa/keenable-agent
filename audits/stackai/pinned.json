@@ -1,0 +1,6 @@
+{
+  "requested": "openrouter/auto",
+  "agent_model": "deepseek/deepseek-v4.1-flash",
+  "note": "openrouter/auto resolved once to deepseek/deepseek-v4.1-flash and pinned for every provider",
+  "pinned_at": "2026-10-07T13:21:55.930504+00:00"
+}

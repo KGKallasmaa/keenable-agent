@@ -1,0 +1,22 @@
+{
+  "provider": "exa",
+  "probed_at": "2026-10-07T13:21:52.743205+00:00",
+  "via": "OpenRouter openrouter:web_search + openrouter:web_fetch, engine=exa",
+  "server_tools": [
+    {
+      "type": "openrouter:web_search",
+      "parameters": {
+        "engine": "exa",
+        "max_results": 5
+      }
+    },
+    {
+      "type": "openrouter:web_fetch",
+      "parameters": {
+        "engine": "exa",
+        "max_uses": 15
+      }
+    }
+  ],
+  "function_tools": []
+}
