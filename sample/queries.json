@@ -1,0 +1,7 @@
+[
+  {"id": "icj", "query": "What year was the International Court of Justice established?"},
+  {"id": "charter", "query": "Which article of the UN Charter establishes the Security Council?"},
+  {"id": "kyoto", "query": "What year did the Kyoto Protocol enter into force?"},
+  {"id": "sg", "query": "Who is the current United Nations Secretary-General?"},
+  {"id": "paris", "query": "What is the official name of the Paris climate agreement?"}
+]

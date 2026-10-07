@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Search Audit — prototype</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23111827'/%3E%3Ccircle cx='14' cy='14' r='6.5' fill='none' stroke='%23fff' stroke-width='3'/%3E%3Cpath d='M19 19l6.5 6.5' stroke='%2322c55e' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #fafaf8; --panel: #ffffff; --ink: #111827; --ink-2: #374151; --muted: #6b7280; --line: #e5e7eb; --line-2: #d1d5db; --soft: #f3f4f6;
+    --exa: #c2410c; --parallel: #475569; --keen: #2563eb; --select: #dc2626; --routed: #7c3aed;
+    --ok: #15803d; --part: #b45309; --fail: #111827;
+    --best-bg: #dcfce7; --best-fg: #166534; --worst-bg: #f3f4f6; --worst-fg: #6b7280;
+    --serif: "Source Serif 4", Georgia, serif; --sans: "IBM Plex Sans", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --r: 8px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+  a:hover { text-decoration-color: currentColor; }
+  :focus-visible { outline: 2px solid var(--keen); outline-offset: 2px; border-radius: 3px; }
+  .proto { background: #fef9c3; color: #713f12; font: 12px/1 var(--mono); padding: 7px 24px; border-bottom: 1px solid #fde68a; }
+  header.top { display: flex; align-items: center; gap: 28px; padding: 12px 24px; border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 10; }
+  .mark { display: inline-flex; align-items: center; gap: 8px; font: 600 15px var(--sans); text-decoration: none; }
+  .mark svg { width: 22px; height: 22px; }
+  header.top nav { display: flex; gap: 20px; font-size: 14px; }
+  header.top nav a { text-decoration: none; color: var(--muted); }
+  header.top nav a[aria-current] { color: var(--ink); font-weight: 500; }
+  header.top .plus { margin-left: auto; }
+  main { max-width: 1120px; margin: 0 auto; padding: 32px 24px 96px; }
+  h1 { font: 600 32px/1.2 var(--serif); letter-spacing: -.01em; margin: 0 0 12px; max-width: 34ch; }
+  h2 { font: 600 19px/1.3 var(--sans); margin: 40px 0 6px; }
+  h3 { font: 600 12px var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 22px 0 8px; }
+  p { margin: 0 0 12px; }
+  .lede { font-size: 16px; color: var(--ink-2); max-width: 72ch; }
+  .sub { color: var(--muted); font-size: 14px; margin: 0 0 16px; max-width: 78ch; }
+  .hint { color: var(--muted); font-size: 13px; }
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; background: var(--ink); color: #fff; border: 1px solid var(--ink); padding: 0 14px; height: 36px; font: 500 14px var(--sans); border-radius: var(--r); cursor: pointer; text-decoration: none; white-space: nowrap; }
+  .btn:visited { color: #fff; }
+  .btn.ghost { background: var(--panel); color: var(--ink); border-color: var(--line-2); }
+  .btn.ghost:hover { border-color: var(--ink); }
+  .btn svg { width: 15px; height: 15px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 20px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font: 500 12px var(--sans); color: var(--muted); padding: 9px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: 0; }
+  th.r, td.r { text-align: right; } th.c, td.c { text-align: center; }
+  .tablewrap { overflow-x: auto; }
+  .pill { display: inline-flex; align-items: center; font: 500 11px var(--sans); padding: 2px 8px; border-radius: 99px; background: var(--soft); color: var(--ink-2); white-space: nowrap; }
+  .fav { width: 16px; height: 16px; border-radius: 3px; vertical-align: -3px; margin-right: 6px; flex: none; }
+  .mono-badge { display: inline-flex; width: 16px; height: 16px; margin-right: 6px; align-items: center; justify-content: center; font: 600 10px var(--sans); background: var(--ink); color: #fff; border-radius: 3px; vertical-align: -3px; flex: none; }
+  .pv { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-weight: 500; }
+  .pv .sw { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .pv .fav, .pv .mono-badge { margin-right: 0; }
+  .g { display: inline-flex; width: 15px; height: 15px; border-radius: 50%; align-items: center; justify-content: center; font: 700 9px var(--sans); }
+  .g.c { background: var(--ok); color: #fff; }
+  .g.p { background: #fef3c7; color: var(--part); border: 1.2px solid var(--part); }
+  .g.w { background: #fff; color: var(--fail); border: 1.2px solid var(--fail); }
+  .best { background: var(--best-bg); color: var(--best-fg); font-weight: 600; border-radius: 4px; padding: 1px 5px; }
+  .worst { background: var(--worst-bg); color: var(--worst-fg); border-radius: 4px; padding: 1px 5px; text-decoration: line-through; text-decoration-color: rgba(107,114,128,.5); }
+  .chk { display: inline-flex; gap: 3px; }
+  .chk i { width: 15px; height: 15px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font: 700 9px var(--sans); font-style: normal; }
+  .chk i.y { background: var(--best-bg); color: var(--ok); } .chk i.n { background: var(--soft); color: var(--fail); border: 1px solid var(--line-2); }
+  .hero { padding: 28px 0 6px; } .hero h1 { font-size: 42px; max-width: 22ch; }
+  .list { margin-top: 10px; }
+  .list a.it { display: grid; grid-template-columns: 1fr auto auto; gap: 24px; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--line); text-decoration: none; }
+  .list a.it:last-child { border-bottom: 0; }
+  .list a.it:hover { background: var(--soft); }
+  .list .co { display: flex; align-items: center; font: 600 16px var(--sans); }
+  .list .cat { color: var(--muted); font-size: 14px; margin-left: 22px; }
+  .list .m { font: 12px var(--mono); color: var(--muted); white-space: nowrap; }
+  .empty { padding: 28px; color: var(--muted); text-align: center; }
+  .rhead { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .rhead .co { font: 600 16px var(--sans); display: inline-flex; align-items: center; }
+  .rhead .meta { color: var(--muted); font-size: 13px; }
+  .rhead .actions { margin-left: auto; display: flex; gap: 8px; }
+  .summary { display: grid; grid-template-columns: 1.2fr 1fr; gap: 18px; margin-top: 20px; }
+  .summary .panel { padding: 16px 18px; }
+  .ptitle { font: 600 14px var(--sans); margin: 0 0 2px; }
+  .weights { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 12px 0 8px; }
+  .weights label { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+  .weights input { width: 100%; accent-color: var(--ink); }
+  .weights .wv { font: 600 12px var(--mono); color: var(--ink); }
+  .scorebar { height: 8px; border-radius: 99px; background: var(--soft); position: relative; min-width: 70px; }
+  .scorebar i { position: absolute; inset: 0 auto 0 0; border-radius: 99px; }
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line-2); margin: 32px 0 0; position: sticky; top: 59px; background: var(--bg); z-index: 5; }
+  .tabs a { padding: 11px 14px; text-decoration: none; color: var(--muted); font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; display: inline-flex; gap: 6px; align-items: center; }
+  .tabs a.on { color: var(--ink); border-bottom-color: var(--ink); }
+  .tabs .count { font: 12px var(--mono); color: var(--muted); }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 16px 0 12px; }
+  .chip { border: 1px solid var(--line-2); background: var(--panel); border-radius: 99px; padding: 4px 11px; font-size: 13px; cursor: pointer; text-decoration: none; color: var(--ink-2); }
+  .chip.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; font-size: 13px; color: var(--muted); }
+  .legend span { display: inline-flex; gap: 6px; align-items: center; }
+  .plist .head, .plist summary { display: grid; grid-template-columns: 34px 1fr 108px repeat(5, 46px) 64px 16px; gap: 8px; align-items: center; padding: 10px 14px; }
+  .plist .head { font: 500 12px var(--sans); color: var(--muted); border-bottom: 1px solid var(--line); }
+  .plist .head .c { text-align: center; font-weight: 600; }
+  .plist details { border-bottom: 1px solid var(--line); }
+  .plist details:last-child { border-bottom: 0; }
+  .plist summary { list-style: none; cursor: pointer; }
+  .plist summary::-webkit-details-marker { display: none; }
+  .plist summary:hover { background: var(--soft); }
+  .plist details[open] > summary { background: var(--soft); }
+  .plist .pt { font-weight: 500; }
+  .plist .cc { text-align: center; }
+  .plist .car { color: var(--muted); transition: transform .15s; }
+  .plist details[open] .car { transform: rotate(90deg); }
+  .pbody { padding: 6px 14px 18px 56px; }
+  .ptable td { padding: 8px 10px; }
+  .ptable tr.sel { cursor: pointer; }
+  .ptable tr.sel:hover td, .ptable tr.sel:focus-visible td { background: var(--soft); }
+  .ptable tr.sel:focus-visible { outline: 2px solid var(--keen); outline-offset: -2px; }
+  .ptable tr.ans td { background: #fcfcfb; padding: 14px 16px 16px; }
+  .anstext { max-width: 80ch; color: var(--ink-2); margin: 0 0 10px; }
+  pre { font: 12px/1.55 var(--mono); background: #0f172a; color: #e2e8f0; padding: 12px 14px; white-space: pre-wrap; border-radius: 6px; margin: 8px 0; overflow-x: auto; }
+  pre .k { color: #93c5fd; } pre .s { color: #86efac; } pre .c { color: #94a3b8; }
+  .fm { font-size: 13px; color: var(--ink-2); }
+  .srcs { display: inline-flex; align-items: center; gap: 4px; }
+  .srcs .fav, .srcs .mono-badge { margin-right: 0; }
+  .chart text { font: 11px var(--sans); fill: var(--muted); }
+  .chart .lbl { font: 600 12px var(--sans); }
+  .route { display: grid; grid-template-columns: 170px 24px 1fr; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .route:last-child { border-bottom: 0; }
+  .note { border-left: 3px solid var(--part); background: #fffbeb; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 14px; margin: 12px 0; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: var(--r); font-size: 14px; z-index: 20; }
+  .steps { display: flex; gap: 6px; margin: 0 0 26px; font-size: 13px; flex-wrap: wrap; }
+  .steps span { padding: 4px 10px; border-radius: 99px; color: var(--muted); background: var(--soft); }
+  .steps span.on { color: #fff; background: var(--ink); } .steps span.done { color: var(--ok); background: var(--best-bg); }
+  label.f { display: block; font: 500 13px var(--sans); margin: 18px 0 6px; }
+  input[type=text], input[type=email], input[type=number], select { width: 100%; max-width: 520px; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r); padding: 8px 10px; font: inherit; color: inherit; }
+  .seg { display: inline-flex; border: 1px solid var(--line-2); border-radius: var(--r); overflow: hidden; background: var(--panel); }
+  .seg a { padding: 7px 13px; text-decoration: none; font-size: 14px; } .seg a.on { background: var(--ink); color: #fff; }
+  .cb { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); max-width: 640px; }
+  .drop { border: 1.5px dashed var(--line-2); border-radius: var(--r); padding: 24px; max-width: 560px; color: var(--muted); text-align: center; background: var(--panel); }
+  .method p { max-width: 74ch; color: var(--ink-2); }
+  .hfav { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; font: 600 10px var(--sans); line-height: 1; }
+  .hfav .fav, .hfav .mono-badge { margin: 0; }
+  .hfav .bar2 { width: 18px; height: 3px; border-radius: 2px; }
+  .modal-bg { position: fixed; inset: 0; background: rgba(17,24,39,.42); z-index: 30; display: flex; align-items: flex-start; justify-content: center; padding: 8vh 16px; overflow-y: auto; }
+  .modal { background: var(--panel); border-radius: 12px; width: 100%; max-width: 620px; box-shadow: 0 20px 50px rgba(0,0,0,.18); }
+  .modal header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+  .modal header h2 { margin: 0; font-size: 16px; }
+  .modal header .x { margin-left: auto; text-decoration: none; font-size: 20px; color: var(--muted); line-height: 1; }
+  .modal .mb { padding: 18px 20px; }
+  .modal footer { display: flex; align-items: center; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--line); }
+  .modal footer .grow { flex: 1; }
+  .dots { display: flex; gap: 6px; } .dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line-2); } .dots i.on { background: var(--ink); }
+  .modal input[type=text], .modal input[type=email] { max-width: none; }
+  .plist-mini { max-height: 220px; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--r); margin-top: 10px; }
+  .plist-mini div { display: flex; gap: 10px; align-items: center; padding: 7px 10px; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .plist-mini div:last-child { border-bottom: 0; }
+  .plist-mini .x2 { margin-left: auto; color: var(--muted); text-decoration: none; }
+  .provgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .provgrid label { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: var(--r); padding: 9px 10px; cursor: pointer; }
+  .h2h { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+  .h2h > div { padding: 14px 16px; border-left: 1px solid var(--line); } .h2h > div:first-child { border-left: 0; }
+  .h2h .v { font: 600 26px var(--serif); } .h2h .k { font-size: 12px; color: var(--muted); }
+  select.inl { width: auto; display: inline-block; padding: 5px 8px; }
+  @media (max-width: 860px) {
+    .h2h { grid-template-columns: 1fr 1fr; } .provgrid { grid-template-columns: 1fr; }
+    header.top { padding: 10px 16px; gap: 14px; } main { padding: 24px 16px 72px; }
+    h1, .hero h1 { font-size: 26px; }
+    .summary, .two { grid-template-columns: 1fr; }
+    .plist .head { display: none; }
+    .plist summary { grid-template-columns: 1fr; gap: 6px; } .plist summary .idx, .plist summary .car { display: none; }
+    .plist summary .grades { display: flex !important; gap: 6px; }
+    .pbody { padding: 4px 8px 16px; }
+    .list a.it { grid-template-columns: 1fr; gap: 2px; } .list .cat { margin-left: 22px; }
+    .rhead .actions { margin-left: 0; }
+    .tabs { overflow-x: auto; top: 55px; }
+  }
+</style>
+</head>
+<body>
+<div class="proto">PROTOTYPE · illustrative, seeded data · not real results</div>
+<header class="top">
+  <a class="mark" href="#/"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#111827"/><circle cx="14" cy="14" r="6.5" fill="none" stroke="#fff" stroke-width="3"/><path d="M19 19l6.5 6.5" stroke="#22c55e" stroke-width="3.5" stroke-linecap="round"/></svg>Search Audit</a>
+  <nav aria-label="Main"><a href="#/" data-nav="home">Reports</a><a href="#/methodology" data-nav="methodology">Methodology</a></nav>
+  <a class="btn plus" href="#/new" onclick="state.step=1">+ New audit</a>
+</header>
+<main id="app" tabindex="-1"></main>
+
+<script>
+"use strict";
+// ============ Providers ============
+const PROVIDERS = [
+  { id: "exa", label: "Exa", short: "Exa", domain: "exa.ai", color: "var(--exa)", hex: "#c2410c" },
+  { id: "parallel", label: "Parallel", short: "Parallel", domain: "parallel.ai", color: "var(--parallel)", hex: "#475569" },
+  { id: "keen", label: "Keenable search", short: "Search", domain: "keenable.ai", color: "var(--keen)", hex: "#2563eb" },
+  { id: "select", label: "Keenable SELECT", short: "SELECT", domain: "keenable.ai", color: "var(--select)", hex: "#dc2626" },
+  { id: "routed", label: "Keenable routed", short: "Routed", domain: "keenable.ai", color: "var(--routed)", hex: "#7c3aed" },
+];
+const P = Object.fromEntries(PROVIDERS.map((p) => [p.id, p]));
+const IDS = PROVIDERS.map((p) => p.id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function fav(domain, label) {
+  const ch = esc((label || "?")[0].toUpperCase());
+  if (!domain) return `<span class="mono-badge" aria-hidden="true">${ch}</span>`;
+  return `<img class="fav" alt="" loading="lazy" data-mono="${ch}" src="https://icons.duckduckgo.com/ip3/${domain}.ico" onerror="favFallback(this)">`;
+}
+function favFallback(img) { const s = document.createElement("span"); s.className = "mono-badge"; s.textContent = img.dataset.mono; img.replaceWith(s); }
+const pv = (id, short) => `<span class="pv"><span class="sw" style="background:${P[id].color}"></span>${fav(P[id].domain, P[id].label)}${short ? P[id].short : P[id].label}</span>`;
+const hfav = (id) => `<span class="hfav" title="${P[id].label}">${fav(P[id].domain, P[id].label)}<span class="bar2" style="background:${P[id].color}"></span><span style="color:${P[id].color}">${P[id].short}</span></span>`;
+const G_ICON = { c: "✓", p: "◐", w: "✗" }, G_NAME = { c: "correct", p: "partly correct", w: "wrong" };
+const gIcon = (g, who) => `<span class="g ${g}" title="${who ? who + ": " : ""}${G_NAME[g]}" aria-label="${G_NAME[g]}">${G_ICON[g]}</span>`;
+
+// ============ Seeded illustrative data ============
+function mulberry32(a) { return function () { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const rnd = mulberry32(20261007);
+function gauss() { let u = 0; while (!u) u = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rnd()); }
+function normCdf(x) { const t = 1 / (1 + 0.3275911 * Math.abs(x) / Math.SQRT2), y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x / 2); return x >= 0 ? (1 + y) / 2 : (1 - y) / 2; }
+const pick = (a) => a[Math.floor(rnd() * a.length)];
+const TYPES = [
+  { id: "lookup", name: "Lookup", n: 22, p: { exa: .86, parallel: .82, keen: .88, select: .55 } },
+  { id: "fresh", name: "Freshness", n: 14, p: { exa: .86, parallel: .78, keen: .72, select: .45 } },
+  { id: "multihop", name: "Multi-hop", n: 18, p: { exa: .70, parallel: .72, keen: .70, select: .66 } },
+  { id: "wide", name: "List-building", n: 16, p: { exa: .58, parallel: .66, keen: .58, select: .90 } },
+  { id: "domain", name: "Regulation", n: 10, p: { exa: .88, parallel: .90, keen: .80, select: .74 } },
+];
+const T = Object.fromEntries(TYPES.map((t) => [t.id, t]));
+const BASE = { exa: { c: .094, t: 7.9, s: 6.4 }, parallel: { c: .071, t: 8.6, s: 5.1 }, keen: { c: .019, t: 5.8, s: 6.0 }, select: { c: .022, t: 13.5, s: 1.6 } };
+const TEMPLATES = {
+  lookup: ["Is {v} SOC 2 Type II certified?", "Does {v} offer SAML SSO on its mid-tier plan?", "Where is {v} headquartered, and who is its CEO?", "Does {v} expose a public REST API for {t}?", "Which data-residency regions does {v} support?", "What is {v}'s list price for its enterprise plan?"],
+  fresh: ["What changed in {v}'s most recent pricing announcement?", "Has {v} announced a funding round this quarter?", "What did {v} ship at its latest product event?", "Who is {v}'s current CTO?"],
+  multihop: ["Which of {v}'s top three competitors integrate with Salesforce, and on which plans?", "Which customers did {v} announce in 2026, and in which industries?", "Compare {v} and its closest rival on uptime SLA and support hours.", "Which of {v}'s partners are also ISO 27001 certified?"],
+  wide: ["List enterprise {t} vendors with SOC 2 Type II and SAML SSO, with pricing links.", "Table of Series B+ {t} startups in Europe founded after 2021, with their latest round.", "List every {t} tool that offers on-prem deployment, with source links.", "Which {t} vendors publish a public status page? Give the URLs."],
+  domain: ["What does the EU AI Act require for high-risk {t} systems, and from when?", "What are the HIPAA requirements for storing {t} data with a third-party vendor?", "What does DORA require from ICT providers serving EU banks?"],
+};
+const VENDORS = ["Workday", "Snowflake", "Databricks", "HubSpot", "Zendesk", "Notion", "Rippling", "Ramp", "Gong", "Datadog", "Okta", "Airtable"];
+const TOPICS = ["HR software", "contract-management", "procurement", "observability", "customer-support", "data-warehouse", "identity", "expense-management"];
+const SRC = { lookup: ["{v}.com", "g2.com", "wikipedia.org", "crunchbase.com", "trust.{v}.com"], fresh: ["reuters.com", "techcrunch.com", "{v}.com", "theverge.com", "bloomberg.com"],
+  multihop: ["g2.com", "{v}.com", "salesforce.com", "gartner.com", "techcrunch.com"], wide: ["crunchbase.com", "g2.com", "capterra.com", "{v}.com", "wikipedia.org"], domain: ["europa.eu", "hhs.gov", "eba.europa.eu", "iapp.org", "lexology.com"] };
+const RUBRIC = ["Answers the prompt", "Facts correct", "Sources support it", "Up to date"];
+const FAILURES = {
+  wrong_source: { name: "Used the wrong source", def: "Answered from an unrelated or wrong vendor page." },
+  outdated: { name: "Outdated information", def: "Found only older pages; the answer was right once but isn't now." },
+  incomplete: { name: "Incomplete list", def: "Returned only some of the items a list prompt asked for." },
+  unsupported: { name: "Claim not in sources", def: "Stated something the cited pages don't say." },
+  wrong_tool: { name: "Wrong tool for the job", def: "Built a table for a single-fact prompt." },
+  over_search: { name: "Over-searching", def: "Used more than 10 searches before answering." },
+  error: { name: "Tool error / timeout", def: "The provider errored or the agent hit its time limit." },
+};
+const PROMPTS = [];
+let pid = 1;
+for (const t of TYPES) for (let i = 0; i < t.n; i++) {
+  const v = pick(VENDORS);
+  const text = t.id === "fresh" && i === 0 ? "Who is Tesla's current CTO?" : pick(TEMPLATES[t.id]).replace("{v}", v).replace("{t}", pick(TOPICS));
+  const z = gauss();
+  const r = {};
+  for (const id of ["exa", "parallel", "keen", "select"]) {
+    const u = normCdf(0.6 * z + 0.8 * gauss());
+    const err = rnd() < 0.025;
+    const g = err ? "w" : u < t.p[id] ? "c" : rnd() < 0.45 ? "p" : "w";
+    const tail = id === "select" && rnd() < 0.12 ? 3 + rnd() * 8 : 1;
+    const searches = id === "select" ? 1 + Math.floor(rnd() * 2) : Math.max(1, Math.round(BASE[id].s + gauss() * 2.2));
+    r[id] = { g, err, cost: BASE[id].c * (0.7 + 0.6 * rnd()), time: BASE[id].t * (0.7 + 0.6 * rnd()) * tail, searches };
+  }
+  const toSelect = t.id === "wide" || (t.id === "multihop" && rnd() < 0.25);
+  const pJ = 0.7 + rnd() * 0.27;
+  const via = toSelect ? "select" : "keen";
+  r.routed = { ...r[via], cost: r[via].cost + 0.0004, time: r[via].time + 0.3, via, pJ };
+  if (text.startsWith("Who is Tesla")) { r.exa.g = r.parallel.g = r.keen.g = "c"; r.select.g = "w"; r.routed = { ...r.keen, cost: r.keen.cost + 0.0004, time: r.keen.time + 0.3, via: "keen", pJ: 0.86 }; }
+  const vv = v.toLowerCase();
+  for (const id of IDS) {
+    const x = r[id];
+    x.fail = x.g === "c" ? null : x.err ? "error" : (id === "select" || x.via === "select") && t.id !== "wide" && x.g === "w" ? "wrong_tool" : t.id === "fresh" ? "outdated" : t.id === "wide" ? "incomplete" : x.searches > 10 ? "over_search" : x.g === "p" ? "unsupported" : "wrong_source";
+    const h = (pid * 7 + id.length * 3) % 5, n = x.g === "w" ? 1 : x.g === "p" ? 2 : 3;
+    x.src = Array.from({ length: n }, (_, k) => SRC[t.id][(h + k) % 5].replace("{v}", vv));
+    x.chk = x.g === "c" ? [1, 1, 1, 1] : x.g === "p" ? RUBRIC.map((_, k) => (k === 1 + (pid % 3) ? 0 : 1)) : [1, 0, pid % 2, t.id === "fresh" ? 0 : 1];
+  }
+  PROMPTS.push({ id: pid++, type: t.id, text, r });
+}
+const TESLA = PROMPTS.find((p) => p.text.startsWith("Who is Tesla")).id;
+
+// ============ Statistics ============
+function wilson(k, n, z = 1.96) { if (!n) return [0, 0]; const p = k / n, d = 1 + z * z / n, c = p + z * z / (2 * n), m = z * Math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)); return [(c - m) / d, (c + m) / d]; }
+function logC(n, k) { let s = 0; for (let i = 1; i <= k; i++) s += Math.log(n - k + i) - Math.log(i); return s; }
+function mcnemar(b, c) { const n = b + c; if (!n) return 1; let s = 0; for (let i = 0; i <= Math.min(b, c); i++) s += Math.exp(logC(n, i) - n * Math.LN2); return Math.min(1, 2 * s); }
+function holm(ps) { const idx = ps.map((p, i) => [p, i]).sort((a, b) => a[0] - b[0]); const adj = []; let run = 0; idx.forEach(([p, i], r) => { run = Math.max(run, Math.min(1, (ps.length - r) * p)); adj[i] = run; }); return adj; }
+const ok = (p, id) => p.r[id].g === "c";
+const median = (xs) => { const s = [...xs].sort((a, b) => a - b); return s.length ? (s[(s.length - 1) >> 1] + s[s.length >> 1]) / 2 : 0; };
+
+// Value score: a wrong answer scores 0; otherwise credit × (wA + wC·cheapness + wS·speed) / (wA+wC+wS), relative to the best on that prompt.
+const state = { step: 1, a: "routed", b: "exa", w: { a: 60, c: 25, s: 15 }, tab: "prompts", filter: "disagree", type: "all", open: null, ans: {}, emptyPreview: false, source: "generate", harness: "mini" };
+function promptScore(p, id, w) {
+  const credit = { c: 1, p: 0.5, w: 0 }[p.r[id].g];
+  if (!credit) return 0;
+  const live = IDS.filter((i) => p.r[i].g !== "w"); // a wrong answer never sets the bar
+  const minC = Math.min(...live.map((i) => p.r[i].cost)), minT = Math.min(...live.map((i) => p.r[i].time));
+  const tot = w.a + w.c + w.s || 1;
+  return credit * (w.a + w.c * (minC / p.r[id].cost) + w.s * (minT / p.r[id].time)) / tot;
+}
+function model(prompts = PROMPTS, w = state.w) {
+  const n = prompts.length, st = {};
+  for (const id of IDS) {
+    const xs = prompts.map((p) => p.r[id]);
+    const k = prompts.filter((p) => ok(p, id)).length;
+    const cost = xs.reduce((s, x) => s + x.cost, 0);
+    st[id] = { k, n, acc: k / n, ci: wilson(k, n), perQ: cost / n, perC: k ? cost / k : Infinity, t50: median(xs.map((x) => x.time)), t90: [...xs.map((x) => x.time)].sort((a, b) => a - b)[Math.floor(0.9 * (n - 1))],
+      searches: xs.reduce((s, x) => s + x.searches, 0) / n, score: 100 * prompts.reduce((s, p) => s + promptScore(p, id, w), 0) / n };
+  }
+  const byAcc = [...IDS].sort((a, b) => st[b].acc - st[a].acc || st[a].perC - st[b].perC);
+  const leader = byAcc[0];
+  const raw = byAcc.slice(1).map((id) => { let b = 0, c = 0; for (const p of prompts) { if (ok(p, leader) && !ok(p, id)) b++; if (!ok(p, leader) && ok(p, id)) c++; } return mcnemar(b, c); });
+  const adj = holm(raw);
+  const accTied = new Set([leader, ...byAcc.slice(1).filter((_, i) => adj[i] >= 0.05)]);
+  const byScore = [...IDS].sort((a, b) => st[b].score - st[a].score);
+  const dom = (b, a) => st[b].acc >= st[a].acc && st[b].perQ <= st[a].perQ && st[b].t50 <= st[a].t50 && (st[b].acc > st[a].acc || st[b].perQ < st[a].perQ || st[b].t50 < st[a].t50);
+  const pareto = new Set(IDS.filter((a) => !IDS.some((b) => b !== a && dom(b, a))));
+  const types = TYPES.map((t) => {
+    const ps = prompts.filter((p) => p.type === t.id);
+    const tst = Object.fromEntries(IDS.map((id) => [id, { k: ps.filter((p) => ok(p, id)).length, score: 100 * ps.reduce((s, p) => s + promptScore(p, id, w), 0) / ps.length, cost: ps.reduce((s, p) => s + p.r[id].cost, 0) / ps.length }]));
+    const best = [...IDS].sort((a, b) => tst[b].score - tst[a].score)[0];
+    let kk = 0, ss = 0; for (const p of ps) { if (ok(p, "keen") && !ok(p, "select")) kk++; if (!ok(p, "keen") && ok(p, "select")) ss++; }
+    const pKS = mcnemar(kk, ss);
+    const clear = pKS < 0.05;
+    const kBest = clear ? (ss > kk ? "select" : "keen") : "keen"; // not clear → default to search (cheaper, faster)
+    return { t, n: ps.length, st: tst, best, kBest, clear, pKS };
+  });
+  return { n, st, accTied, byAcc, byScore, pareto, types };
+}
+
+// ============ Helpers ============
+const REPORTS = [
+  { id: "7f3c9a2e", co: "StackAI", domain: "stack-ai.com", cat: "Enterprise AI agent builder", q: 80, p: 5, date: "2026-10-08", listed: true },
+  { id: "9c41", co: "Northwind Research", domain: null, cat: "Market research assistant", q: 100, p: 4, date: "2026-10-06", listed: true },
+  { id: "1b2d", co: "Acme Legal AI", domain: null, cat: "Legal research", q: 50, p: 4, date: "2026-10-08", listed: false },
+];
+const ICON = {
+  share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>',
+  down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>',
+};
+function hl(vals, lowerIsBetter) {
+  const ids = Object.keys(vals), xs = ids.map((i) => vals[i]).filter((x) => isFinite(x));
+  if (xs.length < 2) return {}; const lo = Math.min(...xs), hi = Math.max(...xs); if (lo === hi) return {};
+  const best = lowerIsBetter ? lo : hi, worst = lowerIsBetter ? hi : lo;
+  return Object.fromEntries(ids.map((i) => [i, vals[i] === best ? "best" : vals[i] === worst ? "worst" : ""]));
+}
+const money = (x, d = 3) => isFinite(x) ? "$" + x.toFixed(d) : "—";
+const big$ = (x) => x >= 1e6 ? "$" + (x / 1e6).toFixed(1) + "M" : x >= 1e3 ? "$" + Math.round(x / 1e3) + "k" : "$" + Math.round(x);
+const secs = (x) => x >= 60 ? (x / 60).toFixed(1) + "m" : x.toFixed(1) + "s";
+const pct = (x) => Math.round(x * 100) + "%";
+const disagree = (p) => new Set(IDS.map((id) => p.r[id].g)).size > 1;
+function headline(m, co) {
+  const best = m.byScore[0], top = m.byAcc[0], acc = [...m.accTied];
+  if (!m.accTied.has(best)) return `${P[best].label} is the best value for ${co} at these weights, but ${P[top].label} answers significantly more prompts correctly (${m.st[top].k} vs ${m.st[best].k} of ${m.n}).`;
+  if (acc.length === 1) return `${P[best].label} is the most accurate provider for ${co} and the best value overall.`;
+  return `${P[best].label} gives ${co} the best balance of accuracy, cost and speed. ${acc.length} providers tie on accuracy, so cost and speed decide.`;
+}
+
+// ============ Views ============
+const views = {
+  home() {
+    const listed = state.emptyPreview ? [] : REPORTS.filter((r) => r.listed);
+    return `<section class="hero"><h1>Which search provider makes your AI agents answer best?</h1>
+      <p class="lede">Run your agent's real prompts through every search provider, grade each answer, and compare accuracy, cost and speed on your own workload.</p>
+      <div class="row"><a class="btn" href="#/new">+ New audit</a><a class="btn ghost" href="#/methodology">Methodology</a></div></section>
+      <h2>Public reports</h2><p class="sub">Shown here only when the creator opted in.</p>
+      <div class="list panel">${listed.length ? listed.map((r) => `<a class="it" href="#/r/${r.id}"><span><span class="co">${fav(r.domain, r.co)}${esc(r.co)}</span><span class="cat">${esc(r.cat)}</span></span><span class="m">${r.q} prompts · ${r.p} providers</span><span class="m">${r.date}</span></a>`).join("")
+        : `<p class="empty">No public reports yet. Tick "Show on the public list" when you run an audit.</p>`}</div>
+      <p class="hint" style="margin-top:12px">Prototype: <a href="#/" onclick="state.emptyPreview=!state.emptyPreview">toggle empty state</a></p>`;
+  },
+  report() {
+    const m = model(), tab = state.tab;
+    const tabA = (id, label, count) => `<a href="#/r/7f3c9a2e" class="${tab === id ? "on" : ""}" onclick="state.tab='${id}'">${label}${count != null ? `<span class="count">${count}</span>` : ""}</a>`;
+    return `<div class="rhead"><span class="co">${fav("stack-ai.com", "S")}&nbsp;StackAI</span><span class="pill">Enterprise AI agent builder</span>
+        <span class="meta">${m.n} prompts · ${IDS.length} providers · run 2026-10-08</span>
+        <span class="actions"><button class="btn ghost" onclick="share()">${ICON.share}Share</button><a class="btn ghost" href="#/r/7f3c9a2e/pdf">${ICON.down}Download</a></span></div>
+      <h1>${esc(headline(m, "StackAI"))}</h1>
+      ${summary(m)}
+      <nav class="tabs" aria-label="Report">${tabA("prompts", "Prompts", m.n)}${tabA("h2h", "Head-to-head")}${tabA("failures", "Failure modes")}${tabA("impl", "Implementation guide")}${tabA("judge", "Judge")}</nav>
+      ${({ prompts: tabPrompts, h2h: tabH2H, failures: tabFailures, impl: tabImpl, judge: tabJudge }[tab] || tabPrompts)(m)}`;
+  },
+  pdf() { return `<p class="hint"><a href="#/r/7f3c9a2e">← Report</a></p><h1>Download</h1><p class="sub">The same report rendered to PDF by the worker, with every tab.</p><button class="btn">${ICON.down}StackAI_search_audit.pdf</button>`; },
+  methodology() {
+    return `<div class="method"><h1>Methodology</h1><p class="lede">Built so a CTO can check, and re-run, every number.</p>
+      <h2>Prompts</h2><p>Generated from public information about the company (shown with sources and confirmed by a person), or uploaded from real logs (CSV/TXT, one prompt per line). Jev, a classification model, labels each prompt's type; you can override it.</p>
+      <h2>Same agent, different search</h2><p>One agent runs every prompt once per provider: same model (openrouter/auto, resolved once and pinned), same instructions, a budget of 15 searches and 180 seconds. Each provider exposes exactly one search tool and one page-reading tool, under identical names. Providers for the same prompt run back to back, so freshness is comparable.</p>
+      <h2>Keenable routed</h2><p>One search tool that asks Jev, on every call, whether the request wants a list or table (→ Keenable SELECT) or a single answer (→ Keenable search). Its result on each prompt is the result of the tool Jev chose; the choice and its confidence are shown per prompt.</p>
+      <h2>Grading</h2><p>A judge model checks every answer against four criteria: answers the prompt, facts correct, sources support it, up to date. All four pass = ✓ correct; the first plus all but one = ◐ partly correct; otherwise ✗ wrong. Pages reach the judge as data, never as instructions; planted pages test that. A second judge (Jev) cross-checks, and we publish agreement with human graders.</p>
+      <h2>Scoring</h2><p>Accuracy alone treats a 1-second answer and a 5-minute answer as equal. So each answer gets a <b>value score</b>: a wrong answer scores 0; otherwise accuracy credit (✓ = 1, ◐ = 0.5) × (accuracy weight + cost weight × cheapness + speed weight × speed) ÷ total weight. Cheapness and speed are relative to the cheapest and fastest provider on that prompt. Defaults: accuracy 60, cost 25, speed 15; change them on the report.</p>
+      <h2>Is a difference real?</h2><p>Providers answer the same prompts, so accuracy gaps are tested pair-wise (McNemar test, Holm correction). "Tied" means the gap could be chance. The Pareto view rings providers that no other provider beats on accuracy, cost and speed at once.</p>
+      <h2>What it does not measure</h2><p>Generated prompts approximate a workload. Results hold for this agent and model. Prices change. Every report can be forked, and every prompt shows the command to reproduce it.</p>
+      <h2>This report (StackAI)</h2><p>80 generated prompts, reviewed by hand. Run 2026-10-08. Judge: anthropic/claude-sonnet via OpenRouter, rubric v1; agreed with human graders on 27 of 30 answers. <a href="#/r/7f3c9a2e">Back to the report</a></p></div>`;
+  },
+  modal() {
+    const st = state.step, gen = state.source === "generate";
+    const body = {
+      1: `<label class="f" for="co" style="margin-top:0">Company</label><input id="co" type="text" value="StackAI" />
+          <label class="f" for="dom">Website</label><input id="dom" type="text" value="stack-ai.com" />
+          <p class="hint" style="margin-top:12px">We'll research the company with Keenable to build prompts that match its work.</p>`,
+      2: `<div class="panel" style="padding:12px 14px;background:var(--soft);border:0"><div style="display:flex;align-items:center;gap:6px;font-weight:600">${fav("stack-ai.com", "S")} StackAI <span class="pill">Enterprise AI agent builder</span></div>
+            <p class="hint" style="margin:6px 0 0">Builds AI agents and workflows for enterprises; uses ${pv("exa")} today. <a href="#/new" onclick="toast('Profile editing opens here')">Edit</a></p></div>
+          <div class="seg" style="margin-top:16px"><a href="#/new" class="${gen ? "on" : ""}" onclick="state.source='generate'">Generate prompts</a><a href="#/new" class="${gen ? "" : "on"}" onclick="state.source='upload'">Upload your own</a></div>
+          ${gen ? `<p class="hint" style="margin:10px 0 0">${PROMPTS.length} prompts across ${TYPES.length} types, based on the profile. Edit or remove any.</p>
+            <div class="plist-mini">${PROMPTS.slice(0, 10).map((p) => `<div><span class="pill">${T[p.type].name}</span><span contenteditable="true">${esc(p.text)}</span><a class="x2" href="#/new" aria-label="Remove">×</a></div>`).join("")}<div class="hint">+ ${PROMPTS.length - 10} more · <a href="#/new">Add a prompt</a></div></div>`
+          : `<div class="drop" style="margin-top:12px;max-width:none">Drop a CSV or TXT, one prompt per line, or <a href="#/new">choose a file</a><br><span class="hint">Jev labels each prompt's type.</span></div>`}`,
+      3: `<p class="hint" style="margin:0 0 10px">Providers to compare</p>
+          <div class="provgrid">${PROVIDERS.map((p) => `<label><input type="checkbox" checked /> ${pv(p.id)}</label>`).join("")}</div>
+          <label class="f" for="em">Your email</label><input id="em" type="email" placeholder="you@company.com" />
+          <p class="hint" style="margin-top:8px">The audit takes about 40 minutes for ${PROMPTS.length} prompts. We'll email you the report link.</p>`,
+    }[st];
+    const title = { 1: "New audit", 2: "Prompts", 3: "Providers" }[st];
+    return `<div class="modal-bg" onclick="if(event.target===this)location.hash='#/'"><div class="modal" role="dialog" aria-modal="true" aria-label="${title}">
+      <header><h2>${title}</h2><span class="dots" aria-label="Step ${st} of 3">${[1, 2, 3].map((i) => `<i class="${i <= st ? "on" : ""}"></i>`).join("")}</span><a class="x" href="#/" aria-label="Close">×</a></header>
+      <div class="mb">${body}</div>
+      <footer>${st > 1 ? `<a class="btn ghost" href="#/new" onclick="state.step=${st - 1}">Back</a>` : ""}<span class="grow"></span>
+        ${st < 3 ? `<a class="btn" href="#/new" onclick="state.step=${st + 1}">${st === 1 ? "Research company" : "Continue"}</a>` : `<a class="btn" href="#/run/1b2d" onclick="state.step=1">Start audit</a>`}</footer>
+    </div></div>`;
+  },
+  run() {
+    const prog = { exa: 71, parallel: 66, keen: 74, select: 58, routed: 62 };
+    return `<h1>Auditing Acme Legal AI…</h1><p class="sub">About 40 minutes. The report link is permanent; we'll email you.</p>
+      <div class="panel" style="padding:14px 18px;max-width:720px">${PROVIDERS.map((p) => `<div style="display:grid;grid-template-columns:200px 1fr 60px;gap:12px;align-items:center;padding:7px 0">${pv(p.id)}<div class="scorebar"><i style="width:${prog[p.id]}%;background:${p.color}"></i></div><span class="num hint">${Math.round(prog[p.id] / 2)}/50</span></div>`).join("")}</div>`;
+  },
+};
+
+// ============ Report parts ============
+function summary(m) {
+  const st = m.st, w = state.w;
+  const hS = hl(Object.fromEntries(IDS.map((i) => [i, +st[i].score.toFixed(1)])), false), hA = hl(Object.fromEntries(IDS.map((i) => [i, st[i].k])), false),
+    hC = hl(Object.fromEntries(IDS.map((i) => [i, +st[i].perQ.toFixed(4)])), true), hT = hl(Object.fromEntries(IDS.map((i) => [i, +st[i].t50.toFixed(1)])), true);
+  const maxS = Math.max(...IDS.map((i) => st[i].score));
+  return `<div class="summary">
+    <div class="panel"><p class="ptitle">Ranking</p><p class="hint" style="margin:0">Value score combines accuracy, cost and speed. Drag to set your own weights.</p>
+      <div class="weights">${[["a", "Accuracy"], ["c", "Cost"], ["s", "Speed"]].map(([k, n]) => `<div><label for="w${k}">${n}<span class="wv">${w[k]}</span></label><input id="w${k}" type="range" min="0" max="100" value="${w[k]}" oninput="setW('${k}',this.value)"></div>`).join("")}</div>
+      <div class="tablewrap"><table><thead><tr><th>#</th><th>Provider</th><th>Value score</th><th class="r">Correct</th><th class="r">$ / prompt</th><th class="r">Time p50 / p90</th></tr></thead><tbody>
+      ${m.byScore.map((id, i) => `<tr><td class="num hint">${i + 1}</td><td>${pv(id)}${id === "exa" ? ' <span class="pill">today</span>' : ""}</td>
+        <td><div style="display:flex;align-items:center;gap:8px"><div class="scorebar" style="flex:1"><i style="width:${st[id].score / maxS * 100}%;background:${P[id].color}"></i></div><span class="num ${hS[id] || ""}">${st[id].score.toFixed(0)}</span></div></td>
+        <td class="r num"><span class="${hA[id] || ""}">${st[id].k}/${m.n}</span>${m.accTied.has(id) ? '<div class="hint" style="font-size:11px">tied</div>' : ""}</td><td class="r num"><span class="${hC[id] || ""}">${money(st[id].perQ)}</span></td><td class="r num" style="white-space:nowrap"><span class="${hT[id] || ""}">${secs(st[id].t50)}</span><span class="hint"> / ${secs(st[id].t90)}</span></td></tr>`).join("")}
+      </tbody></table></div>
+      <p class="hint" style="margin:10px 0 0"><span class="best">green</span> best · <span class="worst">grey</span> worst · tied = accuracy gap within chance. <a href="#/methodology">How scoring works</a></p></div>
+    <div class="panel">${pareto(m)}</div></div>`;
+}
+function pareto(m) {
+  const st = m.st, W = 460, H = 300, L = 46, B = 36, Tp = 14, R = 70;
+  const xs = IDS.map((i) => st[i].perQ), ys = IDS.map((i) => st[i].acc);
+  const x1 = Math.max(...xs) * 1.12, y0 = Math.max(0, Math.min(...ys) - 0.08), y1 = Math.min(1, Math.max(...ys) + 0.05);
+  const X = (v) => L + v / x1 * (W - L - R), Y = (v) => H - B - (v - y0) / (y1 - y0) * (H - B - Tp);
+  const tmax = Math.max(...IDS.map((i) => st[i].t50));
+  const front = IDS.filter((i) => m.pareto.has(i)).sort((a, b) => st[a].perQ - st[b].perQ);
+  const ticksX = [0, x1 / 2, x1].map((v) => `<line x1="${X(v)}" x2="${X(v)}" y1="${Tp}" y2="${H - B}" stroke="#eef0f2"/><text x="${X(v)}" y="${H - B + 16}" text-anchor="middle">$${v.toFixed(3)}</text>`).join("");
+  const ticksY = [y0, (y0 + y1) / 2, y1].map((v) => `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#eef0f2"/><text x="${L - 6}" y="${Y(v) + 4}" text-anchor="end">${pct(v)}</text>`).join("");
+  return `<p class="ptitle">Accuracy vs cost</p><p class="hint" style="margin:0 0 6px">Up and left is better. Dot size = median time. Ringed = Pareto front: no other provider beats it on accuracy, cost and speed at once.</p>
+    <svg class="chart" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Accuracy against cost per prompt for each provider">
+      ${ticksX}${ticksY}
+      <text x="${(W - R + L) / 2}" y="${H - 4}" text-anchor="middle">cost per prompt</text>
+      <text x="12" y="${(H - B) / 2}" text-anchor="middle" transform="rotate(-90 12 ${(H - B) / 2})">answered correctly</text>
+      ${front.length > 1 ? `<polyline fill="none" stroke="#9ca3af" stroke-dasharray="4 4" points="${front.map((i) => `${X(st[i].perQ)},${Y(st[i].acc)}`).join(" ")}"/>` : ""}
+      ${IDS.map((i) => { const r = 5 + 9 * st[i].t50 / tmax, cx = X(st[i].perQ), cy = Y(st[i].acc); return `<g>${m.pareto.has(i) ? `<circle cx="${cx}" cy="${cy}" r="${r + 4}" fill="none" stroke="${P[i].hex}" stroke-width="1.5"/>` : ""}<circle cx="${cx}" cy="${cy}" r="${r}" fill="${P[i].hex}" fill-opacity=".9"/><text class="lbl" x="${cx + r + 6}" y="${cy + 4}" fill="${P[i].hex}">${P[i].short}</text></g>`; }).join("")}
+    </svg>`;
+}
+function setW(k, v) { state.w[k] = Number(v); const y = scrollY; render.keep = true; render(); scrollTo(0, y); const el = document.getElementById("w" + k); if (el) el.focus(); }
+
+function tabPrompts(m) {
+  let ps = PROMPTS.filter((p) => state.type === "all" || p.type === state.type);
+  if (state.filter === "disagree") ps = ps.filter(disagree);
+  if (state.filter === "nobody") ps = ps.filter((p) => IDS.every((id) => !ok(p, id)));
+  if (state.filter === "routed") ps = ps.filter((p) => p.r.routed.via === "select");
+  const chip = (k, v, label) => `<a href="#/r/7f3c9a2e" class="chip ${state[k] === v ? "on" : ""}" onclick="state.${k}='${v}';state.open=null">${label}</a>`;
+  return `<div class="filters">${chip("filter", "disagree", `Providers disagree · ${PROMPTS.filter(disagree).length}`)}${chip("filter", "all", `All · ${PROMPTS.length}`)}${chip("filter", "nobody", "Nobody correct")}${chip("filter", "routed", "Routed to SELECT")}
+      <span style="width:10px"></span>${chip("type", "all", "All types")}${TYPES.map((t) => chip("type", t.id, t.name)).join("")}</div>
+    <div class="legend" style="margin-bottom:10px"><span>${gIcon("c")} correct</span><span>${gIcon("p")} partly</span><span>${gIcon("w")} wrong</span><span>Click a prompt to compare providers; click a provider row for its answer and trace.</span></div>
+    <div class="panel plist">
+      <div class="head"><span>#</span><span>Prompt</span><span>Type</span>${PROVIDERS.map((p) => `<span class="c">${hfav(p.id)}</span>`).join("")}<span class="c">Best value</span><span></span></div>
+      ${ps.length ? ps.map((p) => `<details id="p${p.id}" ${state.open === p.id ? "open" : ""} ontoggle="if(this.open)state.open=${p.id}"><summary><span class="num hint idx">${p.id}</span><span class="pt">${esc(p.text)}</span><span><span class="pill">${T[p.type].name}</span></span>
+        <span class="grades" style="display:contents">${IDS.map((id) => `<span class="cc">${gIcon(p.r[id].g, P[id].label)}</span>`).join("")}</span><span class="cc" title="Highest value score on this prompt">${(() => { const b = [...IDS].sort((x, y) => promptScore(p, y, state.w) - promptScore(p, x, state.w))[0]; return promptScore(p, b, state.w) ? hfav(b) : '<span class="hint">—</span>'; })()}</span><span class="car">›</span></summary>
+        <div class="pbody">${promptTable(p)}</div></details>`).join("") : `<p class="empty">No prompts match these filters.</p>`}
+    </div>`;
+}
+function promptTable(p) {
+  const r = p.r, hT = hl(Object.fromEntries(IDS.map((i) => [i, +r[i].time.toFixed(1)])), true), hC = hl(Object.fromEntries(IDS.map((i) => [i, +r[i].cost.toFixed(4)])), true),
+    hN = hl(Object.fromEntries(IDS.map((i) => [i, r[i].searches])), true), hV = hl(Object.fromEntries(IDS.map((i) => [i, +promptScore(p, i, state.w).toFixed(3)])), false);
+  const count = {}; IDS.forEach((i) => r[i].src.forEach((d) => (count[d] = (count[d] || 0) + 1)));
+  return `<div class="tablewrap"><table class="ptable"><thead><tr><th>Provider</th><th class="c">Result</th><th title="${RUBRIC.join(" · ")}">Judge checks</th><th>Failure mode</th><th class="r">Score</th><th class="r">Time</th><th class="r">Cost</th><th class="r">Searches</th><th>Sources</th></tr></thead><tbody>
+    ${IDS.map((id) => { const x = r[id], open = state.ans[p.id + id]; return `<tr class="sel" tabindex="0" role="button" aria-expanded="${open ? "true" : "false"}" aria-label="${P[id].label}: show answer and trace" onclick="toggleAns(${p.id},'${id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAns(${p.id},'${id}')}"><td>${pv(id)}${id === "routed" ? `<div class="hint" style="font-size:12px">Jev → ${P[x.via].short} (${Math.round(x.pJ * 100)}%)</div>` : ""}</td>
+      <td class="c">${gIcon(x.g)}</td><td><span class="chk">${x.chk.map((v, k) => `<i class="${v ? "y" : "n"}" title="${RUBRIC[k]}: ${v ? "pass" : "fail"}">${v ? "✓" : "✗"}</i>`).join("")}</span></td>
+      <td class="fm">${x.fail ? FAILURES[x.fail].name : '<span class="hint">—</span>'}</td>
+      <td class="r num"><span class="${hV[id] || ""}">${Math.round(promptScore(p, id, state.w) * 100)}</span></td><td class="r num"><span class="${hT[id] || ""}">${secs(x.time)}</span></td><td class="r num"><span class="${hC[id] || ""}">${money(x.cost)}</span></td><td class="r num"><span class="${hN[id] || ""}">${x.searches}</span></td>
+      <td><span class="srcs">${x.src.map((d) => `<span title="${d}${count[d] > 1 ? " · also cited by others" : " · only this provider"}" style="${count[d] > 1 ? "" : "box-shadow:0 0 0 1.5px " + P[id].hex + ";border-radius:3px"}">${fav(d, d)}</span>`).join("")}</span></td></tr>
+      ${open ? `<tr class="ans"><td colspan="9">${answerPanel(p, id)}</td></tr>` : ""}`; }).join("")}
+    </tbody></table></div>
+    <p class="hint" style="margin:8px 0 0">Judge checks: ${RUBRIC.join(" · ")}. Score uses your weights. Sources ringed in a provider's colour were cited only by that provider. <button class="btn ghost" style="height:28px;font-size:12px;margin-left:8px" onclick="copyLink(${p.id})">Copy link</button></p>`;
+}
+function answerText(p, id) {
+  if (p.id === TESLA) return { exa: "Tesla has had no titled CTO since 2019; engineering is led by its SVP of Vehicle Engineering.", parallel: "As of October 2026 Tesla lists no CTO; the most senior engineering leader is its SVP of Engineering.", keen: "Tesla has had no titled CTO since JB Straubel left in 2019.", select: "Returned a table of past CTOs; the 2019 row was presented as the current CTO.", routed: "Tesla has had no titled CTO since 2019." }[id];
+  return { c: "Placeholder: the agent's full answer appears here, with inline citations.", p: "Placeholder: partly right; the failed judge check is shown in the row above.", w: "Placeholder: the incorrect answer appears here, with the sources it relied on." }[p.r[id].g];
+}
+function answerPanel(p, id) {
+  const x = p.r[id];
+  const cmd = `searchaudit rerun --report 7f3c9a2e --prompt ${p.id} --provider ${{ keen: "keenable-search", select: "keenable-select", routed: "keenable-routed" }[id] || id}`;
+  const usesSelect = id === "select" || x.via === "select";
+  return `<div class="two" style="grid-template-columns:1.2fr 1fr"><div><h3 style="margin-top:0">Answer</h3><p class="anstext">${esc(answerText(p, id))}</p>
+      <h3>Judge</h3><p class="anstext">${x.chk.every(Boolean) ? "Passes all four checks." : `Fails: ${RUBRIC.filter((_, k) => !x.chk[k]).join(", ")}.`} ${x.fail ? FAILURES[x.fail].def : ""}</p>
+      <h3>Sources</h3><p class="anstext">${x.src.map((d) => `${fav(d, d)}<a href="#">${d}</a>`).join(" &nbsp; ")}</p></div>
+    <div><h3 style="margin-top:0">Tool trace</h3><pre>${id === "routed" ? `<span class="c"># Jev: ${x.via === "select" ? "list/table" : "single answer"} → ${P[x.via].label} (p=${x.pJ.toFixed(2)})</span>\n` : ""}${usesSelect ? `<span class="k">SELECT</span> SEM_EXTRACT(content, <span class="s">'name'</span>), ANY_VALUE(url)\n<span class="k">FROM</span> WEB_SEARCH(<span class="s">6 queries</span>)\n<span class="k">WHERE</span> SEM_MATCH(content, <span class="s">'${esc(p.text.slice(0, 40))}…'</span>)` : `1 search(<span class="s">"${esc(p.text.slice(0, 34))}…"</span>)  1.2s  8 results\n2 fetch(${x.src[0]})  0.8s${x.searches > 2 ? `\n<span class="c">… ${x.searches - 2} more searches</span>` : ""}`}</pre>
+      <h3>Reproduce</h3><pre>${cmd}</pre></div></div>`;
+}
+function toggleAns(pidv, id) { state.ans[pidv + id] = !state.ans[pidv + id]; state.open = pidv; render.keep = true; const y = scrollY; render(); scrollTo(0, y); const row = document.querySelector(`#p${pidv} tr[aria-label^="${P[id].label}:"]`); if (row) row.focus(); }
+
+function tabH2H(m) {
+  const a = state.a, b = state.b === state.a ? IDS.find((x) => x !== a) : state.b;
+  const both = PROMPTS.filter((p) => ok(p, a) && ok(p, b)), onlyA = PROMPTS.filter((p) => ok(p, a) && !ok(p, b)), onlyB = PROMPTS.filter((p) => !ok(p, a) && ok(p, b)), none = PROMPTS.filter((p) => !ok(p, a) && !ok(p, b));
+  const pval = mcnemar(onlyA.length, onlyB.length);
+  const sel = (k, v) => `<select class="inl" aria-label="Provider ${k.toUpperCase()}" onchange="state.${k}=this.value;render.keep=true;render()">${IDS.map((id) => `<option value="${id}" ${id === v ? "selected" : ""}>${P[id].label}</option>`).join("")}</select>`;
+  const cheaper = PROMPTS.filter((p) => p.r[a].cost < p.r[b].cost).length, faster = PROMPTS.filter((p) => p.r[a].time < p.r[b].time).length;
+  const row = (p) => `<tr style="cursor:pointer" onclick="state.tab='prompts';state.filter='all';state.type='all';state.open=${p.id};state.ans={['${p.id}${a}']:true,['${p.id}${b}']:true};render()"><td>${esc(p.text)}</td><td><span class="pill">${T[p.type].name}</span></td><td class="c">${gIcon(p.r[a].g)}</td><td class="c">${gIcon(p.r[b].g)}</td><td class="fm">${p.r[a].fail ? FAILURES[p.r[a].fail].name : (p.r[b].fail ? FAILURES[p.r[b].fail].name : "")}</td><td class="r num">${secs(p.r[a].time)} · ${secs(p.r[b].time)}</td></tr>`;
+  return `<p class="sub" style="margin-top:18px">Compare any two providers on the same ${m.n} prompts.</p>
+    <div class="row" style="margin:0 0 14px">${sel("a", a)}<span class="hint">vs</span>${sel("b", b)}</div>
+    <div class="panel h2h"><div><div class="k">Both correct</div><div class="v">${both.length}</div></div><div><div class="k">Only ${P[a].label}</div><div class="v" style="color:${P[a].color}">${onlyA.length}</div></div><div><div class="k">Only ${P[b].label}</div><div class="v" style="color:${P[b].color}">${onlyB.length}</div></div><div><div class="k">Neither</div><div class="v">${none.length}</div></div></div>
+    <p class="sub" style="margin-top:10px">${pval < 0.05 ? `<b>${onlyA.length > onlyB.length ? P[a].label : P[b].label} is more accurate</b> (paired test, p = ${pval.toFixed(3)}).` : `No clear accuracy difference (paired test, p = ${pval.toFixed(2)}).`} ${P[a].label} was cheaper on ${cheaper} of ${m.n} prompts and faster on ${faster}. Median: ${money(m.st[a].perQ)} vs ${money(m.st[b].perQ)} per prompt, ${secs(m.st[a].t50)} vs ${secs(m.st[b].t50)}.</p>
+    ${[["Only " + P[a].label + " correct", onlyA], ["Only " + P[b].label + " correct", onlyB]].map(([t, list]) => `<h2>${t} <span class="hint num">${list.length}</span></h2>${list.length ? `<div class="panel tablewrap"><table><thead><tr><th>Prompt</th><th>Type</th><th class="c">${hfav(a)}</th><th class="c">${hfav(b)}</th><th>Failure</th><th class="r">Time</th></tr></thead><tbody>${list.map(row).join("")}</tbody></table></div>` : `<p class="hint">None.</p>`}`).join("")}`;
+}
+function tabFailures(m) {
+  const counts = Object.fromEntries(Object.keys(FAILURES).map((f) => [f, Object.fromEntries(IDS.map((id) => [id, PROMPTS.filter((p) => p.r[id].fail === f).length]))]));
+  return `<p class="sub" style="margin-top:18px">How each provider's answers went wrong across all ${m.n} prompts (the judge's main reason per answer). Click a number to open an example.</p>
+    <div class="panel tablewrap"><table><thead><tr><th>Failure mode</th>${PROVIDERS.map((p) => `<th class="r">${pv(p.id, true)}</th>`).join("")}</tr></thead><tbody>
+    ${Object.entries(FAILURES).map(([f, d]) => { const h = hl(counts[f], true); return `<tr><td><span style="font-weight:500">${d.name}</span><div class="hint">${d.def}</div></td>${IDS.map((id) => { const ex = PROMPTS.find((p) => p.r[id].fail === f); return `<td class="r num">${counts[f][id] ? `<a href="#/r/7f3c9a2e" onclick="state.tab='prompts';state.filter='all';state.type='all';state.open=${ex.id};state.ans={['${ex.id}${id}']:true}"><span class="${h[id] || ""}">${counts[f][id]}</span></a>` : `<span class="${h[id] || ""}">0</span>`}</td>`; }).join("")}</tr>`; }).join("")}
+    <tr><td><b>All failures</b></td>${IDS.map((id) => `<td class="r num"><b>${PROMPTS.filter((p) => p.r[id].fail).length}</b></td>`).join("")}</tr></tbody></table></div>
+    <h2>Failures by prompt type</h2><p class="sub">Prompts each provider did not get fully right, per type. Lower is better.</p>
+    <div class="panel tablewrap"><table><thead><tr><th>Type</th><th class="r">Prompts</th>${PROVIDERS.map((p) => `<th class="r">${pv(p.id, true)}</th>`).join("")}</tr></thead><tbody>
+    ${m.types.map((x) => { const v = Object.fromEntries(IDS.map((id) => [id, x.n - x.st[id].k])); const h = hl(v, true); return `<tr><td>${x.t.name}</td><td class="r num">${x.n}</td>${IDS.map((id) => `<td class="r num"><span class="${h[id] || ""}">${v[id]}</span></td>`).join("")}</tr>`; }).join("")}</tbody></table></div>`;
+}
+function tabImpl(m) {
+  const st = m.st;
+  const routes = m.types.map((x) => ({ x, to: x.kBest, alt: !["keen", "select", "routed"].includes(x.best) && x.st[x.best].score - x.st[x.kBest].score > 5 ? x.best : null }));
+  const toSel = routes.filter((r) => r.to === "select").map((r) => r.x.t.name.toLowerCase());
+  const mixCost = m.types.reduce((s, x) => s + x.n * x.st[x.kBest].cost, 0) / m.n;
+  const vols = [1e5, 1e6, 1e7];
+  const rows = [...IDS.map((id) => ({ id, label: pv(id), c: st[id].perQ })), { id: "plan", label: `<span class="pv"><span class="sw" style="background:var(--routed)"></span>Recommended router</span>`, c: mixCost }];
+  const h = hl(Object.fromEntries(rows.map((r) => [r.id, +r.c.toFixed(4)])), true);
+  return `<p class="sub" style="margin-top:18px">Generated from this audit's results; it changes when the results change.</p>
+    <div class="two"><div class="panel" style="padding:16px 18px"><p class="ptitle">Recommended setup for StackAI</p>
+      <p class="hint" style="margin:0 0 6px">One search tool for StackAI's agents. Jev classifies each call. A type goes to SELECT only when SELECT was clearly better than search on it (paired test); otherwise it defaults to search, which is cheaper and faster.</p>
+      ${routes.map((r) => `<div class="route"><span>${r.x.t.name} <span class="hint num">· ${r.x.n}</span></span><span class="hint">→</span><span>${pv(r.to)} ${r.x.clear ? '<span class="pill" style="background:var(--best-bg);color:var(--best-fg)">clear</span>' : `<span class="pill" title="Search vs SELECT difference on this type could be chance (p = ${r.x.pKS.toFixed(2)}). Defaulting to search.">lean · re-test</span>`}</span></div>`).join("")}
+      ${routes.filter((r) => r.alt).map((r) => `<div class="note"><b>${r.x.t.name}:</b> ${P[r.alt].label} scored ${(r.x.st[r.alt].score - r.x.st[r.to].score).toFixed(0)} points higher than Keenable on this type. If these prompts matter most, route them to ${P[r.alt].label}.</div>`).join("")}
+    </div>
+    <div class="panel" style="padding:16px 18px"><p class="ptitle">Router config</p>
+<pre><span class="k">from</span> searchaudit.router <span class="k">import</span> JevRouter
+
+router = JevRouter(
+    classify=<span class="s">"typesafe/jev-1.13"</span>,   <span class="c"># via OpenRouter</span>
+    routes={
+${routes.map((r) => `        <span class="s">"${r.x.t.id}"</span>: <span class="s">"${r.alt || (r.to === "select" ? "keenable-select" : "keenable-search")}"</span>,`).join("\n")}
+    },
+    default=<span class="s">"keenable-search"</span>,
+    fallback=<span class="s">"exa"</span>,             <span class="c"># on provider error</span>
+)
+results = router.search(prompt)</pre>
+      <p class="hint">${toSel.length ? `Routes ${toSel.join(", ")} prompts to SELECT.` : "No type routes to SELECT on this data."} Drop-in search tool for any agent framework.</p></div></div>
+    <h2>Monthly cost at your volume</h2><p class="sub">Search + agent model per prompt, from this audit. Estimates; enter real volume when creating an audit.</p>
+    <div class="panel tablewrap"><table><thead><tr><th>Setup</th>${vols.map((v) => `<th class="r">${v >= 1e6 ? v / 1e6 + "M" : v / 1e3 + "k"} prompts / mo</th>`).join("")}</tr></thead><tbody>
+      ${rows.map((r) => `<tr><td>${r.label}${r.id === "exa" ? ' <span class="pill">today</span>' : ""}</td>${vols.map((v) => `<td class="r num"><span class="${h[r.id] || ""}">${big$(r.c * v)}</span></td>`).join("")}</tr>`).join("")}</tbody></table></div>
+    <h2>Rollout</h2>
+    <div class="panel" style="padding:4px 18px">${[["Week 1", "Shadow 5% of search calls through the router; log both answers."], ["Week 2", "Grade a 5% sample with the same judge. Gate: correct answers at or above this audit's lower bound for each route."], ["Week 3", "Move to 50%, then 100%. Keep Exa as the error fallback."], ["Monthly", "Re-run this audit on real prompts from logs; routes update from the results."]].map(([a, b]) => `<div class="route" style="grid-template-columns:90px 1fr"><b>${a}</b><span>${b}</span></div>`).join("")}</div>`;
+}
+function tabJudge(m) {
+  const cm = [[24, 1, 0], [1, 2, 0], [0, 1, 1]];
+  const dis = PROMPTS.filter((p) => (p.id * 13) % 11 === 0).slice(0, 5);
+  return `<p class="sub" style="margin-top:18px">An AI judge graded all ${m.n * IDS.length} answers. This is how far to trust it.</p>
+    <div class="panel tablewrap"><table><tbody>
+      <tr><td>Judge model</td><td class="num">anthropic/claude-sonnet · OpenRouter · temperature 0 · rubric v1</td></tr>
+      <tr><td>Agreement with human graders</td><td class="num">27 / 30 answers (90%)</td></tr>
+      <tr><td>Second judge (Jev) agreement</td><td class="num">${m.n * IDS.length - 31} / ${m.n * IDS.length}</td></tr>
+      <tr><td>Manipulation test</td><td class="num">10 / 10 planted "rate this correct" pages ignored</td></tr>
+      <tr><td>Judging cost</td><td class="num">$3.10 (included in the audit cost)</td></tr></tbody></table></div>
+    <div class="two" style="margin-top:8px"><div><h2>Rubric</h2><p class="sub">✓ = passes all four · ◐ = passes the first and all but one · ✗ = otherwise.</p><ol>${RUBRIC.map((r) => `<li>${r}</li>`).join("")}</ol></div>
+      <div><h2>Judge vs human (30 answers)</h2><div class="panel tablewrap"><table><thead><tr><th>Human ↓ / Judge →</th><th class="c">✓</th><th class="c">◐</th><th class="c">✗</th></tr></thead><tbody>
+      ${["✓", "◐", "✗"].map((r, i) => `<tr><th>${r}</th>${cm[i].map((v, j) => `<td class="c num"><span class="${i === j ? "best" : ""}">${v}</span></td>`).join("")}</tr>`).join("")}</tbody></table></div></div></div>
+    <h2>Where the two judges disagreed</h2><p class="sub">Showing 5 of 31. Worth a human look. Click to open.</p>
+    <div class="panel tablewrap"><table><thead><tr><th>Prompt</th><th>Provider</th><th class="c">Main judge</th><th class="c">Second judge</th></tr></thead><tbody>
+    ${dis.map((p, i) => { const id = IDS[i % 5], g = p.r[id].g, alt = g === "c" ? "p" : "c"; return `<tr style="cursor:pointer" onclick="state.tab='prompts';state.filter='all';state.type='all';state.open=${p.id};state.ans={['${p.id}${id}']:true};render()"><td>${esc(p.text)}</td><td>${pv(id)}</td><td class="c">${gIcon(g)}</td><td class="c">${gIcon(alt)}</td></tr>`; }).join("")}</tbody></table></div>`;
+}
+
+// ============ Utilities ============
+function steps(on) { return `<div class="steps">${["Company", "Profile", "Prompts", "Providers & agent", "Review & run"].map((n, i) => `<span class="${i < on ? "done" : i === on ? "on" : ""}">${i + 1}. ${n}</span>`).join("")}</div>`; }
+function toast(t) { const d = document.createElement("div"); d.className = "toast"; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 1700); }
+function copyText(text, msg) { const fb = () => { const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); toast(msg); } catch (e) {} ta.remove(); }; if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(() => toast(msg), fb); else fb(); }
+function share() { const m = model(); copyText([`StackAI · Search Audit: ${headline(m, "StackAI")}`, ...m.byScore.map((id, i) => `${i + 1}. ${P[id].label}: score ${m.st[id].score.toFixed(0)} · ${m.st[id].k}/${m.n} correct · ${money(m.st[id].perQ)}/prompt · ${secs(m.st[id].t50)}`), location.href.split("#")[0] + "#/r/7f3c9a2e"].join("\n"), "Link and summary copied"); }
+function copyLink(id) { copyText(location.href.split("#")[0] + "#/r/7f3c9a2e?p=" + id, "Link copied"); }
+
+// ============ Router ============
+function render() {
+  const h = location.hash.replace(/^#/, "") || "/", parts = h.split("?")[0].split("/").filter(Boolean);
+  const qp = new URLSearchParams(h.split("?")[1] || "");
+  let html, nav = "";
+  if (!parts.length) { nav = "home"; html = views.home(); }
+  else if (parts[0] === "new") { nav = "home"; html = views.home() + views.modal(); }
+  else if (parts[0] === "run") html = views.run();
+  else if (parts[0] === "r" && parts[2] === "pdf") html = views.pdf();
+  else if (parts[0] === "r") { if (qp.get("tab")) state.tab = qp.get("tab"); if (qp.get("p")) { state.tab = "prompts"; state.filter = "all"; state.type = "all"; state.open = Number(qp.get("p")); } if (qp.get("ans")) state.ans[qp.get("p") + qp.get("ans")] = true; html = views.report(); }
+  else if (parts[0] === "methodology") { nav = "methodology"; html = views.methodology(); }
+  else html = `<h1>Not found</h1><p><a href="#/">Back to reports</a></p>`;
+  document.getElementById("app").innerHTML = html;
+  document.querySelectorAll("[data-nav]").forEach((a) => a.toggleAttribute("aria-current", a.dataset.nav === nav));
+  const target = state.open && document.getElementById("p" + state.open);
+  if (parts[0] === "new") { const f = document.querySelector(".modal input"); if (f && !render.keep) f.focus(); }
+  if (target && !render.keep) target.scrollIntoView({ block: "start" });
+  else if (!render.keep) window.scrollTo(0, 0);
+  render.keep = false;
+}
+window.addEventListener("hashchange", render);
+document.addEventListener("keydown", (e) => {
+  if (!location.hash.startsWith("#/new")) return;
+  if (e.key === "Escape") { state.step = 1; location.hash = "#/"; return; }
+  if (e.key === "Tab") { // keep focus inside the modal
+    const f = [...document.querySelectorAll(".modal a, .modal button, .modal input, .modal [contenteditable]")];
+    if (!f.length) return; const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+});
+document.addEventListener("click", (e) => { const a = e.target.closest("a[onclick]"); if (a) { e.preventDefault(); render.keep = !/state\.open=\d/.test(a.getAttribute("onclick")); setTimeout(render, 0); } });
+render();
+</script>
+</body>
+</html>
