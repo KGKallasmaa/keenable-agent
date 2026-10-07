@@ -1,0 +1,33 @@
+{# Small building blocks shared by every report template. #}
+{% macro fav(domain, label) -%}
+{%- set ch = (label or "?")[0] | upper -%}
+{%- if domain -%}<img class="fav" alt="" loading="lazy" data-mono="{{ ch }}" src="https://icons.duckduckgo.com/ip3/{{ domain }}.ico" onerror="favFallback(this)">
+{%- else -%}<span class="mono-badge" aria-hidden="true">{{ ch }}</span>{%- endif -%}
+{%- endmacro %}
+
+{% macro pv(p, short=False) -%}
+<span class="pv"><span class="sw" style="background:{{ p.hex }}"></span>{{ fav(p.domain, p.label) }}{{ p.short if short else p.label }}</span>
+{%- endmacro %}
+
+{% macro hfav(p) -%}
+<span class="hfav" title="{{ p.label }}">{{ fav(p.domain, p.label) }}<span class="bar2" style="background:{{ p.hex }}"></span><span style="color:{{ p.hex }}">{{ p.short }}</span></span>
+{%- endmacro %}
+
+{% macro gicon(g, who="") -%}
+{%- set name = {"c": "correct", "p": "partly correct", "w": "wrong"}[g] -%}
+<span class="g {{ g }}" role="img" title="{{ who ~ ': ' if who }}{{ name }}" aria-label="{{ who ~ ': ' if who }}{{ name }}">{{ {"c": "✓", "p": "◐", "w": "✗"}[g] }}</span>
+{%- endmacro %}
+
+{% macro checks(cell, rubric) -%}
+<span class="chk">{% for ok in cell.checks %}<i class="{{ 'y' if ok else 'n' }}" title="{{ rubric[loop.index0] }}: {{ 'pass' if ok else 'fail' }}">{{ "✓" if ok else "✗" }}</i>{% endfor %}</span>
+{%- endmacro %}
+
+{% macro hl(cls, text) -%}
+{%- if cls %}<span class="{{ cls }}">{{ text }}</span>{% else %}{{ text }}{% endif -%}
+{%- endmacro %}
+
+{% macro icon(name) -%}
+{%- if name == "share" -%}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>
+{%- elif name == "down" -%}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+{%- endif -%}
+{%- endmacro %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Methodology · Search Audit{% endblock %}
+{% block main %}
+<div class="method">
+<h1>Methodology</h1>
+<p class="lede">Built so a CTO can check every number. Each report links its raw results.json: every prompt, run, tool call and grade.</p>
+
+<h2 id="prompts">Prompts</h2>
+<p>Generated from public information about the company and reviewed by a person, or taken from real logs. Each prompt has a type (lookup, freshness, multi-hop, list-building, regulation) and a reference answer with grading notes that the judge uses.</p>
+
+<h2 id="agent">Same agent, different search</h2>
+<p>One agent runs every prompt once per provider: the same model (resolved once and pinned for the whole audit), the same instructions and the same budget of tool calls and seconds. Each provider exposes one search tool and one page-reading tool. A run that errors or hits its budget is kept and counts as not correct; runs are never dropped.</p>
+
+<h2 id="routed">Keenable routed</h2>
+<p>One search tool that asks Jev, a classification model, whether a request wants a list or table (Keenable SELECT) or a single answer (Keenable search). Its result on each prompt is the result of the tool Jev chose, so it is derived from those two rather than an independent run. The choice and its confidence are shown per prompt.</p>
+
+<h2 id="grading">Grading</h2>
+<p>A judge model checks every answer against the reference on four criteria: answers the prompt, facts correct, sources support it, up to date. All four pass = ✓ correct; the first plus all but one = ◐ partly correct; otherwise ✗ wrong. The report lists any grade that does not match its own checks. Agreement with human graders is published once answers have been hand-graded; until then the report says "not measured yet".</p>
+
+<h2 id="scoring">Scoring</h2>
+<p>Accuracy alone treats a 1-second answer and a 3-minute answer as equal. So each answer gets a <b>value score</b>: a wrong answer scores 0; otherwise accuracy credit (✓ = 1, ◐ = 0.5) × (accuracy weight + cost weight × cheapness + speed weight × speed) ÷ total weight. Cheapness and speed are relative to the cheapest and fastest answer on that prompt that was not wrong, so a fast wrong answer never lowers the score of a correct one. Defaults: accuracy 60, cost 25, speed 15; change them with the sliders on a report.</p>
+
+<h2 id="tests">Is a difference real?</h2>
+<p>Providers answer the same prompts, so accuracy gaps are tested pair-wise: an exact McNemar test on the prompts only one of the two got right (◐ counts as not correct), with a Holm correction when the leader is compared with several providers. "Tied" means the gap to the most accurate provider could be chance. Head-to-head comparisons also show a paired bootstrap interval for the difference. The Pareto chart rings providers that no other provider beats on both accuracy and cost.</p>
+<p>The headline is computed from these tests, never written by hand. With fewer than 30 prompts, or when one provider failed more than half its runs, it says there is not enough evidence yet.</p>
+
+<h2 id="routes">Implementation guide</h2>
+<p>For each prompt type the same paired test compares Keenable search with Keenable SELECT. A type routes to the winner only when the difference is clear (p &lt; 0.05); otherwise it is marked "lean · re-test" and defaults to search, which is cheaper and faster. Types with fewer than 10 prompts get no decision. When another provider scores clearly higher than the Keenable route on a type, the guide says so.</p>
+
+<h2 id="cost">Cost</h2>
+<p>Cost per prompt is search spend plus agent model tokens for that run. Where a provider's response does not report its price, a list price is used and the number is marked ~; any estimated input makes a derived number (such as monthly cost at volume) estimated too.</p>
+
+<h2 id="limits">What it does not measure</h2>
+<p>Generated prompts approximate a workload. Results hold for this agent, this model and this date. Prices change.</p>
+</div>
+{% endblock %}

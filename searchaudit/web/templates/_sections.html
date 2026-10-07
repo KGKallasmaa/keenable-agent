@@ -1,0 +1,203 @@
+{# Report sections shared by the interactive report (report.html) and the print view (print.html). #}
+{% from "macros.html" import fav, pv, hfav, gicon, hl %}
+
+{% macro today(p) -%}{% if p.uses_today %} <span class="pill" title="{{ p.label }} is what this company uses today">uses today</span>{% endif %}{%- endmacro %}
+
+{% macro ranking(vm, interactive=True) -%}
+{% set maxs = vm.summary[vm.by_score[0]].score or 1 %}
+<p class="ptitle">Ranking</p>
+<p class="hint" style="margin:0">Value score combines accuracy, cost and speed per prompt (wrong = 0).{% if interactive %} Drag to set your own weights.{% else %} Weights: accuracy {{ vm.weights.a }}, cost {{ vm.weights.c }}, speed {{ vm.weights.s }}.{% endif %}</p>
+{% if interactive %}
+<div class="weights">
+{% for k, name in [("a", "Accuracy"), ("c", "Cost"), ("s", "Speed")] %}
+  <div><label for="w{{ k }}">{{ name }}<span class="wv" id="wv{{ k }}">{{ vm.weights[k] }}</span></label><input id="w{{ k }}" data-w="{{ k }}" type="range" min="0" max="100" value="{{ vm.weights[k] }}"></div>
+{% endfor %}
+</div>
+{% endif %}
+<div class="tablewrap"><table id="ranking"><thead><tr><th>#</th><th>Provider</th><th>Value score</th><th class="r">Correct</th><th class="r">$ / prompt</th><th class="r">Time p50 / p90</th></tr></thead><tbody>
+{% for id in vm.by_score %}{% set s = vm.summary[id] %}{% set p = vm.provider[id] %}
+<tr data-id="{{ id }}">
+  <td class="num hint rank">{{ loop.index }}</td>
+  <td>{{ pv(p) }}{{ today(p) }}</td>
+  <td><div style="display:flex;align-items:center;gap:8px"><div class="scorebar" style="flex:1"><i style="width:{{ (s.score / maxs * 100) | round(1) }}%;background:{{ p.hex }}"></i></div><span class="num sc">{{ hl(vm.highlight.score[id], s.score | round | int) }}</span></div></td>
+  <td class="r num" title="95% interval for share correct: {{ s.ci[0] | pct }}–{{ s.ci[1] | pct }}">{{ hl(vm.highlight.k[id], s.k ~ "/" ~ s.n) }}{% if id in vm.tied %}<div class="hint small">tied</div>{% endif %}</td>
+  <td class="r num">{{ hl(vm.highlight.cost[id], s.per_prompt | money(3, s.est)) }}</td>
+  <td class="r num" style="white-space:nowrap">{{ hl(vm.highlight.t50[id], s.t50 | secs) }}<span class="hint"> / {{ s.t90 | secs }}</span></td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+<p class="hint" style="margin:10px 0 0"><span class="best">green</span> best · <span class="worst">grey</span> worst · tied = accuracy gap within chance (paired McNemar test, Holm-corrected, vs {{ vm.labels[vm.leader] }}). ~ = priced from a list price. <a href="/methodology#scoring">How scoring works</a></p>
+{%- endmacro %}
+
+{% macro chart(vm) -%}
+{% set c = vm.chart %}
+<p class="ptitle">Accuracy vs cost</p>
+<p class="hint" style="margin:0 0 6px">Up and left is better. Dot size = median time. Ringed = Pareto front: no other provider is both at least as accurate and at least as cheap.</p>
+<svg class="chart" viewBox="0 0 {{ c.w }} {{ c.h }}" width="100%" role="img" aria-label="Share of prompts answered correctly against cost per prompt, one dot per provider">
+{% for t in c.xticks %}<line class="grid" x1="{{ t.x }}" x2="{{ t.x }}" y1="{{ c.top }}" y2="{{ c.base }}"/><text x="{{ t.x }}" y="{{ c.base + 16 }}" text-anchor="middle">{{ t.label }}</text>{% endfor %}
+{% for t in c.yticks %}<line class="grid" x1="{{ c.left }}" x2="{{ c.right }}" y1="{{ t.y }}" y2="{{ t.y }}"/><text x="{{ c.left - 6 }}" y="{{ t.y + 4 }}" text-anchor="end">{{ t.label }}</text>{% endfor %}
+<text x="{{ (c.right + c.left) / 2 }}" y="{{ c.h - 4 }}" text-anchor="middle">cost per prompt</text>
+<text x="12" y="{{ c.base / 2 }}" text-anchor="middle" transform="rotate(-90 12 {{ c.base / 2 }})">answered correctly</text>
+{% if c.front %}<polyline class="front" fill="none" stroke-dasharray="4 4" points="{{ c.front }}"/>{% endif %}
+{% for d in c.dots %}<g><title>{{ d.label }}</title>{% if d.ring %}<circle cx="{{ d.cx }}" cy="{{ d.cy }}" r="{{ d.r + 4 }}" fill="none" stroke="{{ d.hex }}" stroke-width="1.5"/>{% endif %}<circle cx="{{ d.cx }}" cy="{{ d.cy }}" r="{{ d.r }}" fill="{{ d.hex }}" fill-opacity=".9"/><text class="lbl" x="{{ d.lx }}" y="{{ d.ly }}" style="fill:{{ d.hex }}">{{ d.short }}</text></g>{% endfor %}
+</svg>
+{%- endmacro %}
+
+{% macro facts(vm) -%}
+<div class="facts">
+{% for f in vm.facts %}
+  <div><div class="k">{{ f.key }}</div><div class="v">{{ f.value }}</div><div class="d">{{ f.detail }}</div></div>
+{% endfor %}
+</div>
+{%- endmacro %}
+
+{% macro measured(vm) -%}
+{% set m = vm.meta %}
+<div class="two">
+  <div class="panel pad">
+    <p class="ptitle">Setup</p>
+    <table class="kv"><tbody>
+      <tr><td>Prompts</td><td>{{ m.n }} · run {{ m.date }}</td></tr>
+      <tr><td>Agent model</td><td class="num">{{ m.agent_model }}{% if m.agent_model_note %}<div class="hint">{{ m.agent_model_note }}</div>{% endif %}</td></tr>
+      <tr><td>Judge model</td><td class="num">{{ m.judge_model }}</td></tr>
+      {% if m.budget %}<tr><td>Budget per answer</td><td>{% for k, v in m.budget.items() %}{{ k | replace("_", " ") }} {{ v }}{{ ", " if not loop.last }}{% endfor %}</td></tr>{% endif %}
+      <tr><td>Cost of this audit</td><td class="num">{{ m.total_cost_usd | money(2) }}</td></tr>
+    </tbody></table>
+  </div>
+  <div class="panel pad">
+    <p class="ptitle">Providers</p>
+    <table class="kv"><tbody>
+    {% for p in vm.providers %}
+      <tr><td>{{ pv(p) }}</td><td>{{ p.via or "—" }}{% if p.price_note %}<div class="hint">{{ p.price_note }}</div>{% endif %}</td></tr>
+    {% endfor %}
+    </tbody></table>
+  </div>
+</div>
+{% if m.notes %}
+<h3>Caveats</h3>
+<ul class="method">{% for n in m.notes %}<li>{{ n }}</li>{% endfor %}</ul>
+{% endif %}
+<p class="hint">Full method: <a href="/methodology">Methodology</a>. Raw data: <a href="/r/{{ m.slug }}/results.json">results.json</a>.</p>
+{%- endmacro %}
+
+{% macro failures(vm) -%}
+<p class="sub" style="margin-top:18px">How each provider's answers went wrong across all {{ vm.n }} prompts (the judge's main reason per answer). Click a number to open an example.</p>
+<div class="panel tablewrap"><table><thead><tr><th>Failure mode</th>{% for p in vm.providers %}<th class="r">{{ pv(p, True) }}</th>{% endfor %}</tr></thead><tbody>
+{% for row in vm.failures.matrix %}
+<tr><td><span style="font-weight:500">{{ row.name }}</span><div class="hint">{{ row.definition }}</div></td>
+{% for id in vm.ids %}{% set n = row.count[id] %}
+  <td class="r num">{% if n %}<a href="#p{{ row.example[id] }}" data-open="{{ row.example[id] }}" data-ans="{{ id }}" title="Open an example">{{ hl(row.hl[id], n) }}</a>{% else %}{{ hl(row.hl[id], 0) }}{% endif %}</td>
+{% endfor %}</tr>
+{% endfor %}
+<tr><td><b>All failures</b></td>{% for id in vm.ids %}<td class="r num"><b>{{ vm.failures.totals[id] }}</b></td>{% endfor %}</tr>
+</tbody></table></div>
+<h2>Failures by prompt type</h2>
+<p class="sub">Prompts each provider did not get fully right, per type. Lower is better.</p>
+<div class="panel tablewrap"><table><thead><tr><th>Type</th><th class="r">Prompts</th>{% for p in vm.providers %}<th class="r">{{ pv(p, True) }}</th>{% endfor %}</tr></thead><tbody>
+{% for t in vm.types %}
+<tr><td>{{ t.name }}</td><td class="r num">{{ t.n }}</td>{% for id in vm.ids %}<td class="r num">{{ hl(t.not_right_hl[id], t.not_right[id]) }}</td>{% endfor %}</tr>
+{% endfor %}
+</tbody></table></div>
+{%- endmacro %}
+
+{% macro h2h_pair(vm, pair, rows_by_index) -%}
+{% set a = vm.provider[pair.a] %}{% set b = vm.provider[pair.b] %}
+<div class="panel h2h">
+  <div><div class="k">Both correct</div><div class="v">{{ pair.both }}</div></div>
+  <div><div class="k">Only {{ a.label }}</div><div class="v" style="color:{{ a.hex }}">{{ pair.only_a_idx | length }}</div></div>
+  <div><div class="k">Only {{ b.label }}</div><div class="v" style="color:{{ b.hex }}">{{ pair.only_b_idx | length }}</div></div>
+  <div><div class="k">Neither</div><div class="v">{{ pair.neither }}</div></div>
+</div>
+<p class="sub" style="margin-top:10px">
+  {% if pair.significant %}<b>{{ pair.verdict }}</b>{% else %}{{ pair.verdict }}{% endif %} (paired McNemar test, p {{ pair.p | pvalue }}; difference in share correct {{ "%+d" | format((pair.diff * 100) | round | int) }} points, 95% bootstrap interval {{ "%+d" | format((pair.diff_low * 100) | round | int) }} to {{ "%+d" | format((pair.diff_high * 100) | round | int) }}).
+  {{ a.label }} was cheaper on {{ pair.cheaper }} of {{ vm.n }} prompts and faster on {{ pair.faster }}.
+  Per prompt: {{ vm.summary[pair.a].per_prompt | money(3, vm.summary[pair.a].est) }} vs {{ vm.summary[pair.b].per_prompt | money(3, vm.summary[pair.b].est) }}; median {{ vm.summary[pair.a].t50 | secs }} vs {{ vm.summary[pair.b].t50 | secs }}.
+</p>
+{% for title, idx in [("Only " ~ a.label ~ " correct", pair.only_a_idx), ("Only " ~ b.label ~ " correct", pair.only_b_idx)] %}
+<h2>{{ title }} <span class="hint num">{{ idx | length }}</span></h2>
+{% if idx %}
+<div class="panel tablewrap"><table><thead><tr><th>Prompt</th><th>Type</th><th class="c">{{ hfav(a) }}</th><th class="c">{{ hfav(b) }}</th><th>Failure</th><th class="r">Time</th></tr></thead><tbody>
+{% for i in idx %}{% set r = rows_by_index[i] %}{% set ca = r.cells[pair.a] %}{% set cb = r.cells[pair.b] %}
+<tr class="link" data-open="{{ r.id }}" data-ans="{{ pair.a }},{{ pair.b }}"><td><a href="#p{{ r.id }}" data-open="{{ r.id }}" data-ans="{{ pair.a }},{{ pair.b }}">{{ r.text }}</a></td><td><span class="pill">{{ r.type_name }}</span></td><td class="c">{{ gicon(ca.grade) }}</td><td class="c">{{ gicon(cb.grade) }}</td><td class="fm">{{ ca.failure_name or cb.failure_name }}</td><td class="r num">{{ ca.seconds | secs }} · {{ cb.seconds | secs }}</td></tr>
+{% endfor %}
+</tbody></table></div>
+{% else %}<p class="hint">None.</p>{% endif %}
+{% endfor %}
+{%- endmacro %}
+
+{% macro guide(vm) -%}
+{% set g = vm.guide %}
+<p class="sub" style="margin-top:18px">Generated from this audit's results; it changes when the results change.</p>
+{% if g.available %}
+<div class="two guide-two">
+  <div class="panel pad"><p class="ptitle">Recommended setup for {{ vm.meta.company }}</p>
+    <p class="hint" style="margin:0 0 6px">One search tool for {{ vm.meta.company }}'s agents. Jev classifies each call. A prompt type goes to SELECT only when SELECT was clearly better than search on it (paired test, p &lt; 0.05); otherwise it defaults to search, which is cheaper and faster.</p>
+    {% for r in g.routes %}
+    <div class="route"><span>{{ r.name }} <span class="hint num">· {{ r.n }}</span></span><span class="hint">→</span><span>{{ pv(vm.provider[r.choice]) }}
+      {% if r.status == "clear" %}<span class="pill ok" title="Search {{ r.search_only }} vs SELECT {{ r.select_only }} prompts only one got right; p {{ r.p | pvalue }}">clear</span>
+      {% elif r.status == "lean" %}<span class="pill" title="The search vs SELECT difference on this type could be chance (search {{ r.search_only }}, SELECT {{ r.select_only }}, p {{ r.p | pvalue }}). Defaulting to search.">lean · re-test</span>
+      {% else %}<span class="pill" title="Fewer than 10 prompts of this type: no routing decision.">too few prompts</span>{% endif %}</span></div>
+    {% endfor %}
+    {% for r in g.routes if r.alt %}
+    <div class="note"><b>{{ r.name }}:</b> {{ vm.labels[r.alt.provider] }} scored {{ r.alt.points }} points higher than the Keenable route on this type (default weights). If these prompts matter most, route them to {{ vm.labels[r.alt.provider] }}.</div>
+    {% endfor %}
+  </div>
+  <div class="panel pad"><p class="ptitle">Router config</p>
+<pre>{{ g.config }}</pre>
+    <p class="hint">{% if g.to_select %}Routes {{ g.to_select | join(", ") }} prompts to SELECT.{% else %}No prompt type routes to SELECT on this data.{% endif %} Drop-in search tool for any agent framework.</p>
+  </div>
+</div>
+{% else %}
+<p class="note">Routing needs both Keenable search and Keenable SELECT in the audit, so no router is recommended here.</p>
+{% endif %}
+<h2>Monthly cost at your volume</h2>
+<p class="sub">Search + agent model per prompt, from this audit, times prompts per month. ~ = at least one input priced from a list price.</p>
+<div class="panel tablewrap"><table><thead><tr><th>Setup</th>{% for c in g.volumes[0].cells %}<th class="r">{{ c.volume | volume }} prompts / mo</th>{% endfor %}</tr></thead><tbody>
+{% for r in g.volumes %}
+<tr><td>{% if r.id == "router" %}<span class="pv"><span class="sw" style="background:{{ vm.provider.routed.hex if 'routed' in vm.provider else 'var(--ink)' }}"></span>Recommended router</span>{% else %}{{ pv(vm.provider[r.id]) }}{{ today(vm.provider[r.id]) }}{% endif %}</td>
+{% for c in r.cells %}<td class="r num">{{ hl(r.hl, c.usd | big_money(c.est)) }}</td>{% endfor %}</tr>
+{% endfor %}
+</tbody></table></div>
+<h2>Rollout</h2>
+<div class="panel" style="padding:4px 18px">
+{% set fb = vm.labels[g.fallback] if g.fallback else "the current provider" %}
+{% for when, what in [
+  ("Week 1", "Shadow 5% of search calls through the router; log both answers."),
+  ("Week 2", "Grade a 5% sample with the same judge. Gate: share correct at or above this audit's lower 95% bound for each route."),
+  ("Week 3", "Move to 50%, then 100%. Keep " ~ fb ~ " as the error fallback."),
+  ("Monthly", "Re-run this audit on real prompts from logs; routes update from the results.")] %}
+  <div class="route step"><b>{{ when }}</b><span>{{ what }}</span></div>
+{% endfor %}
+</div>
+{%- endmacro %}
+
+{% macro judge(vm) -%}
+{% set j = vm.judge %}
+<p class="sub" style="margin-top:18px">An AI judge graded all {{ j.answers }} answers against the reference for each prompt. This is how far to trust it.</p>
+<div class="panel tablewrap"><table class="kv"><tbody>
+  <tr><td>Judge model</td><td class="num">{{ j.model }}{% if j.models | length > 1 %} <span class="hint">(mixed: {% for k, v in j.models.items() %}{{ k }} × {{ v }}{{ ", " if not loop.last }}{% endfor %})</span>{% endif %}</td></tr>
+  <tr><td>Agreement with human graders</td><td>{% if j.human_agreement is none %}<span class="hint">Not measured yet. No answers in this audit have been hand-graded.</span>{% else %}<span class="num">{{ j.human_agreement | pct }}</span> of {{ j.human_labels_n }} hand-graded answers{% endif %}</td></tr>
+  <tr><td>Grades that break the rubric rule</td><td class="num">{{ j.inconsistent | length }}{% if not j.inconsistent %} <span class="hint">every grade matches its four checks</span>{% endif %}</td></tr>
+  {% if j.missing %}<tr><td>Missing runs or judgments</td><td class="num">{{ j.missing }} <span class="hint">(counted as wrong)</span></td></tr>{% endif %}
+</tbody></table></div>
+<div class="two" style="margin-top:8px">
+  <div><h2>Rubric</h2><p class="sub">✓ = passes all four · ◐ = passes the first and all but one · ✗ = otherwise.</p><ol class="method">{% for r in vm.rubric %}<li>{{ r }}</li>{% endfor %}</ol></div>
+  <div><h2>Partial credit</h2><p class="sub">◐ counts half in value scores and as not correct in the paired accuracy tests, so a tie is never won on half-right answers.</p></div>
+</div>
+{% if j.inconsistent %}
+<h2>Grades that do not match their checks</h2>
+<p class="sub">The judge's grade differs from what its own four checks imply. Worth a human look.</p>
+<div class="panel tablewrap"><table><thead><tr><th>Prompt</th><th>Provider</th><th class="c">Grade</th><th class="c">Checks imply</th></tr></thead><tbody>
+{% for x in j.inconsistent %}
+<tr class="link" data-open="{{ x.prompt }}" data-ans="{{ x.provider }}"><td><a href="#p{{ x.prompt }}" data-open="{{ x.prompt }}" data-ans="{{ x.provider }}">{{ x.text }}</a></td><td>{{ pv(vm.provider[x.provider]) }}</td><td class="c">{{ gicon(x.grade) }}</td><td class="c">{{ gicon(x.expected) }}</td></tr>
+{% endfor %}
+</tbody></table></div>
+{% endif %}
+<h2>Closest calls</h2>
+<p class="sub">Prompts where providers split most evenly between right and wrong: the judge's decision there moves the ranking most. Worth a human look.</p>
+<div class="panel tablewrap"><table><thead><tr><th>Prompt</th><th>Type</th>{% for p in vm.providers %}<th class="c">{{ hfav(p) }}</th>{% endfor %}</tr></thead><tbody>
+{% for s in j.splits %}
+<tr class="link" data-open="{{ s.id }}"><td><a href="#p{{ s.id }}" data-open="{{ s.id }}">{{ s.text }}</a></td><td><span class="pill">{{ s.type_name }}</span></td>{% for id in vm.ids %}<td class="c">{{ gicon(s.grades[id], vm.labels[id]) }}</td>{% endfor %}</tr>
+{% endfor %}
+</tbody></table></div>
+{%- endmacro %}

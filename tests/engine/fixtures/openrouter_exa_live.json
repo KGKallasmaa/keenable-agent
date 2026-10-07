@@ -1,0 +1,79 @@
+{
+  "object": "chat.completion",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "provider": "OpenAI",
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "Asana acquired StackAI (announced May 28, 2026) for $75 million.",
+        "refusal": null,
+        "reasoning": "The user asks about StackAI acquisition. Let me search.",
+        "annotations": [
+          {
+            "type": "url_citation",
+            "url_citation": {
+              "url": "https://investors.asana.com/news-releases/news-release-details/asana-acquires-stackai-adding-cross-system-execution-human-agent/",
+              "title": "Asana Acquires StackAI, Adding Cross-System Execution for ...",
+              "start_index": 0,
+              "end_index": 0,
+              "content": "Asana Acquires StackAI, Adding Cross-System Execution for Human-Agent Teams \u2022 Asana, Inc.\n\n...\n\n## Asana Acquires StackAI, Adding Cross-System Execution for Human-Agent Teams\n\n...\n\nMay 28, 2026\n\n...\n\nSAN FRANCISCO--(BUSINESS WIRE)--May 28, 2026-- Asana, Inc.(NYSE: ASAN)(LTSE: ASAN), the operating sy"
+            }
+          },
+          {
+            "type": "url_citation",
+            "url_citation": {
+              "url": "https://www.stackai.com/blog/stackai-joins-asana-to-build-the-future-of-agentic-work-management",
+              "title": "StackAI Joins Asana to Build the Future of Agentic Work ...",
+              "start_index": 0,
+              "end_index": 0,
+              "content": "We\u2019re incredibly excited to announce today that StackAI is joining Asana, where humans and agents run workflows together from a shared plan, with shared memory, goals and context.\n\n...\n\n1. **Does this change the StackAI product? **No. StackAI continues to operate as its own product and brand followi"
+            }
+          },
+          {
+            "type": "url_citation",
+            "url_citation": {
+              "url": "https://techcrunch.com/2026/05/28/asana-acquires-no-code-agent-builder-stack-ai/",
+              "title": "Asana acquires no-code agent-builder StackAI",
+              "start_index": 0,
+              "end_index": 0,
+              "content": "Asana has acquired the workflow automation company StackAI for $75 million, part of a larger effort to position itself as an AI-native workplace platform. StackAI\u2019s founders, Tony Rosinol and Bernard Aceituno, will join Asana as part of the acquisition."
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 2362,
+    "completion_tokens": 80,
+    "total_tokens": 2442,
+    "cost": 0.007578808,
+    "prompt_tokens_details": {
+      "cached_tokens": 768,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 12,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.000578808,
+      "upstream_inference_prompt_cost": 0.00048280800000000004,
+      "upstream_inference_completions_cost": 9.6e-05
+    },
+    "server_tool_use_details": {
+      "web_search_requests": 1,
+      "tool_calls_requested": 1,
+      "tool_calls_executed": 1
+    }
+  }
+}

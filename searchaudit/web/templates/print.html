@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "macros.html" import fav, pv, hfav, gicon, checks, hl %}
+{% from "_sections.html" import ranking, chart, facts, measured, failures, h2h_pair, guide, judge %}
+{% block title %}{{ vm.meta.company }} · Search Audit{% endblock %}
+{% block main %}
+{% set m = vm.meta %}
+<div class="cover">
+  <div class="rhead" style="margin-bottom:6px"><span class="co">{{ fav(None, m.company) }}{{ m.company }}</span><span class="pill">{{ m.category }}</span>
+    <span class="meta">Search Audit · {{ vm.n }} prompts · {{ vm.ids | length }} providers · run {{ m.date }}</span></div>
+  <h1>{{ vm.headline.text }}</h1>
+</div>
+{{ facts(vm) }}
+<div class="summary">
+  <div class="panel pad">{{ ranking(vm, interactive=False) }}</div>
+  <div class="panel pad">{{ chart(vm) }}</div>
+</div>
+<h2>How we measured</h2>
+{{ measured(vm) }}
+
+<section class="psec">
+  <h2>Prompts</h2>
+  <p class="sub">All {{ vm.n }} prompts. ✓ correct · ◐ partly · ✗ wrong. Best value = highest value score on that prompt at the default weights. Prompts where providers disagree are detailed in the next section.</p>
+  <table class="compact"><thead><tr><th>#</th><th>Prompt</th><th>Type</th>{% for p in vm.providers %}<th class="c">{{ hfav(p) }}</th>{% endfor %}<th class="c">Best value</th></tr></thead><tbody>
+  {% for p in vm.prompts %}
+  <tr><td class="num hint">{{ p.id }}</td><td>{{ p.text }}</td><td><span class="pill">{{ p.type_name }}</span></td>{% for id in vm.ids %}<td class="c">{{ gicon(p.cells[id].grade, vm.labels[id]) }}</td>{% endfor %}<td class="c">{% if p.best_value %}<span style="color:{{ vm.provider[p.best_value].hex }};font-weight:600">{{ vm.provider[p.best_value].short }}</span>{% else %}<span class="hint">—</span>{% endif %}</td></tr>
+  {% endfor %}
+  </tbody></table>
+</section>
+
+<section class="psec">
+  <h2>Where providers disagree <span class="hint num">{{ vm.counts.disagree }}</span></h2>
+  <p class="sub">One row per provider: result, the four judge checks ({{ vm.rubric | join(" · ") }}), failure mode, value score, time, cost and searches. The judge's note is shown under every answer that was not fully correct. Full answers and tool traces are online at /r/{{ slug }}/q/&lt;number&gt;.</p>
+  {% for p in vm.prompts if p.disagree %}
+  <div class="qblock" id="p{{ p.id }}">
+    <p class="qh"><span class="num hint">{{ p.id }}</span><span>{{ p.text }}</span><span class="pill">{{ p.type_name }}</span></p>
+    <table class="compact ptable"><tbody>
+    {% for id in vm.ids %}{% set c = p.cells[id] %}
+      <tr{% if c.grade != "c" %} class="has-note"{% endif %}><td style="width:150px">{{ pv(vm.provider[id]) }}{% if c.via %} <span class="hint small">→ {{ vm.provider[c.via].short }}</span>{% endif %}</td><td class="c" style="width:26px">{{ gicon(c.grade) }}</td><td style="width:84px">{{ checks(c, vm.rubric) }}</td>
+        <td class="fm">{{ c.failure_name }}</td><td class="r num">{{ hl(p.highlight.score[id], (c.score * 100) | round | int) }}</td><td class="r num">{{ c.seconds | secs }}</td><td class="r num">{{ c.cost | money(3, c.est) }}</td><td class="r num">{{ c.searches }}</td></tr>
+      {% if c.grade != "c" %}<tr class="jn"><td></td><td colspan="7">{{ c.note }}</td></tr>{% endif %}
+    {% endfor %}
+    </tbody></table>
+  </div>
+  {% endfor %}
+</section>
+
+<section class="psec"><h2>Failure modes</h2>{{ failures(vm) }}</section>
+
+{% set pair = vm.h2h[vm.h2h_default | join("|")] %}
+<section class="psec"><h2>Head-to-head: {{ vm.labels[pair.a] }} vs {{ vm.labels[pair.b] }}</h2>
+  <p class="sub">The best-value provider against {% if vm.provider[pair.b].uses_today %}what {{ m.company }} uses today{% else %}the next most accurate provider{% endif %}. Every other pair is in the online report.</p>
+  {{ h2h_pair(vm, pair, vm.prompts) }}
+</section>
+
+<section class="psec"><h2>Implementation guide</h2>{{ guide(vm) }}</section>
+<section class="psec"><h2>Judge</h2>{{ judge(vm) }}</section>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% from "macros.html" import fav, pv, hfav, gicon, icon %}
+{% from "_sections.html" import ranking, chart, facts, measured, failures, h2h_pair, guide, judge %}
+{% from "_prompt.html" import prompt_table %}
+{% block title %}{{ vm.meta.company }} · Search Audit{% endblock %}
+{% block main %}
+{% set m = vm.meta %}
+<div class="rhead">
+  <span class="co">{{ fav(None, m.company) }}{{ m.company }}</span><span class="pill">{{ m.category }}</span>
+  <span class="meta">{{ vm.n }} prompts · {{ vm.ids | length }} providers · run {{ m.date }}</span>
+  <span class="actions">
+    <button class="btn ghost" type="button" id="share">{{ icon("share") }}Share</button>
+    <button class="btn ghost" type="button" id="download" aria-haspopup="dialog" aria-controls="dl-modal">{{ icon("down") }}Download</button>
+  </span>
+</div>
+<h1 id="headline" data-kind="{{ vm.headline.kind }}">{{ vm.headline.text }}</h1>
+{{ facts(vm) }}
+<div class="summary">
+  <div class="panel pad">{{ ranking(vm) }}</div>
+  <div class="panel pad">{{ chart(vm) }}</div>
+</div>
+
+<div class="tabs" role="tablist" aria-label="Report sections">
+{% for id, label, count in [("prompts", "Prompts", vm.n), ("h2h", "Head-to-head", None), ("failures", "Failure modes", None), ("guide", "Implementation guide", None), ("judge", "Judge", None), ("measured", "How we measured", None)] %}
+  <button role="tab" type="button" id="tab-{{ id }}" aria-controls="panel-{{ id }}" aria-selected="{{ 'true' if loop.first else 'false' }}" tabindex="{{ 0 if loop.first else -1 }}">{{ label }}{% if count %}<span class="count">{{ count }}</span>{% endif %}</button>
+{% endfor %}
+</div>
+
+<section role="tabpanel" id="panel-prompts" aria-labelledby="tab-prompts" tabindex="0">
+  <div class="filters" role="group" aria-label="Filter prompts">
+    <button type="button" class="chip" data-filter="disagree" aria-pressed="true">Providers disagree · {{ vm.counts.disagree }}</button>
+    <button type="button" class="chip" data-filter="all" aria-pressed="false">All · {{ vm.counts.all }}</button>
+    <button type="button" class="chip" data-filter="nobody" aria-pressed="false">Nobody correct · {{ vm.counts.nobody }}</button>
+    <span class="gap"></span>
+    <button type="button" class="chip" data-type="all" aria-pressed="true">All types</button>
+    {% for t in vm.types %}<button type="button" class="chip" data-type="{{ t.id }}" aria-pressed="false">{{ t.name }}</button>{% endfor %}
+  </div>
+  <div class="legend" style="margin-bottom:10px"><span>{{ gicon("c") }} correct</span><span>{{ gicon("p") }} partly</span><span>{{ gicon("w") }} wrong</span><span>Open a prompt to compare providers; click a provider row for its answer and trace.</span></div>
+  <div class="panel plist" style="--np:{{ vm.ids | length }}">
+    <div class="head"><span>#</span><span>Prompt</span><span>Type</span>{% for p in vm.providers %}<span class="c">{{ hfav(p) }}</span>{% endfor %}<span class="c">Best value</span><span></span></div>
+    {% for p in vm.prompts %}
+    <details id="p{{ p.id }}" data-type="{{ p.type }}" data-disagree="{{ 1 if p.disagree else 0 }}" data-nobody="{{ 1 if p.nobody else 0 }}"{% if not p.disagree %} hidden{% endif %}>
+      <summary><span class="num hint idx">{{ p.id }}</span><span class="pt">{{ p.text }}</span><span><span class="pill">{{ p.type_name }}</span></span>
+        <span class="grades" style="display:contents">{% for id in vm.ids %}<span class="cc">{{ gicon(p.cells[id].grade, vm.labels[id]) }}</span>{% endfor %}</span>
+        <span class="cc bv" data-best="{{ p.id }}" title="Highest value score on this prompt">{% if p.best_value %}{{ hfav(vm.provider[p.best_value]) }}{% else %}<span class="hint">—</span>{% endif %}</span><span class="car" aria-hidden="true">›</span></summary>
+      <div class="pbody">
+        {{ prompt_table(p, vm) }}
+        <p class="hint" style="margin:8px 0 0">Judge checks: {{ vm.rubric | join(" · ") }}. Score uses your weights. Sources ringed in a provider's colour were cited only by that provider.
+          <a class="btn ghost sm" style="margin-left:8px" href="/r/{{ slug }}/q/{{ p.id }}">Open prompt page</a>
+          <button class="btn ghost sm" type="button" data-copy="/r/{{ slug }}/q/{{ p.id }}">Copy link</button></p>
+      </div>
+    </details>
+    {% endfor %}
+    <p class="empty" id="no-prompts" hidden>No prompts match these filters.</p>
+  </div>
+</section>
+
+<section role="tabpanel" id="panel-h2h" aria-labelledby="tab-h2h" tabindex="0" hidden>
+  <p class="sub" style="margin-top:18px">Compare any two providers on the same {{ vm.n }} prompts.</p>
+  <div class="row" style="margin:0 0 14px">
+    {% for k in ["a", "b"] %}
+    {% set chosen = vm.h2h_default[0 if k == "a" else 1] %}
+    <select class="inl" id="h2h-{{ k }}" aria-label="Provider {{ k | upper }}">{% for p in vm.providers %}<option value="{{ p.id }}"{% if p.id == chosen %} selected{% endif %}>{{ p.label }}</option>{% endfor %}</select>
+    {% if k == "a" %}<span class="hint">vs</span>{% endif %}
+    {% endfor %}
+  </div>
+  {% for key, pair in vm.h2h.items() %}
+  <div class="h2h-pair" data-pair="{{ key }}"{% if key != vm.h2h_default | join("|") %} hidden{% endif %}>{{ h2h_pair(vm, pair, vm.prompts) }}</div>
+  {% endfor %}
+</section>
+
+<section role="tabpanel" id="panel-failures" aria-labelledby="tab-failures" tabindex="0" hidden>{{ failures(vm) }}</section>
+<section role="tabpanel" id="panel-guide" aria-labelledby="tab-guide" tabindex="0" hidden>{{ guide(vm) }}</section>
+<section role="tabpanel" id="panel-judge" aria-labelledby="tab-judge" tabindex="0" hidden>{{ judge(vm) }}</section>
+<section role="tabpanel" id="panel-measured" aria-labelledby="tab-measured" tabindex="0" hidden><div style="margin-top:18px">{{ measured(vm) }}</div></section>
+
+<div class="modal-bg" id="dl-modal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="dl-title">
+    <header><h2 id="dl-title">Download</h2><button class="x" type="button" data-close aria-label="Close">×</button></header>
+    <div class="mb">
+      {% if has_pdf %}
+      <a class="dl" href="/r/{{ slug }}.pdf" download="{{ pdf_name }}">{{ icon("down") }}<span><b>PDF report</b><span class="hint">Every section, A4, for sharing offline.</span></span></a>
+      {% else %}
+      <a class="dl" href="/r/{{ slug }}/print" target="_blank">{{ icon("down") }}<span><b>Print view</b><span class="hint">The PDF has not been generated yet; print this page to PDF from your browser.</span></span></a>
+      {% endif %}
+      <a class="dl" href="/r/{{ slug }}/results.json" download>{{ icon("down") }}<span><b>results.json</b><span class="hint">Every prompt, run, tool call and grade, to re-check any number.</span></span></a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="application/json" id="report-data">{{ vm.client | json_script }}</script>
+<script src="/static/report.js" defer></script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{
+  "id": "gen-1759830000-abc123",
+  "provider": "Anthropic",
+  "model": "anthropic/claude-sonnet-5.5",
+  "object": "chat.completion",
+  "created": 1759830000,
+  "choices": [
+    {
+      "index": 0,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "Asana acquired StackAI on May 28, 2026 for a reported $75 million ([techcrunch.com](https://techcrunch.com/2026/05/28/asana-acquires-no-code-agent-builder-stack-ai/)). StackAI had raised a $16M Series A ([stackai.com](https://www.stackai.com/blog/series-a)).",
+        "refusal": null,
+        "reasoning": null,
+        "annotations": [
+          {
+            "type": "url_citation",
+            "url_citation": {
+              "url": "https://techcrunch.com/2026/05/28/asana-acquires-no-code-agent-builder-stack-ai/",
+              "title": "Asana acquires no-code agent builder Stack AI",
+              "content": "Asana said Thursday it has acquired Stack AI, a no-code platform for building AI agents, for about $75 million.",
+              "start_index": 95,
+              "end_index": 190
+            }
+          },
+          {
+            "type": "url_citation",
+            "url_citation": {
+              "url": "https://www.stackai.com/blog/series-a",
+              "title": "StackAI raises $16M Series A",
+              "content": "StackAI announced a $16 million Series A to bring AI agents to the enterprise.",
+              "start_index": 230,
+              "end_index": 290
+            }
+          },
+          {
+            "type": "url_citation",
+            "url_citation": {
+              "url": "https://techcrunch.com/2026/05/28/asana-acquires-no-code-agent-builder-stack-ai/",
+              "title": "Asana acquires no-code agent builder Stack AI",
+              "content": "",
+              "start_index": 300,
+              "end_index": 310
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 6120,
+    "completion_tokens": 210,
+    "total_tokens": 6330,
+    "cost": 0.04,
+    "is_byok": false,
+    "prompt_tokens_details": {"cached_tokens": 0},
+    "cost_details": {"upstream_inference_cost": null},
+    "completion_tokens_details": {"reasoning_tokens": 0},
+    "server_tool_use_details": {"web_search_requests": 3, "tool_calls_requested": 4, "tool_calls_executed": 4}
+  }
+}

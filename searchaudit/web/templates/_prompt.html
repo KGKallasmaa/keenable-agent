@@ -1,0 +1,73 @@
+{# One prompt, every provider: the table-first drill-down used by the report, the per-prompt page and print. #}
+{% from "macros.html" import fav, pv, gicon, checks, hl %}
+
+{% macro sources(cell, p) -%}
+<span class="srcs">
+{%- for s in cell.sources | unique(attribute="domain") -%}
+<span class="{{ 'uniq' if s.unique }}" title="{{ s.domain }} · {{ 'only this provider' if s.unique else 'also cited by others' }}"{% if s.unique %} style="box-shadow:0 0 0 1.5px {{ p.hex }}"{% endif %}>{{ fav(s.domain, s.domain) }}</span>
+{%- else -%}<span class="hint">none</span>
+{%- endfor -%}
+</span>
+{%- endmacro %}
+
+{% macro via_line(cell, vm) -%}
+{%- if cell.via %}<div class="hint via">Jev → {{ vm.provider[cell.via].short }}{% if cell.confidence is not none %} ({{ (cell.confidence * 100) | round | int }}%){% endif %}</div>{% endif -%}
+{%- endmacro %}
+
+{% macro trace(cell) -%}
+<pre>
+{%- for t in cell.trace -%}
+{{ loop.index }} <span class="k">{{ t.tool }}</span>({{ t.args }})  {{ (t.ms / 1000) | secs }}{% if t.chars %}  {{ t.chars }} chars{% endif %}{% if t.cost %}  ${{ "%.4f" | format(t.cost) }}{% endif %}{% if not t.ok %}  <span class="e">error: {{ t.error }}</span>{% endif %}{{ "\n" if not loop.last }}
+{%- else -%}<span class="c"># no tool calls recorded</span>
+{%- endfor -%}
+</pre>
+{%- endmacro %}
+
+{% macro answer_panel(cell, vm) -%}
+<div class="two wide-left">
+  <div>
+    <h3 style="margin-top:0">Answer</h3>
+    <p class="anstext">{{ cell.answer or "(no answer)" }}</p>
+    {% if cell.error %}<p class="hint">Run error: {{ cell.error }}</p>{% endif %}
+    {% if cell.budget_hit %}<p class="hint">The agent hit its tool-call or time budget and was forced to answer.</p>{% endif %}
+    <h3>Judge</h3>
+    <p class="anstext">{{ cell.note }}{% if cell.failure %} <span class="hint">{{ cell.failure_name }}: {{ cell.failure_def }}</span>{% endif %}</p>
+    <h3>Sources</h3>
+    <p class="anstext srclist">
+    {%- for s in cell.sources -%}
+      <a href="{{ s.url }}" rel="noopener nofollow" target="_blank">{{ fav(s.domain, s.domain) }}{{ s.title or s.domain }}</a>
+    {%- else -%}<span class="hint">No sources cited.</span>
+    {%- endfor -%}
+    </p>
+  </div>
+  <div>
+    <h3 style="margin-top:0">Tool trace</h3>
+    {{ trace(cell) }}
+    <p class="hint small">{{ cell.searches }} searches · {{ cell.fetches }} page reads{% if cell.model %} · model {{ cell.model }}{% endif %}</p>
+  </div>
+</div>
+{%- endmacro %}
+
+{# expanded: every answer panel open (per-prompt page). #}
+{% macro prompt_table(p, vm, expanded=False) -%}
+<div class="tablewrap"><table class="ptable" data-prompt="{{ p.id }}"><thead><tr>
+  <th>Provider</th><th class="c">Result</th><th title="{{ vm.rubric | join(' · ') }}">Judge checks</th><th>Failure mode</th>
+  <th class="r">Score</th><th class="r">Time</th><th class="r">Cost</th><th class="r">Searches</th><th>Sources</th>
+</tr></thead><tbody>
+{% for id in vm.ids %}
+{% set c = p.cells[id] %}{% set pr = vm.provider[id] %}
+<tr class="sel" tabindex="0" role="button" aria-expanded="{{ 'true' if expanded else 'false' }}" aria-controls="a{{ p.id }}-{{ id }}" aria-label="{{ pr.label }}: show answer and trace">
+  <td>{{ pv(pr) }}{{ via_line(c, vm) }}</td>
+  <td class="c">{{ gicon(c.grade) }}</td>
+  <td>{{ checks(c, vm.rubric) }}</td>
+  <td class="fm">{{ c.failure_name or "" }}{% if not c.failure %}<span class="hint">—</span>{% endif %}</td>
+  <td class="r num" data-score="{{ id }}">{{ hl(p.highlight.score[id], (c.score * 100) | round | int) }}</td>
+  <td class="r num">{{ hl(p.highlight.seconds[id], c.seconds | secs) }}</td>
+  <td class="r num">{{ hl(p.highlight.cost[id], c.cost | money(3, c.est)) }}</td>
+  <td class="r num">{{ hl(p.highlight.searches[id], c.searches) }}</td>
+  <td>{{ sources(c, pr) }}</td>
+</tr>
+<tr class="ans" id="a{{ p.id }}-{{ id }}"{% if not expanded %} hidden{% endif %}><td colspan="9">{{ answer_panel(c, vm) }}</td></tr>
+{% endfor %}
+</tbody></table></div>
+{%- endmacro %}

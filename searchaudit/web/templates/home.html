@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% from "macros.html" import fav %}
+{% block main %}
+<section class="hero">
+  <h1>Which search provider makes your AI agents answer best?</h1>
+  <p class="lede">Run an agent's real prompts through every search provider with the same model, grade each answer, and compare accuracy, cost and speed on that workload.</p>
+  <div class="row"><a class="btn ghost" href="/methodology">Methodology</a></div>
+</section>
+<h2>Reports</h2>
+<div class="list panel">
+{% for a in audits %}{% set m = a.vm.meta %}
+  <a class="it" href="/r/{{ a.slug }}"><span><span class="co">{{ fav(None, m.company) }}{{ m.company }}{% if a.is_fixture %} <span class="pill" style="margin-left:8px">fixture</span>{% endif %}</span><span class="cat">{{ m.category }}</span></span><span class="m">{{ m.n }} prompts · {{ m.providers }} providers</span><span class="m">{{ m.date }}</span></a>
+{% else %}
+  <p class="empty">No reports yet.</p>
+{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "macros.html" import fav %}
+{% from "_prompt.html" import prompt_table %}
+{% block title %}Prompt {{ p.id }} · {{ vm.meta.company }} · Search Audit{% endblock %}
+{% block main %}
+<p class="hint"><a href="/r/{{ slug }}#p{{ p.id }}">← {{ vm.meta.company }} report</a></p>
+<div class="rhead"><span class="co">{{ fav(None, vm.meta.company) }}{{ vm.meta.company }}</span><span class="pill">{{ p.type_name }}</span><span class="meta">Prompt {{ p.id }} of {{ vm.n }} · run {{ vm.meta.date }}</span>
+  <span class="actions"><button class="btn ghost" type="button" data-copy="/r/{{ slug }}/q/{{ p.id }}">Copy link</button></span></div>
+<h1>{{ p.text }}</h1>
+<div class="ref"><b>Reference the judge graded against</b>{% if p.as_of %} <span class="hint">(checked {{ p.as_of }})</span>{% endif %}<br>{{ p.reference }}</div>
+<h2>Every provider</h2>
+<p class="sub">Score uses the default weights (accuracy {{ vm.weights.a }}, cost {{ vm.weights.c }}, speed {{ vm.weights.s }}). Click a row to collapse its answer.</p>
+<div class="panel" style="padding:6px 8px">{{ prompt_table(p, vm, expanded=True) }}</div>
+<p class="hint" style="margin-top:8px">Judge checks: {{ vm.rubric | join(" · ") }}. Sources ringed in a provider's colour were cited only by that provider.</p>
+<nav class="qnav" aria-label="Prompts">
+  {% if prev %}<a class="btn ghost" href="/r/{{ slug }}/q/{{ prev }}">← Prompt {{ prev }}</a>{% else %}<span></span>{% endif %}
+  {% if next %}<a class="btn ghost" href="/r/{{ slug }}/q/{{ next }}">Prompt {{ next }} →</a>{% endif %}
+</nav>
+{% endblock %}
+{% block scripts %}<script src="/static/report.js" defer></script>{% endblock %}

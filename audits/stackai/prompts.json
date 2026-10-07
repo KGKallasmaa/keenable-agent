@@ -1,0 +1,482 @@
+[
+  {
+    "id": 1,
+    "text": "For our KYC file on Apple Inc., what is the company's Central Index Key (CIK) on SEC EDGAR?",
+    "type": "lookup",
+    "reference": "Answer: CIK 0000320193 (320193 without leading zeros) for Apple Inc. Sources: https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000320193",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 2,
+    "text": "Our underwriting agent needs the 2022 NAICS code for direct property and casualty insurance carriers. What is it?",
+    "type": "lookup",
+    "reference": "Answer: NAICS 524126, 'Direct Property and Casualty Insurance Carriers'. Sources: https://www.census.gov/naics/?input=524126&year=2022 ; https://www.ibisworld.com/classifications/naics/524126/direct-property-and-casualty-insurance-carriers/",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 3,
+    "text": "What is the Legal Entity Identifier (LEI) of JPMorgan Chase & Co.?",
+    "type": "lookup",
+    "reference": "Answer: 8I5DZWZKVSZI1NUHU748 (JPMORGAN CHASE & CO., legal address Wilmington, status ISSUED in GLEIF). Sources: https://search.gleif.org/#/record/8I5DZWZKVSZI1NUHU748 ; https://api.gleif.org/api/v1/lei-records/8I5DZWZKVSZI1NUHU748",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 4,
+    "text": "What is the head-office SWIFT/BIC code of Deutsche Bank AG in Frankfurt?",
+    "type": "lookup",
+    "reference": "Answer: DEUTDEFF (11-character form DEUTDEFFXXX), Deutsche Bank AG, Taunusanlage 12, Frankfurt am Main. Branch codes like DEUTDEFF500 are not the head-office code; giving one only is partly correct. Sources: https://ohmyfin.ai/swift-codes/DEUTDEFF ; https://openbankingtracker.com/swift-codes/id/deutsche-bank-ag",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 5,
+    "text": "Who is the current President and CEO of Moody's Corporation?",
+    "type": "lookup",
+    "reference": "Answer: Rob Fauber (President and CEO; still in role per Moody's 2026 earnings releases and its Aug 2026 8-K). Sources: https://www.sec.gov/Archives/edgar/data/0001059556/000162828026026383/a1q26earningsrelease.htm ; https://www.sec.gov/Archives/edgar/data/0001059556/000105955626000038/mco-20260811.htm",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 6,
+    "text": "When does Oracle Corporation's fiscal year end?",
+    "type": "lookup",
+    "reference": "Answer: May 31 (e.g. fiscal 2026 ended May 31, 2026). Sources: https://www.sec.gov/Archives/edgar/data/0001341439/000119312526277521/orcl-20260531.htm",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 7,
+    "text": "When was ISO/IEC 42001 (AI management system standard) published?",
+    "type": "lookup",
+    "reference": "Answer: ISO/IEC 42001:2023 was published in December 2023 (18 December 2023), first edition, title 'Information technology - Artificial intelligence - Management system'. Month+year is enough for correct. Sources: https://www.iso.org/standard/42001 ; https://webstore.iec.ch/publication/90574",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 8,
+    "text": "Which company owns the AI and analytics firm Kensho Technologies, and roughly what did it pay?",
+    "type": "lookup",
+    "reference": "Answer: S&P Global, which acquired Kensho in 2018 (announced March 6, 2018; closed April 2018) for about $550 million in cash and stock. Sources: https://press.spglobal.com/2018-03-06-S-P-Global-to-Acquire-Kensho-Bolsters-Core-Capabilities-in-Artificial-Intelligence-Natural-Language-Processing-and-Data-Analytics ; https://www.sec.gov/Archives/edgar/data/0000064040/000006404018000183/spgi-2018930x10q.htm",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 9,
+    "text": "Where is Epic Systems, the EHR vendor, headquartered?",
+    "type": "lookup",
+    "reference": "Answer: Verona, Wisconsin, USA (1979 Milky Way). Founded 1979 by Judy Faulkner in Madison; moved to Verona campus in 2005. Sources: https://en.wikipedia.org/wiki/Epic_Systems ; https://www.beckershospitalreview.com/ehrs/50-things-to-know-about-epic.html",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 10,
+    "text": "A vendor sent us a SOC 2 report. Which Trust Services Criteria categories can a SOC 2 cover, and which one is mandatory?",
+    "type": "lookup",
+    "reference": "Answer: Five categories: Security (Common Criteria, always required), Availability, Processing Integrity, Confidentiality, Privacy. All five plus Security as mandatory = correct; all five without saying Security is required = partly correct. Sources: https://secureframe.com/hub/soc-2/trust-services-criteria ; https://certpro.com/hub/soc-2/controls/trust-services-criteria/",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 11,
+    "text": "What did Thoma Bravo pay to take Coupa Software private, and when did the deal close?",
+    "type": "lookup",
+    "reference": "Answer: About $8.0 billion all-cash ($81.00 per share); closed February 28, 2023 (with a minority investment from an ADIA subsidiary). Sources: https://www.thomabravo.com/press-releases/thoma-bravo-completes-acquisition-of-coupa-software ; https://www.sec.gov/Archives/edgar/data/1385867/000119312523054081/d455192dex991.htm",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 12,
+    "text": "In what year was Workday founded, and by whom?",
+    "type": "lookup",
+    "reference": "Answer: 2005 (March 2005), by Dave Duffield and Aneel Bhusri (ex-PeopleSoft). HQ Pleasanton, California. Sources: https://en.wikipedia.org/wiki/Workday,_Inc.",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 13,
+    "text": "On which exchange and under what ticker does ServiceNow trade?",
+    "type": "lookup",
+    "reference": "Answer: New York Stock Exchange (NYSE), ticker NOW. Sources: https://www.redchip.com/stocks/NOW ; https://www.sec.gov/Archives/edgar/data/0001373715/000137371518000058/now-20171231x10k.htm",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 14,
+    "text": "Who is the CEO of Snowflake and since when?",
+    "type": "lookup",
+    "reference": "Answer: Sridhar Ramaswamy, CEO since February 2024 (succeeded Frank Slootman). Sources: https://www.sec.gov/Archives/edgar/data/0001640147/000164014726000023/snowflake2026ars.pdf ; https://www.businesswire.com/news/home/20240228398564/en",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 15,
+    "text": "EquipmentShare went public in 2026. What is its ticker, which exchange, and what was the IPO price?",
+    "type": "lookup",
+    "reference": "Answer: Ticker EQPT on the Nasdaq (Global Select Market); IPO priced at $24.50 per share (30.5M Class A shares, ~$747M raised), trading began January 23, 2026. Sources: https://www.streetinsider.com/Globe+Newswire/EquipmentShare+Prices+Initial+Public+Offering/25882952.html ; https://www.lw.com/en/news/latham-watkins-advises-on-equipmentshares-us-747-25-million-ipo",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 16,
+    "text": "Who is the President and CEO of Assurant, Inc.?",
+    "type": "lookup",
+    "reference": "Answer: Keith Demmings (President and CEO of Assurant; elected to Moody's board effective Nov 1, 2026). Sources: https://www.sec.gov/Archives/edgar/data/0001059556/000105955626000038/mco-20260811.htm",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 17,
+    "text": "What did the FOMC decide at its most recent meeting, and what is the federal funds target range now?",
+    "type": "fresh",
+    "reference": "Answer: At the Sept 15-16, 2026 meeting the FOMC RAISED the target range by 25bp to 3-3/4 to 4 percent (3.75%-4.00%), vote 12-0. Prior range was 3.50%-3.75%. Next meeting is late October 2026; if it has happened before the run, the newer decision is correct. An answer saying rates were cut or held is wrong. Sources: https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 18,
+    "text": "What is the ECB deposit facility rate right now, and when did it last change?",
+    "type": "fresh",
+    "reference": "Answer: 2.50%, after a 25bp hike effective 16 September 2026 (MRO 2.65%, marginal lending 2.90%). Previous change: 17 June 2026 hike to 2.25%. Sources: https://www.ecb.europa.eu/stats/policy_and_exchange_rates/key_ecb_interest_rates/html/index.en.html",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 19,
+    "text": "What did the Bank of England decide on Bank Rate at its September 2026 meeting, and how did the MPC vote?",
+    "type": "fresh",
+    "reference": "Answer: Held Bank Rate at 3.75% on 17 September 2026, vote 6-3; the three dissenters (Mann, Greene, Pill) voted for a 25bp hike to 4.00%. Next decision 5 November 2026. Sources: https://www.bankofengland.co.uk/monetary-policy/the-interest-rate-bank-rate ; https://www.mtsinsights.com/summaries/10990/",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 20,
+    "text": "What is the Bank of Japan's policy rate after its September 2026 meeting?",
+    "type": "fresh",
+    "reference": "Answer: 1.25%, after a 25bp hike decided 18 September 2026 (vote 7-2), the highest since 1995; effective 24 September 2026. Sources: https://www.nationthailand.com/news/world/40071184 ; https://www.babypips.com/news/headline-boj-rate-hike-september-2026-yen-falls-dovish-ueda",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 21,
+    "text": "What was the latest US CPI print: headline and core inflation year over year?",
+    "type": "fresh",
+    "reference": "Answer: August 2026 CPI (released Sept 11, 2026): all items +3.4% y/y (same as July), core (less food and energy) +2.4% y/y; headline +0.4% m/m seasonally adjusted. September CPI is due mid-October 2026; if released before the run, newer data is correct. Sources: https://www.bls.gov/news.release/archives/cpi_09112026.htm ; https://www.bls.gov/news.release/CPI.htm",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 22,
+    "text": "Who is the current Chair of the Federal Reserve, and when did they take office?",
+    "type": "fresh",
+    "reference": "Answer: Kevin Warsh, sworn in May 22, 2026 as the 17th Fed Chair (succeeded Jerome Powell; Senate vote 54-45). Answering Powell is wrong (outdated). Sources: https://seekingalpha.com/news/4596371-kevin-warsh-is-sworn-in-as-federal-reserve-chair ; https://news.bloomberglaw.com/banking-law/trump-to-swear-in-warsh-as-fed-chair-on-friday-white-house-says",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 23,
+    "text": "Who is Apple's CEO today, and what role does Tim Cook now hold?",
+    "type": "fresh",
+    "reference": "Answer: John Ternus became Apple CEO effective September 1, 2026; Tim Cook became Executive Chairman. Arthur Levinson became lead independent director. Answering Tim Cook as CEO is wrong (outdated). Sources: https://www.apple.com/newsroom/2026/04/tim-cook-to-become-apple-executive-chairman-john-ternus-to-become-apple-ceo/",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 24,
+    "text": "Who has been named the next MD and CEO of HDFC Bank, and from when?",
+    "type": "fresh",
+    "reference": "Answer: Anup Bagchi (currently MD & CEO of ICICI Prudential Life), named Oct 1, 2026 to succeed Sashidhar Jagdishan, effective October 27, 2026 (joins board as additional director from Oct 2, 2026). Sources: https://capital.com/en-ae/news/hdfc-bank-names-anup-bagchi-as-managing-director-and-ceo ; https://www.uniindia.com/business-economy/hdfc-bank-new-md-named/199650",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 25,
+    "text": "What was Databricks' most recent funding round: amount, valuation, and lead investor?",
+    "type": "fresh",
+    "reference": "Answer: $5 billion strategic round at a $190 billion valuation, closed August 13, 2026, led by Coatue (co-leads incl. Blackstone, MGX, T. Rowe Price, Sixth Street Growth). Company cited >$7B revenue run rate. The July 2026 term sheet at $188B is partly correct. Sources: https://www.fenwick.com/insights/experience/fenwick-represents-databricks-5b-funding ; https://www.thestar.com.my/tech/tech-news/2026/08/13/databricks-valued-at-190-billion-in-latest-funding-round",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 26,
+    "text": "Cognex just announced an acquisition in machine vision. What is it buying, for how much, and when is it expected to close?",
+    "type": "fresh",
+    "reference": "Answer: RealSense, Inc. (depth cameras / robotic perception), $500 million all cash, announced September 22, 2026, expected to close in Q4 2026. Sources: https://www.sec.gov/Archives/edgar/data/0000851205/000085120526000071/cgnx-20260922.htm",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 27,
+    "text": "Is LivePerson still an independent public company? Our vendor-risk agent needs its current ownership status.",
+    "type": "fresh",
+    "reference": "Answer: No. SoundHound AI completed its acquisition of LivePerson on September 4, 2026; LivePerson is an indirect wholly owned subsidiary of SoundHound and LPSN was delisted from Nasdaq. Holders got 0.4673 SOUN Class A shares per LPSN share. Sources: https://www.sec.gov/Archives/edgar/data/0001102993/000119312526383671/d112155d8k.htm",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 28,
+    "text": "Which jurisdictions did FATF add to and remove from its grey list at its most recent plenary?",
+    "type": "fresh",
+    "reference": "Answer: June 2026 plenary (Paris, 17-19 June 2026): added Bosnia and Herzegovina and Iraq; removed Algeria and Namibia. Black list unchanged (DPRK, Iran, Myanmar). Next plenary is October 2026; if it concluded before the run, newer changes are correct. Sources: https://www.dia.govt.nz/AML-CFT-Jurisdictions-under-increased-monitoring-June-2026 ; https://www.sanctionscanner.com/blog/fatf-plenary-june-2026-grey-list-changes-and-key-outcomes-1391",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 29,
+    "text": "Who is the CEO of the company that acquired Splunk, and when did that acquisition close?",
+    "type": "multihop",
+    "reference": "Answer: Cisco acquired Splunk (closed March 18, 2024; $157 per share in cash, about $27-28B); Cisco's CEO (and Chair) is Chuck Robbins. Sources: https://www.sec.gov/Archives/edgar/data/858877/000119312524070175/d783088dex991.htm ; https://newsroom.cisco.com/c/r/newsroom/en/us/executives/robbins-chuck.html",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 30,
+    "text": "Who runs the company that bought HashiCorp, and what did HashiCorp shareholders receive per share?",
+    "type": "multihop",
+    "reference": "Answer: IBM (deal closed February 27, 2025), $35.00 per share in cash (~$6.4B enterprise / ~$7.2B equity value); IBM Chairman and CEO is Arvind Krishna. Sources: https://newsroom.ibm.com/2025-02-27-ibm-completes-acquisition-of-hashicorp,-creates-comprehensive,-end-to-end-hybrid-cloud-platform ; https://www.unifygtm.com/insights/executives/ibm-ceo",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 31,
+    "text": "Ansys is now part of another company. Which one, when did the deal close, and what did Ansys holders get per share?",
+    "type": "multihop",
+    "reference": "Answer: Synopsys; closed July 17, 2025; $199.91 in cash plus 0.3399 Synopsys shares per Ansys share (~$35B total). Sources: https://www.sec.gov/Archives/edgar/data/883241/000114036125026139/ef20051970_ex99-1.htm ; https://www.photoniques.com/en/news/5305-synopsys-completes-acquisition-of-ansys",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 32,
+    "text": "Which audit firm audits the parent company of GEICO?",
+    "type": "multihop",
+    "reference": "Answer: GEICO's parent is Berkshire Hathaway; its independent registered public accounting firm is Deloitte & Touche LLP (auditor for FY2025). Sources: https://www.sec.gov/Archives/edgar/data/1067983/000119312526083899/brka-20251231.htm ; https://www.sec.gov/Archives/edgar/data/1067983/000119312526106253/d882687ddef14a.htm",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 33,
+    "text": "Juniper Networks was acquired. Who acquired it, at what price per share, and who is the acquirer's CEO?",
+    "type": "multihop",
+    "reference": "Answer: Hewlett Packard Enterprise (HPE), $40.00 per share in cash (~$14B), closed July 2, 2025; HPE's President and CEO is Antonio Neri. Sources: https://www.sec.gov/Archives/edgar/data/1645590/000164559025000101/hpe-20250731.htm ; https://www.storagenewsletter.com/2026/03/11/jedec-board-presents-2026-distinguished-executive-leadership-award-to-antonio-neri-president-and-ceo-hpe/",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 34,
+    "text": "In which city is the bank that acquired Discover Financial headquartered, and when did the deal close?",
+    "type": "multihop",
+    "reference": "Answer: Capital One, headquartered in McLean, Virginia; acquisition closed May 18, 2025. Sources: https://capitalone.com/about/newsroom/capital-one-completes-acquisition-of-discover/ ; https://www.businesswire.com/news/home/20250517147002/en/Capital-One-Completes-Acquisition-of-Discover",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 35,
+    "text": "Who chaired the SEC when it adopted its climate-related disclosure rules, and what did the SEC later decide about defending them in court?",
+    "type": "multihop",
+    "reference": "Answer: Gary Gensler (rules adopted March 6, 2024, 3-2 vote). On March 27, 2025 the SEC (Acting Chair Mark Uyeda) voted to end its defense of the rules in the Eighth Circuit litigation (Iowa v. SEC). Sources: https://www.sec.gov/newsroom/press-releases/2025-58",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 36,
+    "text": "Who chairs the Basel Committee on Banking Supervision, and which central bank does that person lead?",
+    "type": "multihop",
+    "reference": "Answer: Erik Thedeen, Governor of Sveriges Riksbank (Sweden's central bank). (Ben Gully became BCBS Secretary General from 14 Aug 2026.) Sources: https://www.bis.org/press/p260317.htm",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 37,
+    "text": "Cognex is buying RealSense. Which company did RealSense spin out of, and when was that spin-out completed?",
+    "type": "multihop",
+    "reference": "Answer: Intel; the spin-out into RealSense, Inc. was completed July 11, 2025, alongside a $50M Series A. Cognex agreed to buy RealSense for $500M (announced Sept 22, 2026). Sources: https://www.intelcapital.com/realsense-completes-spin-out-from-intel-raises-50-million-to-accelerate-ai-powered-vision-for-robotics-and-biometrics/ ; https://www.sec.gov/Archives/edgar/data/0000851205/000085120526000071/cgnx-20260922.htm",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 38,
+    "text": "Brink's agreed in 2026 to acquire NCR Atleos. What is the deal value, and from which company was NCR Atleos spun off and when?",
+    "type": "multihop",
+    "reference": "Answer: About $6.6 billion cash-and-stock (announced Feb 26, 2026; expected close Q1 2027). NCR Atleos was spun off from NCR Corporation (renamed NCR Voyix) on October 16, 2023 (trading as NATL on NYSE from Oct 17, 2023). Sources: https://www.kslaw.com/About/news/the-brinks-company-to-acquire-ncr-atleos-for-66-billion ; https://www.businesswire.com/news/home/20231016357718/en/NCR-Atleos-Corporation-Announces-Completion-of-Spin-off-from-NCR-Voyix-Corporation",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 39,
+    "text": "Which ransomware group attacked the healthcare clearinghouse that UnitedHealth acquired in 2022, and when did the attack start?",
+    "type": "multihop",
+    "reference": "Answer: Change Healthcare (combination with Optum/UnitedHealth closed Oct 3, 2022); attacked by ALPHV/BlackCat, starting February 21, 2024. Sources: https://www.unitedhealthgroup.com/newsroom/2022/2022-10-3-optum-change-healthcare-combination.html ; https://www.threatdown.com/blog/change-healthcare-outages-reportedly-caused-by-ransomware/",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 40,
+    "text": "Who is the CEO of the company that just acquired LivePerson?",
+    "type": "multihop",
+    "reference": "Answer: SoundHound AI (completed Sept 4, 2026); its co-founder and CEO is Keyvan Mohajer. Sources: https://www.sec.gov/Archives/edgar/data/0001102993/000119312526383671/d112155d8k.htm ; https://schwabnetwork.com/video/soundhound-ai-soun-ceo-on-earnings-oasys-recent-acquisitions",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 41,
+    "text": "List all ICT providers designated as critical third-party providers (CTPPs) under DORA.",
+    "type": "wide",
+    "reference": "Must include (19, ESA list of 18 Nov 2025): Accenture, Amazon Web Services, Bloomberg, Capgemini, Colt Technology Services, Deutsche Telekom, Equinix, FIS (Fidelity National Information Services), Google Cloud, IBM, InterXion, Kyndryl, LSEG Data and Risk, Microsoft, NTT DATA, Oracle, Orange, SAP, Tata Consultancy Services. Grading: correct = all 19 (or 18+) with no non-listed provider added; partly = 10-17; wrong = fewer than 10 or several wrong names. Sources: https://www.esma.europa.eu/sites/default/files/2025-11/List_of_designated_CTPPs.pdf ; https://www.esma.europa.eu/press-news/esma-news/european-supervisory-authorities-designate-critical-ict-third-party-providers",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 42,
+    "text": "List the US banks on the FSB's current G-SIB list and their buckets.",
+    "type": "wide",
+    "reference": "Must include (FSB 2025 list, Nov 2025; 8 US banks): JPMorgan Chase (bucket 4); Bank of America and Citigroup (bucket 3); Goldman Sachs (bucket 2); Bank of New York Mellon, Morgan Stanley, State Street, Wells Fargo (bucket 1). Grading: correct = all 8 banks, buckets right; partly = all 8 banks with bucket errors, or 6-7 banks; wrong = fewer than 6 or non-G-SIBs added. Note: a new FSB list is due Nov 2026. Sources: https://www.fsb.org/uploads/P271125.pdf ; https://www.fsb.org/2025/11/2025-list-of-global-systemically-important-banks-g-sibs/",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 43,
+    "text": "Which Chinese banks are global systemically important banks (G-SIBs) right now?",
+    "type": "wide",
+    "reference": "Must include (FSB 2025 list; 5 banks): Industrial and Commercial Bank of China (bucket 3), Agricultural Bank of China (2), Bank of China (2), China Construction Bank (2), Bank of Communications (1). Grading: correct = all 5 (buckets optional); partly = 4 (commonly missing BoCom); wrong = 3 or fewer. Sources: https://www.fsb.org/uploads/P271125.pdf",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 44,
+    "text": "List all jurisdictions currently on the FATF grey list (jurisdictions under increased monitoring).",
+    "type": "wide",
+    "reference": "Must include (22, after June 2026 plenary): Angola, Bolivia, Bosnia and Herzegovina, Bulgaria, Cameroon, Cote d'Ivoire, Democratic Republic of the Congo, Haiti, Iraq, Kenya, Kuwait, Laos, Lebanon, Monaco, Nepal, Papua New Guinea, South Sudan, Syria, Venezuela, Vietnam, British Virgin Islands, Yemen. Algeria and Namibia were removed in June 2026 (listing them = error). Grading: correct = 20+ with no removed/black-list countries; partly = 14-19 or one stale entry; wrong = fewer than 14. If the October 2026 plenary concluded before the run, its updated list is correct. Sources: https://amluae.com/fatf-grey-list-countries-update-19th-june-2026/ ; https://www.dia.govt.nz/AML-CFT-Jurisdictions-under-increased-monitoring-June-2026",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 45,
+    "text": "List all EU member states that use the euro.",
+    "type": "wide",
+    "reference": "Must include (21): Austria, Belgium, Bulgaria, Croatia, Cyprus, Estonia, Finland, France, Germany, Greece, Ireland, Italy, Latvia, Lithuania, Luxembourg, Malta, Netherlands, Portugal, Slovakia, Slovenia, Spain. Bulgaria joined 1 January 2026. Grading: correct = all 21; partly = 20 (usually missing Bulgaria = outdated); wrong = includes a non-euro state or <19. Sources: https://www.bancaditalia.it/media/notizia/bulgaria-will-join-the-euro-area-on-1-january-2026/ ; https://www.intellinews.com/bulgaria-becomes-21st-eurozone-member-418019/",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 46,
+    "text": "Which US states have comprehensive consumer privacy laws in effect as of 2026?",
+    "type": "wide",
+    "reference": "Must include (19 core, in effect by Jan 1, 2026): California, Virginia, Colorado, Connecticut, Utah, Texas, Oregon, Montana, Iowa, Delaware, Nebraska, New Hampshire, New Jersey, Tennessee, Minnesota, Maryland, Indiana, Kentucky, Rhode Island (the last three took effect Jan 1, 2026). Florida's Digital Bill of Rights is optional (narrow scope; some trackers count it). Grading: correct = 17+ core incl. Indiana/Kentucky/Rhode Island; partly = 12-16 or missing the 2026 trio; wrong = fewer than 12. Sources: https://compliancehub.wiki/20-states-consumer-privacy-laws-enforcement-2026/ ; https://www.koleyjessen.com/insights/publications/new-state-privacy-laws-effective-january-1-2026-indiana-kentucky-and-rhode-island",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 47,
+    "text": "List the AI practices prohibited under Article 5 of the EU AI Act.",
+    "type": "wide",
+    "reference": "Must include the 8 original Art. 5(1) bans: (a) subliminal/manipulative/deceptive techniques; (b) exploiting vulnerabilities (age, disability, socio-economic situation); (c) social scoring; (d) predicting criminal offences based solely on profiling/personality; (e) untargeted scraping of facial images to build facial recognition databases; (f) emotion recognition in workplaces and education (except medical/safety); (g) biometric categorisation inferring sensitive traits; (h) real-time remote biometric identification in public spaces for law enforcement (narrow exceptions). Bonus: the AI Omnibus (Reg. 2026/1744) adds bans on non-consensual realistic intimate imagery and CSAM generation from 2 Dec 2026. Grading: correct = 7-8 of the 8; partly = 5-6; wrong = 4 or fewer. Sources: https://artificialintelligenceact.eu/article/5/",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 48,
+    "text": "Our credit-scoring vendor asked which use-case areas count as high-risk under Annex III of the EU AI Act. List them all.",
+    "type": "wide",
+    "reference": "Must include the 8 Annex III areas: 1 biometrics; 2 critical infrastructure; 3 education and vocational training; 4 employment, workers management and access to self-employment; 5 access to essential private and public services and benefits (incl. creditworthiness and life/health insurance pricing); 6 law enforcement; 7 migration, asylum and border control; 8 administration of justice and democratic processes. Grading: correct = all 8; partly = 6-7; wrong = 5 or fewer. Sources: https://artificialintelligenceact.eu/annex/3/",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 49,
+    "text": "Which countries and territories have a GDPR adequacy decision from the European Commission?",
+    "type": "wide",
+    "reference": "Must include (per EC page): Andorra, Argentina, Brazil (adopted Jan 2026), Canada (commercial orgs), Faroe Islands, Guernsey, Israel, Isle of Man, Japan, Jersey, New Zealand, Republic of Korea, Switzerland, United Kingdom, United States (DPF-certified orgs only), Uruguay; plus the European Patent Organisation (an international organisation, July 2025). Grading: correct = all 16 countries/territories (EPO optional); partly = 13-15 or missing Brazil; wrong = 12 or fewer or a non-adequate country added. Sources: https://commission.europa.eu/law/law-topic/data-protection/international-dimension-data-protection/adequacy-decisions_en",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 50,
+    "text": "List the member jurisdictions of the Basel Committee on Banking Supervision.",
+    "type": "wide",
+    "reference": "Must include (28 per BIS membership page): Argentina, Australia, Belgium, Brazil, Canada, China, European Union, France, Germany, Hong Kong SAR, India, Indonesia, Italy, Japan, Korea, Luxembourg, Mexico, Netherlands, Russia, Saudi Arabia, Singapore, South Africa, Spain, Sweden, Switzerland, Turkiye, United Kingdom, United States. Observers (Chile, Malaysia, UAE, etc.) are not members. Grading: correct = 26+ with no observers listed as members; partly = 20-25; wrong = fewer than 20. Sources: https://www.bis.org/bcbs/membership.htm",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 51,
+    "text": "Under GDPR as currently in force, how quickly must a controller notify the supervisory authority of a personal data breach?",
+    "type": "domain",
+    "reference": "Answer: Art. 33: without undue delay and, where feasible, not later than 72 hours after becoming aware of it, unless the breach is unlikely to result in a risk to individuals; late notifications must give reasons for the delay. The Digital Omnibus proposal to move to 96 hours / high-risk only is NOT adopted as of Oct 2026 (stating 96h as current law = wrong). Sources: https://gdpr-info.eu/art-33-gdpr/ ; https://www.brightdefense.com/news/eu-digital-omnibus-seeks-96-hour-gdpr-breach-deadline/",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 52,
+    "text": "For a HIPAA breach of unsecured PHI affecting 800 patients in one state, what are the notification deadlines to individuals, HHS and the media?",
+    "type": "domain",
+    "reference": "Answer: Individuals: without unreasonable delay, no later than 60 calendar days after discovery. HHS: for 500+ individuals, contemporaneously with individual notice, within 60 days of discovery. Media: required because 500+ residents of one state are affected, also within 60 days. (Breaches <500 go to HHS within 60 days after the end of the calendar year.) Sources: https://www.hhs.gov/hipaa/for-professionals/breach-notification/index.html ; https://www.accountablehq.com/post/hipaa-breach-notification-timeline-60-day-rule-and-deadlines-for-individuals-hhs-and-media",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 53,
+    "text": "When must a US public company file a Form 8-K for a material cybersecurity incident, and can it be delayed?",
+    "type": "domain",
+    "reference": "Answer: Item 1.05 of Form 8-K, generally within four business days after the company determines the incident is material. Delay is allowed only if the US Attorney General determines disclosure poses a substantial risk to national security or public safety and notifies the SEC in writing. Sources: https://www.sec.gov/newsroom/press-releases/2023-139",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 54,
+    "text": "Under NYDFS Part 500, what are the deadlines to notify DFS of a cybersecurity incident and of a ransomware extortion payment?",
+    "type": "domain",
+    "reference": "Answer: 23 NYCRR 500.17: notify the Superintendent within 72 hours of determining a cybersecurity incident occurred. Extortion payment: notice within 24 hours of payment, plus a written description within 30 days (why payment was necessary, alternatives, diligence incl. OFAC). Sources: https://www.dfs.ny.gov/system/files/documents/2026/07/Reporting-an-Extortion-Payment_1.pdf ; https://www.jonesday.com/en/insights/2023/11/nydfs-expands-cybersecurity-regulations",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 55,
+    "text": "Under DORA, what are the reporting deadlines for a major ICT-related incident at an EU bank?",
+    "type": "domain",
+    "reference": "Answer: Initial notification within 4 hours of classifying the incident as major and no later than 24 hours after becoming aware of it; intermediate report within 72 hours of the initial notification; final report within one month of the latest intermediate report (set by Commission Delegated Regulation (EU) 2025/301 / the incident-reporting RTS). DORA has applied since 17 January 2025. Sources: https://www.fma.gv.at/en/dora-ict-related-incidents/ ; https://www.legiscope.com/blog/dora-incident-reporting.html",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 56,
+    "text": "What is the maximum fine under the EU AI Act for using a prohibited AI practice?",
+    "type": "domain",
+    "reference": "Answer: Up to EUR 35 million or 7% of total worldwide annual turnover for the preceding financial year, whichever is higher (Art. 99(3)); for SMEs/start-ups whichever is lower. Other tiers: EUR 15M/3% and EUR 7.5M/1%. Sources: https://artificialintelligenceact.eu/article/99/",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 57,
+    "text": "When do the EU AI Act obligations for stand-alone high-risk AI systems under Annex III now apply, after the AI Omnibus?",
+    "type": "domain",
+    "reference": "Answer: 2 December 2027 (moved from 2 August 2026 by Regulation (EU) 2026/1744, the AI Omnibus, published in the OJ 24 July 2026, in force 27 July 2026). High-risk AI in Annex I regulated products: 2 August 2028. GPAI and Art. 50 transparency duties were not delayed. Answering 2 August 2026 is wrong (outdated). Sources: https://natlawreview.com/article/eu-digital-omnibus-ai-enters-force ; https://www.addleshawgoddard.com/en/insights/insights-briefings/2026/technology/eu-ai-act-ai-omnibus-formally-adopted/",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 58,
+    "text": "Under the amended SEC Regulation S-P, how fast must a broker-dealer or investment adviser notify customers after a breach of customer information, and what are the compliance dates?",
+    "type": "domain",
+    "reference": "Answer: As soon as practicable but no later than 30 days after becoming aware that unauthorized access to or use of customer information occurred or is reasonably likely to have occurred. Compliance: December 3, 2025 for larger entities; June 3, 2026 for smaller entities (amendments adopted May 2024). Sources: https://www.willkie.com/publications/2025/10/december-3-compliance-date-for-sec-amendments-to-regulation-s-p-is-fast-approaching ; https://www.proskauer.com/alert/compliance-with-amendments-to-regulation-s-p-is-required-as-of-december-3-2025",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 59,
+    "text": "Under the NAIC Insurance Data Security Model Law (#668), how quickly must an insurer notify the state insurance commissioner of a cybersecurity event?",
+    "type": "domain",
+    "reference": "Answer: As promptly as possible but no later than 72 hours from determining a cybersecurity event occurred (where the state is the domicile, or 250+ state residents are involved and other criteria are met). State adoptions vary (e.g. 3 or 10 business days); noting variation is a plus, not required. Sources: https://www.radarfirst.com/guide/understanding-the-naic-insurance-data-security-model-law/ ; https://faegredrinker.com/en/insights/publications/2020/10/catching-up-on-the-naic-data-security-model-law-part-2",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  },
+  {
+    "id": 60,
+    "text": "What are the NIS2 incident reporting deadlines for a significant incident?",
+    "type": "domain",
+    "reference": "Answer: Art. 23 NIS2: early warning within 24 hours of becoming aware; incident notification within 72 hours; final report no later than one month after the incident notification (intermediate/progress reports on request). Sources: https://www.springlex.eu/en/packages/nis2/nis2-directive/article-23/ ; https://advisera.com/nis2/reporting-obligations/",
+    "origin": "generated",
+    "as_of": "2026-10-07"
+  }
+]

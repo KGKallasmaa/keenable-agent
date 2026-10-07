@@ -1,0 +1,9 @@
+# Allow-list: the image needs only the package, lockfiles and published audit outputs.
+*
+!pyproject.toml
+!uv.lock
+!searchaudit/
+!audits/*/results.json
+!audits/*/report.pdf
+!audits/*/prompts.json
+**/__pycache__
