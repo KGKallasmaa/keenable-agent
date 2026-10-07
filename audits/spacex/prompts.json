@@ -1,0 +1,482 @@
+[
+ {
+  "id": 1,
+  "text": "SpaceX's first Starship flight to reach orbit launched in late September 2026. On what date did it launch, which Super Heavy booster and which Ship flew, and how many Starlink satellites did it deploy?",
+  "type": "fresh",
+  "reference": "Answer: Flight 14, launched 28 Sep 2026 (~12:48 UTC) from Starbase Pad 2; Booster 21 (B21) and Ship 41 (S41); deployed 26 Starlink V3 satellites (Starlink Group 31-1). Context: one Raptor (RVac) shut down on ascent, mission shortened to ~3 h, ship splashed down in the Pacific; booster made a controlled Gulf splashdown (not caught). Partly correct: date and 26 satellites right but booster/ship numbers missing or wrong. Wrong: says Starship has not reached orbit, or gives a different satellite count. Sources: https://en.wikipedia.org/wiki/List_of_Starship_launches ; https://www.cnbc.com/2026/09/28/spacex-prepares-to-send-starship-rocket-to-orbit-for-first-time.html",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 2,
+  "text": "When was Grok 4.7 released, and what is its API price per million input and output tokens and its context window?",
+  "type": "fresh",
+  "reference": "Answer: Released Monday 21 Sep 2026 (SpaceXAI/xAI). API price $2 per million input tokens and $6 per million output tokens (same as Grok 4.6; cached input $0.50; rates double above 200K-token prompts); 500,000-token context window. Partly correct: correct date but price or context window wrong/missing, or price right with date off by a few days. Wrong: describes Grok 4.6 (released 12 Aug 2026) or earlier models as the latest. Sources: https://en.wikipedia.org/wiki/Grok_(chatbot) ; https://www.lindy.ai/blog/grok-4-7",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 3,
+  "text": "NASA's SpaceX Crew-13 mission launched to the ISS on 1 October 2026. Who commanded it, what is the name of its Dragon capsule, and roughly how long did it take from launch to docking?",
+  "type": "fresh",
+  "reference": "Answer: Commander Jessica Watkins (NASA); pilot Luke Delaney (NASA), mission specialists Joshua Kutryk (CSA) and Sergey Teteryatnikov (Roscosmos). Dragon 'Grace'. Launched 1 Oct 2026 15:10 UTC, docked 23:05 UTC the same day, i.e. ~7 h 55 min (reported as a record-fast arrival for an American spacecraft). Partly correct: 2 of the 3 items right (accept ~8 hours). Wrong: names Crew-12 crew or a different capsule (e.g. Endeavour/Freedom) as Crew-13's. Sources: https://en.wikipedia.org/wiki/SpaceX_Crew-13 ; https://www.space.com/news/live/spacex-nasa-crew-13-astronauts-launch-to-iss-october-1-2026",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 4,
+  "text": "SpaceX's Transporter-18 rideshare launched from Vandenberg on 1 October 2026. How many spacecraft did it carry, which Falcon 9 booster flew it and on which flight of that booster, and where did the booster land?",
+  "type": "fresh",
+  "reference": "Answer: 130 spacecraft (payloads incl. a Google AI datacenter prototype, a methane tracker, pharmaceutical manufacturing labs); booster B1082 on its 25th flight; landed at Landing Zone 4 (LZ-4) at Vandenberg. Launch 1 Oct 2026 11:32 a.m. PDT (18:32 UTC) from SLC-4E. Partly correct: 2 of the 3 items (accept 'more than 100' as partly correct for the count). Wrong: booster landed on a droneship / wrong booster. Sources: https://spaceflightnow.com/2026/10/01/live-coverage-ai-datacenter-prototypes-energy-redirection-demonstrators-and-more-launching-on-spacexs-transporter-18/",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 5,
+  "text": "What was the final score of the 2026 Presidents Cup at Medinah, and which player won the clinching point for the winning team?",
+  "type": "fresh",
+  "reference": "Answer: United States 17, International 13 (24-27 Sep 2026, Medinah CC). Cameron Young clinched it, beating Ryan Fox 2 & 1. The US trailed 10.5-9.5 entering Sunday and won singles 9.5-2.5 (record singles session); 11th straight US win. Captains: Brandt Snedeker (US), Geoff Ogilvy (Intl). Partly correct: correct score but wrong/missing clincher. Wrong: International win or wrong score. Sources: https://en.wikipedia.org/wiki/2026_Presidents_Cup ; https://www.skysports.com/golf/news/13590592/presidents-cup-2026-latest-scores-results-tee-times-leaderboard-as-team-usa-host-international-team-at-medinah",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 6,
+  "text": "Which 2026 MLB Wild Card Series was the only one to go to a deciding Game 3, who won it, and what was the Game 3 score?",
+  "type": "fresh",
+  "reference": "Answer: Atlanta Braves vs Philadelphia Phillies (NL). Braves won 2-1; Game 3 on 1 Oct 2026: Braves 6, Phillies 2. (G1 Braves 5-3; G2 Phillies 4-3 in 10 inn., Alec Bohm HR.) The other three (White Sox over Astros, Yankees over Red Sox, Padres over Cubs) were 2-0 sweeps. Partly correct: right series and winner, wrong/missing score. Wrong: names another series or Phillies as winner. Sources: https://en.wikipedia.org/wiki/2026_Major_League_Baseball_postseason ; https://www.cbssports.com/mlb/news/2026-mlb-playoffs-wild-card-series-game-2-winners-losers/",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 7,
+  "text": "Who won the men's and women's races at the 2026 Berlin Marathon, and what were their winning times?",
+  "type": "fresh",
+  "reference": "Answer: Held 27 Sep 2026. Men: Guye Adola (ETH) 2:02:50 (his second Berlin title, PB). Women: Tigst Assefa (ETH) 2:11:04 (course record, 3rd-fastest ever; missed the 2:09:56 world record). Partly correct: both winners right but one time wrong/missing, or one race fully right. Wrong: 2025 winners. Sources: https://en.wikipedia.org/wiki/2026_Berlin_Marathon ; https://www.olympics.com/en/news/berlin-marathon-2026-ethiopia-shines-as-tigst-assefa-narrowly-misses-world-record-and-guye-adola-claims-second-title",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 8,
+  "text": "In the first round of Brazil's presidential election on 4 October 2026, what share of the valid votes did the top two candidates get, and who finished third?",
+  "type": "fresh",
+  "reference": "Answer: Flávio Bolsonaro (PL) 47.03%, Lula (PT) 45.16%; third Augusto Cury (Avante) 2.89% (then Renan Santos 2.24%, Ronaldo Caiado 2.18%). Runoff Bolsonaro vs Lula on 25 Oct 2026. Accept rounding to 47.0/45.2. Partly correct: top two and percentages right but third place wrong/missing, or percentages approximate (within ~1 pt). Wrong: says Lula finished first or won outright. Sources: https://www.riotimesonline.com/brazil-election-results-2026/ ; https://www.americasquarterly.org/article/reaction-flavio-bolsonaro-and-lula-advance-to-brazils-presidential-runoff/",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 9,
+  "text": "Welche Partei wurde bei der Wahl zum Berliner Abgeordnetenhaus am 20. September 2026 stärkste Kraft, mit wie viel Prozent, und wie hoch war die Wahlbeteiligung?",
+  "type": "fresh",
+  "reference": "Answer: Die Linke, 25.7% (first time strongest party; 47 of 158 seats). Then CDU 18.8%, AfD 16.3%, Grüne 14.3%, SPD 12.1%; BSW 4.7% and FDP 2.5% missed the 5% threshold. Turnout 74.2%. (Preliminary official result of 21 Sep 2026.) Partly correct: Linke as winner but percentage or turnout wrong/missing. Wrong: CDU as winner. Answer may be in German or English. Sources: https://statistiken-aktuell.de/abgeordnetenhauswahl-berlin-2026/ ; https://www.t-online.de/themen/abgeordnetenhauswahl-berlin/",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 10,
+  "text": "大相撲2026年秋場所（九月場所）の幕内優勝力士は誰で、成績は何勝何敗でしたか？十両優勝は誰ですか？",
+  "type": "fresh",
+  "reference": "Answer: Makuuchi: Yokozuna Onosato (大の里), 12-3, his 6th yusho; he beat Ozeki Aonishiki (安青錦) on senshuraku (27 Sep 2026) when both were 11-3 (a direct final-day bout, not a playoff). Juryo: Kitanowaka (北の若, East Juryo 6) via a three-way playoff (tomoe-sen) with Kagayaki and Kayo. Partly correct: Onosato and 12-3 right but juryo winner missing/wrong. Wrong: Aonishiki or another rikishi as makuuchi winner. Answer may be in Japanese or English. Sources: https://www.sumo-love.com/202609-winner-etc/ ; https://combatpress.com/2026/09/grand-sumo-2026-aki-basho-results-onosato-overcomes-late-wobble-to-win-yusho/",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 11,
+  "text": "What revenue and non-GAAP EPS did Micron report for fiscal Q4 2026 (reported 30 September 2026), and what revenue did it guide for fiscal Q1 2027?",
+  "type": "fresh",
+  "reference": "Answer: Q4 FY2026 (ended 3 Sep 2026) revenue $54.23 billion; non-GAAP diluted EPS $33.42 (GAAP $32.87); non-GAAP gross margin 87.0%. Q1 FY2027 revenue guidance $61.5 billion ± $1.5 billion. Partly correct: revenue right but EPS or guidance wrong/missing. Wrong: quotes Q3 FY2026 ($41.46B) as latest. Sources: https://www.sec.gov/Archives/edgar/data/0000723125/000072312526000018/a2026q4ex991-pressrelease.htm ; https://www.cnbc.com/2026/09/30/micron-mu-q4-earnings-report-2026.html",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 12,
+  "text": "What did Nike report for revenue, diluted EPS and Greater China revenue change in its fiscal 2027 first quarter (results released 1 October 2026)?",
+  "type": "fresh",
+  "reference": "Answer: Revenue $11.2 billion, down 4% reported (down 5% currency-neutral); diluted EPS $0.48; Greater China revenue down 22% reported (26% currency-neutral) to about $1.18 billion; gross margin 42.8% (+60 bps). Partly correct: 2 of the 3 requested figures right. Wrong: quotes fiscal Q4 2026 numbers. Sources: https://investors.nike.com/investors/news-events-and-reports/investor-news/investor-news-details/2026/NIKE-Inc--Reports-Fiscal-2027-First-Quarter-Results/default.aspx ; https://finance.yahoo.com/markets/stocks/articles/nike-q1-fy2027-earnings-revenue-210111038.html",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 13,
+  "text": "In Latvia's Saeima election on 3 October 2026, which party won, with how many of the 100 seats, and what was the turnout?",
+  "type": "fresh",
+  "reference": "Answer: United List (Apvienotais saraksts, PM Andris Kulbergs) ~35-36% and 41 seats (final count per Wikipedia; LSM's preliminary 99.9% count said 42 — accept 41 or 42); turnout ~51.8% (record low). Others: Latvia First 17, Sovereign Power 15, National Alliance 10, Progressives 9-10, New Unity 7. Partly correct: United List named but seats or turnout missing/off. Wrong: New Unity as winner. Sources: https://en.wikipedia.org/wiki/2026_Latvian_parliamentary_election ; https://eng.lsm.lv/article/politics/election/04.10.2026-the-votes-are-in-united-list-handed-massive-mandate-by-latvian-voters.a666044/",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 14,
+  "text": "What was the score of the 2026 AFL Grand Final, and who won the Norm Smith Medal?",
+  "type": "fresh",
+  "reference": "Answer: Brisbane Lions 14.12 (96) d. Fremantle 12.17 (89), a 7-point win on 26 Sep 2026 at the MCG (crowd 100,023); Brisbane's third consecutive premiership. Norm Smith Medal: Shai Bolton (Fremantle), 10 votes, fifth medallist from a losing side. Partly correct: winner and medallist right but score wrong/missing, or score right and medallist wrong. Wrong: Fremantle as premier. Sources: https://en.wikipedia.org/wiki/2026_AFL_Grand_Final ; https://www.abc.net.au/news/2026-09-26/afl-grand-final-dockers-lions-shai-bolton-norm-smith-medal/107199694",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 15,
+  "text": "Who won the 2026 NRL Grand Final, what was the score, who kicked the decisive field goal, and who won the Clive Churchill Medal?",
+  "type": "fresh",
+  "reference": "Answer: Sydney Roosters 19 d. Newcastle Knights 18 (4 Oct 2026, Accor Stadium, crowd 80,814; Roosters trailed 6-12 at half-time). Daly Cherry-Evans kicked the winning field goal (~70th minute). Clive Churchill Medal: James Tedesco. Partly correct: winner and score right but one of the two names wrong/missing. Wrong: Knights as winner. Sources: https://en.wikipedia.org/wiki/2026_NRL_Grand_Final ; https://www.abc.net.au/news/2026-10-04/nrl-grand-final-james-tedesco-clive-churchill-medal-roosters/107227582",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 16,
+  "text": "As of early October 2026, which film is the highest-grossing film of all time worldwide, and what changed recently?",
+  "type": "fresh",
+  "reference": "Answer: Avengers: Endgame, about $2.9255 billion vs Avatar's ~$2.9237 billion. It retook the record in early Oct 2026 after its 'Avengers: Endgame Encore' re-release (opened 25 Sep 2026 at No. 1 in the US with ~$26.1M; added ~$126M worldwide). Partly correct: Endgame named but no explanation/figures, or explanation right with slightly off totals. Wrong: Avatar as current record holder. Sources: https://www.yahoo.com/entertainment/movies/articles/avengers-endgame-overtakes-avatar-highest-144659239.html ; https://en.wikipedia.org/wiki/List_of_2026_box_office_number-one_films_in_the_United_States",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 17,
+  "text": "At OpenAI DevDay on 29 September 2026, what personal agent product did OpenAI launch, which model powers it, and who can use it at launch?",
+  "type": "fresh",
+  "reference": "Answer: 'Dots', a background personal agentic assistant with cartoon avatars, powered by GPT-6 Astra; available from 29 Sep 2026 in ChatGPT (and Codex) for Pro and Business Premium users in eligible markets. Also announced around then: a 'Pro 500' tier. Partly correct: Dots named but model or availability wrong/missing. Wrong: names a different product (e.g. Operator/ChatGPT Agent) as the DevDay 2026 launch. Sources: https://techcrunch.com/2026/09/29/openai-launches-dots-its-bubbly-agentic-avatar/ ; https://www.cnbc.com/2026/09/29/openai-devday-2026-live-updates.html",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 18,
+  "text": "¿Cuántas personas asistieron a la manifestación por la vivienda en Madrid del 3 de octubre de 2026 según la Delegación del Gobierno y según los organizadores, y quién la convocó?",
+  "type": "fresh",
+  "reference": "Answer: Delegación del Gobierno: 70,000; organizers (Sindicato de Inquilinas, the convener): 500,000. Held Sat 3 Oct 2026, columns converging at Cibeles, slogan toward a general strike ('Hacia la huelga general'). Partly correct: one of the two figures right, or both figures without the convener. Wrong: figures from the April 2025 protests. Answer may be in Spanish or English. Sources: https://www.eldiariodemadrid.es/articulo/sociedad/manifestacion-vivienda-madrid-500000-70000-asistentes/20261003184558143246.html ; https://capital.es/actualidad/la-delegacion-del-gobierno-en-madrid-cifra-en-70-000-los-asistentes-a-la-marcha-por-la-vivienda/223107/",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 19,
+  "text": "Who became mayor of Kourou, the French Guiana town next to Europe's spaceport, after the March 2026 municipal elections?",
+  "type": "lookup",
+  "reference": "Answer: Michael Rimane (list 'Avenir Kouroucien'), elected in the second round of the March 2026 municipales (15 and 22 March 2026); he succeeded François Ringuet (mayor 2020-2026). Partly correct: names Rimane but with wrong details (e.g. wrong date/term). Wrong: François Ringuet (outgoing mayor) or any other name. Sources: https://www.mon-maire.fr/maire-de-kourou-973 ; https://www.resultats-elections.interieur.gouv.fr/municipales2026/ensemble_geographique/03/973/97304/nouvelle_assemblee/index.html",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 20,
+  "text": "Who is the new Erster Bürgermeister of Ottobrunn (Landkreis München) after the 2026 Bavarian local elections, and whom did he succeed?",
+  "type": "lookup",
+  "reference": "Answer: Florian Schardt, elected in the runoff (Stichwahl) on 22 March 2026; he succeeded Thomas Loderer. Partly correct: names Florian Schardt but not (or wrongly) the predecessor. Wrong: Thomas Loderer as current mayor, or any other name. Sources: https://www.ottobrunn.de/fileadmin/Dateien/Mein_Ottobrunn/MO_0526.pdf (Mein Ottobrunn 05/2026, editorial by 'Erster Bürgermeister Florian Schardt' thanking predecessor Thomas Loderer)",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 21,
+  "text": "What is the total amount of the 2026 municipal budget (presupuesto) of Tordesillas (Valladolid), approved in March 2026?",
+  "type": "lookup",
+  "reference": "Answer: EUR 11,930,773.77 (about 11.93 million euros), approved on 30 March 2026, a 3.07% increase (about EUR 355,491 more) over the prior year; passed with PP and Vox votes. Partly correct: 'about 11.9 million euros' without the date or with a minor detail wrong. Wrong: any other total. Sources: https://www.elespanol.com/castilla-y-leon/region/valladolid/20260330/presupuesto-historico-tordesillas-millones-euros-inversiones/1003744189934_0.amp.html",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 22,
+  "text": "Taiki, the Hokkaido town that hosts the Hokkaido Spaceport: how large is its FY2026 (令和8年度) general-account budget, and by what percentage did it change from the prior year?",
+  "type": "lookup",
+  "reference": "Answer: 97.71 億円 (9,771 million yen; 97億7100万円), up 19.1% year on year, driven by investment projects such as tsunami evacuation towers in the Hama-Taiki and Asahi districts (Mayor Yutaka Kurokawa's last budget of his first term). The total including special accounts is 142.54 億円 (+13.3%). Partly correct: ~97-98 億円 without the growth rate, or the 142.5 億円 all-accounts figure correctly labelled. Wrong: other amounts. Sources: https://www.hokkaido-np.co.jp/article/1275349/",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 23,
+  "text": "How much is the annual dog tax (Hundeabgabe) in Feldkirch, Austria, from 1 January 2026 for a first dog, each additional dog, and a 'Listenhund'?",
+  "type": "lookup",
+  "reference": "Answer: EUR 90 for the first dog, EUR 120 for each additional dog, EUR 400 for a Listenhund (per household/business), per the Hundeabgabeverordnung adopted by the Stadtvertretung on 9 Dec 2025 (VBl. Stadt Feldkirch Nr. 31/2025); a reduced EUR 45 rate exists for one dog of Heizkostenzuschuss recipients. Partly correct: 2 of the 3 amounts right. Wrong: fewer than 2 correct. Sources: https://www.feldkirch.at/fileadmin/user_upload/document/Stadt/Abteilungen/Verordnung_ueber_eine_AEnderung_der_Hundeabgabe_ab_01.01.2026.pdf",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 24,
+  "text": "Which Tartu deputy mayor is responsible for education, culture and sport in the city government formed in December 2025, and when did they take office?",
+  "type": "lookup",
+  "reference": "Answer: Ulla Preeden, elected deputy mayor on 4 December 2025, taking office on 1 April 2026 (portfolio: education, physical education, sports, culture, youth work, science). Mayor remains Urmas Klaas. Partly correct: names Ulla Preeden without the 1 April 2026 start (or with the wrong date). Wrong: any other person. Sources: https://tartu.ee/en/members-city-government",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 25,
+  "text": "What does a single trip on the Metro de Medellín cost in 2026 for a 'usuario frecuente' (frequent user with a Cívica card), and how much was it in 2025?",
+  "type": "lookup",
+  "reference": "Answer: COP 3,820 in 2026, up from COP 3,430 in 2025 (+390 pesos, ~12.1% average adjustment). The 'al portador' (occasional/bearer) fare is COP 4,400. Partly correct: 3,820 without the prior price, or only the 4,400 al-portador fare correctly labelled. Wrong: other values. Sources: https://www.valoraanalitik.com/tarifas-del-transporte-en-las-principales-ciudades-para-2026/",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 26,
+  "text": "How much will a Cambridge, Massachusetts resident parking permit cost starting in 2027, what did it cost before, and is there a hardship exemption?",
+  "type": "lookup",
+  "reference": "Answer: $75 per year for 2027 permits (the city says the standard fee rises to $75 beginning 1 Dec 2026, when 2027 permits go on sale; Council approved 7-2 in May 2026), up from $25 (unchanged since 2013). A financial-hardship waiver (check a box, no income verification) replaces the automatic age-65+ waiver, which ends for 2027; residents with a disability plate/placard still get a free permit. Max two permits per resident from 2027. Partly correct: $75 without the old fee or exemption details, or says seniors still automatically free. Wrong: says the fee stays $25 in 2027. Sources: https://www.cambridgema.gov/rpp ; https://www.cambridgeday.com/2026/05/22/higher-parking-fees-on-the-way-and-perhaps-direct-election-of-mayors/",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 27,
+  "text": "What does a regular adult ticket for Schloss Linderhof (Gesamtkarte, palace plus park buildings) cost in 2026, and can you still buy the combined 'Königsschlösser' ticket?",
+  "type": "lookup",
+  "reference": "Answer: EUR 18.00 regular (EUR 16.00 reduced) for the Linderhof Gesamtkarte in 2026; the Kombikarte 'Königsschlösser' is discontinued ('entfällt') in the 2026 Bavarian Palace Administration price list. (For context: Linderhof Einzelkarte EUR 11; Neuschwanstein EUR 21.) Partly correct: right price but says the Königsschlösser ticket is still sold, or vice versa. Wrong: both wrong. Sources: https://www.schloss.bayern.de/deutsch/service/tourismus/preise2026.pdf",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 28,
+  "text": "What battery capacity, screen size and operating system does the Mudita Kompakt E Ink phone have?",
+  "type": "lookup",
+  "reference": "Answer: 3300 mAh Li-Polymer battery (up to ~6 days standby), 4.3-inch E Ink display (800x480), running MuditaOS K (de-Googled, Android-based). Partly correct: 2 of the 3 right. Wrong: fewer. Sources: https://www.mudita.com/products/phones/mudita-kompakt/full-feature-list ; https://www.mudita.com/kompakt",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 29,
+  "text": "Who won the 'Aufsteiger' category of the Deutscher Gründerpreis 2026, and which company received the special prize (Sonderpreis)?",
+  "type": "lookup",
+  "reference": "Answer: Aufsteiger: Deep Drive (Garching; double-rotor electric motor technology). Sonderpreis: OHB (the Bremen space company). Ceremony 8 Sept 2026 in Berlin; StartUp winner was Proxima Fusion, Lebenswerk Dirk Rossmann. Partly correct: one of the two right. Wrong: neither (e.g. naming Proxima Fusion as Aufsteiger). Sources: https://www.zdfheute.de/wirtschaft/gruenderpreis-2026-preistraeger-100.html",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 30,
+  "text": "What is the size of Ise City's (Mie Prefecture) FY2026 initial general-account budget (令和8年度当初予算)?",
+  "type": "lookup",
+  "reference": "Answer: 606.06 億円 (60,606,000 thousand yen; 606億600万円), down 0.2% from FY2025 (607.53 億円). City tax revenue budgeted at 175 億円 (+3.7%). Partly correct: ~606 億円 without the change, or the change right with a rounded total. Wrong: other totals. Sources: https://www.city.ise.mie.jp/_res/projects/default_project/_page_/001/019/973/r8point.pdf",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 31,
+  "text": "Who finished third in the 2026 Azerbaijan Grand Prix, and which F1 team did he race for in 2025?",
+  "type": "multihop",
+  "reference": "Answer: Isack Hadjar (Red Bull Racing in 2026) finished 3rd on 26 Sep 2026, on his return from a wrist injury; in 2025 he raced for Racing Bulls (Visa Cash App Racing Bulls). (chain: Baku 2026 podium -> driver's 2025 team) Partly correct: Hadjar right but says Red Bull Racing for 2025. Wrong: another driver. Sources: https://www.formula1.com/en/latest/article/russell-narrowly-holds-off-verstappen-to-take-victory-over-the-line-in-chaotic-azerbaijan-gp.5J4lgNh82JDL2GM302irF0 ; https://en.wikipedia.org/wiki/Isack_Hadjar",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 32,
+  "text": "Who finished second in the men's elite road race at the 2026 UCI Road World Championships in Montréal, and in which year and host city did he win his previous elite road-race silver medal at the Worlds?",
+  "type": "multihop",
+  "reference": "Answer: Michael Matthews (Australia) was 2nd, 13 s behind winner Brandon McNulty (USA), on 27 Sep 2026; his previous elite road-race silver was in 2015 in Richmond, Virginia (USA) (he also has elite road-race bronzes from Bergen 2017 and Wollongong 2022, which are not silver). (chain: 2026 Worlds runner-up -> his Worlds medal history) Partly correct: identifies Matthews but gives a bronze year (2017/2022) or wrong city; or gives 2015 without the city. Wrong: names McNulty or Van der Poel (3rd) as runner-up. Sources: https://www.uci.org/article/2026-uci-road-world-championships-mcnulty-caps-off-memorable-montreal-week/2KpLkDUvxDo9fDXPeYyEbs ; https://en.wikipedia.org/wiki/Michael_Matthews_(cyclist)",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 33,
+  "text": "Which Formula 1 Grand Prix did the winner of the 2026 Azerbaijan Grand Prix win immediately before Baku?",
+  "type": "multihop",
+  "reference": "Answer: George Russell (Mercedes) won the Azerbaijan GP on 26 Sep 2026 (his 3rd win of 2026, 0.196 s ahead of Verstappen); his previous win was the 2026 Austrian Grand Prix at the Red Bull Ring (late June 2026, round 8; do not grade the exact date). His first 2026 win was the Australian GP. (chain: Baku 2026 winner -> his 2026 win list) Partly correct: names Russell but answers the Australian GP (his first, not most recent prior win). Wrong: names Verstappen or Antonelli as Baku winner. Sources: https://www.formula1.com/en/latest/article/russell-narrowly-holds-off-verstappen-to-take-victory-over-the-line-in-chaotic-azerbaijan-gp.5J4lgNh82JDL2GM302irF0 ; https://www.silverstone.co.uk/news/f1-2026-austrian-grand-prix-results-russell-holds-verstappen-win-red-bull-ring",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 34,
+  "text": "Schneider Electric announced the biggest acquisition in its history on October 5, 2026. What company is it buying, what is the per-share cash price, and who is the target company's CEO?",
+  "type": "multihop",
+  "reference": "Answer: PTC Inc. (Boston-based CAD/PLM industrial software); $205 per share in cash (about $22.6B equity value, ~$23.7B enterprise value); PTC CEO is Neil Barua. Close expected by Q3 2027. (chain: Schneider deal -> target -> target's CEO) Partly correct: PTC and price right but CEO wrong/missing (e.g. names former CEO Jim Heppelmann), or PTC and CEO right but price wrong. Sources: https://www.engineering.com/schneider-electric-to-acquire-ptc-in-22-6b-deal/",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 35,
+  "text": "AMD agreed in late September 2026 to buy an AI startup in an all-stock deal. What title will the startup's founder-CEO hold at AMD, and which Stanford institute does she co-direct?",
+  "type": "multihop",
+  "reference": "Answer: AMD is acquiring World Labs (announced 28 Sep 2026, ~$8.2B all-stock); its founder-CEO Fei-Fei Li will become Executive Vice President and Chief Scientist of AMD, reporting to Lisa Su; she co-directs the Stanford Institute for Human-Centered Artificial Intelligence (Stanford HAI). (chain: AMD deal -> World Labs CEO -> her Stanford role) Partly correct: World Labs + Fei-Fei Li + one of the two (title or HAI) correct. Wrong: wrong target company. Sources: https://futurumgroup.com/insights/amd-acquires-world-labs-for-82-billion-to-design-silicon-around-world-models/ ; https://en.wikipedia.org/wiki/Fei-Fei_Li",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 36,
+  "text": "Rocket Lab's 97th Electron mission launched on September 26, 2026 (NZ time). Which company's satellite did it carry, and under what stock code and on which market is that company listed in Tokyo?",
+  "type": "multihop",
+  "reference": "Answer: Synspective (Tokyo-based SAR satellite operator) - the mission 'Owlright, Owlright, Owlright' deployed its 13th StriX SAR satellite to a 559 km orbit; Synspective is listed on the Tokyo Stock Exchange Growth Market under code 290A (listed 19 Dec 2024). (chain: Electron flight 97 -> customer -> TSE listing) Partly correct: Synspective identified but code or market wrong/missing. Wrong: another customer (e.g. iQPS). Sources: https://www.globenewswire.com/news-release/2026/09/26/3369387/0/en/mission-success-rocket-lab-launches-97th-electron-mission.html ; https://www.synspective.com/ir/faq",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 37,
+  "text": "The 2026 Nobel Prize in Physics went to a single laureate born in a small Belgian town. Who is the current mayor of that town, and which party does the mayor represent?",
+  "type": "multihop",
+  "reference": "Answer: The laureate is Francis Halzen (IceCube; University of Wisconsin-Madison), born 1944 in Tienen, Belgium. The mayor (burgemeester) of Tienen is Jonathan Holslag, of the local party Durf (in office since the start of 2025 after the Oct 2024 local elections). (chain: Nobel physics 2026 -> birthplace Tienen -> mayor) Partly correct: identifies Halzen and Tienen but wrong/missing mayor, or names Holslag without party. Wrong: wrong laureate or town. Sources: https://en.wikipedia.org/wiki/Francis_Halzen ; https://www.vrt.be/vrtnws/nl/2025/11/25/tienen-burgemeester-jonathan-holslag-beleidsplan-meerjarenplan-b/",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 38,
+  "text": "Which of the 2026 Nobel laureates in Physiology or Medicine is a professor at the University of Würzburg, and at which Max Planck Institute (and in which city) did he lead the research group where the light-gated channels were discovered?",
+  "type": "multihop",
+  "reference": "Answer: Georg Nagel (prize shared with Karl Deisseroth and Peter Hegemann, announced 5 Oct 2026, for light-gated ion channels and optogenetics). Nagel led an independent research group at the Max Planck Institute of Biophysics in Frankfurt am Main (1992-2004), where channelrhodopsins were characterised. (chain: 2026 Nobel medicine laureates -> Würzburg laureate -> his earlier institute) Partly correct: Nagel right but institute or city wrong (e.g. MPI for Brain Research). Wrong: names Hegemann or Deisseroth. Sources: https://www.aljazeera.com/news/2026/10/5/nobel-medicine-prize-honours-us-and-german-scientists-for-optogenetics-work ; https://en.wikipedia.org/wiki/Georg_Nagel",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 39,
+  "text": "Who captained the winning team at the 2026 Laver Cup in London, and in what year did he win his only Grand Slam singles title?",
+  "type": "multihop",
+  "reference": "Answer: Team Europe won 13-5 (25-27 Sep 2026, The O2, London) under captain Yannick Noah, who won his only Grand Slam singles title at the 1983 French Open. (chain: 2026 Laver Cup winner -> captain -> his Slam record) Partly correct: Noah named but wrong year. Wrong: names Björn Borg (former Europe captain) or Andre Agassi (Team World captain). Sources: https://en.wikipedia.org/wiki/2026_Laver_Cup ; https://en.wikipedia.org/wiki/Yannick_Noah",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 40,
+  "text": "C.H. Robinson agreed on October 5, 2026 to buy another freight brokerage. From which company was that brokerage originally spun off, and in what year?",
+  "type": "multihop",
+  "reference": "Answer: The target is RXO, Inc. (Charlotte, NC; CEO Drew Wilkerson; ~$5.8B deal, $30.25/share implied = $17.25 cash + 0.0856 CHRW shares). RXO was spun off from XPO in November 2022. (chain: CHRW deal -> RXO -> spin-off origin) Partly correct: RXO and XPO right but wrong year; or RXO right with origin missing. Wrong: says GXO (spun off from XPO in 2021, a different company) or another target. Sources: https://www.chrobinson.com/en-us/about-us/newsroom/press-releases/2026/ch-robinson-to-acquire-rxo/ ; https://en.wikipedia.org/wiki/RXO",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 41,
+  "text": "List every Formula 1 Grand Prix held in the 2026 season up to and including the race on 4 October 2026, with the winning driver and team for each.",
+  "type": "wide",
+  "reference": "Answer (16 races): 1 Australia (8 Mar) Russell/Mercedes; 2 China (15 Mar) Antonelli/Mercedes; 3 Japan (29 Mar) Antonelli/Mercedes; 4 Miami (3 May) Antonelli/Mercedes; 5 Canada (24 May) Antonelli/Mercedes; 6 Monaco (7 Jun) Antonelli/Mercedes; 7 Barcelona-Catalunya (14 Jun) Hamilton/Ferrari; 8 Austria (28 Jun) Russell/Mercedes; 9 Great Britain (5 Jul) Leclerc/Ferrari; 10 Belgium (19 Jul) Antonelli/Mercedes; 11 Hungary (26 Jul) Norris/McLaren; 12 Netherlands (23 Aug) Norris/McLaren; 13 Italy (6 Sep) Antonelli/Mercedes; 14 Spain/Madrid (13 Sep) Antonelli/Mercedes; 15 Azerbaijan (26 Sep) Russell/Mercedes; 16 Bahrain GP held at Sepang, Malaysia (4 Oct) Verstappen/Red Bull (his and Red Bull's first 2026 win). Saudi Arabian GP was cancelled (not a race). Totals: Antonelli 8, Russell 3, Norris 2, Hamilton 1, Leclerc 1, Verstappen 1. Grading: correct = all 16 races with right winners (at most 1 slip); partly = 11-15 correct or the list stops before Azerbaijan/Bahrain; wrong = fewer than 11 or invents a race (e.g. a Saudi Arabian GP winner). Sources: https://www.formula1.com/en/results/2026/races ; https://www.formula1.com/en/latest/article/verstappen-wins-rain-hit-bahrain-gp-in-malaysia-over-antonelli-as-russell-retires-late-on.6qfpIHPch8mIVj2YgfHdCp",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 42,
+  "text": "Who won the men's and women's singles titles at each of the four tennis Grand Slams in 2026, and whom did they beat in the final?",
+  "type": "wide",
+  "reference": "Answer: Australian Open - Carlos Alcaraz d. Novak Djokovic; Elena Rybakina d. Aryna Sabalenka. French Open - Alexander Zverev d. Flavio Cobolli (Zverev's first major); Mirra Andreeva d. Maja Chwalinska. Wimbledon - Jannik Sinner d. Alexander Zverev; Linda Noskova d. Karolina Muchova. US Open - Alexander Zverev d. Ben Shelton; Elena Rybakina d. Aryna Sabalenka. Grading: correct = all 8 champions (finalists may have 1 slip); partly = 5-7 champions; wrong = 4 or fewer or 2025 champions. Sources: https://en.wikipedia.org/wiki/2026_French_Open ; https://en.wikipedia.org/wiki/2026_Wimbledon_Championships",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 43,
+  "text": "List every SpaceX Starship flight test launched between 1 January and 30 September 2026, with the launch date and the main outcome of each flight.",
+  "type": "wide",
+  "reference": "Answer (3 flights, all Block 3 from Starbase Pad 2): Flight 12, 22 May 2026 (B19/S39), first Block 3 flight: partial success; booster lost an engine, flipped the wrong way at hot staging and failed its Gulf landing, ship completed its flight and splashed down. Flight 13, 24 July 2026 (after a 16 July post-ignition abort and a 23 July weather scrub): suborbital, carried 20 real Starlink V3 satellites, ship made a controlled splashdown intact; counted a success. Flight 14, 28 September 2026 12:48 UTC (B21/S41, mission 'Starlink Group 31-1'): first Starship to reach orbit, deployed 26 Starlink V3 satellites, first commercial Starship flight. Grading: correct = all three flights with right dates (±1 day) and the key outcome of each (F14 = first orbital + Starlink deployment); partly = 2 of 3, or all three with a wrong/missing outcome; wrong = misses Flight 14 or lists 2025 flights (Flights 10/11) as 2026. Sources: https://en.wikipedia.org/wiki/List_of_spaceflight_launches_in_July%E2%80%93September_2026 ; https://www.space.com/space-exploration/launches-spacecraft/spacex-starship-megarocket-flight-14-orbital-launch-success",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 44,
+  "text": "List every orbital launch attempt by a Chinese rocket in September 2026 (UTC dates), giving the date and the launch vehicle for each.",
+  "type": "wide",
+  "reference": "Answer (10 launches, all successful): 1 Sep Pallas-1 (Galactic Energy maiden flight, Jiuquan); 9 Sep Long March 4B (Yaogan 53 satellites); 15 Sep Zhuque-2E (LandSpace, 10 Qianfan/Spacesail sats); 15 Sep Gravity-1 (Orienspace, sea launch, 8 Spacesail sats + EUHT demo); 17 Sep Long March 12 (Guowang/SatNet LEO Group 25, Wenchang commercial pad); 17 Sep Kuaizhou-11 (Tianyi 51/52); 19 Sep Long March 2D (PIESAT-2 13-16, Taiyuan); 20 Sep Kinetica-1 (CAS Space Y18, 9 sats); 23 Sep Long March 8A (Guowang Group 26); 24 Sep Long March 6A (Yaogan 40 Group 04, Taiyuan). SpaceNews called the 23/24 Sep missions China's 9th and 10th of the month and put China at 70 orbital attempts for 2026. Grading: correct = at least 9 of the 10 with right vehicles and no invented launches; partly = 6-8; wrong = 5 or fewer, or mixes in non-Chinese launches. If a credible source shows an extra Chinese launch on 25-30 Sep, accept it as an addition. Sources: https://en.wikipedia.org/wiki/List_of_spaceflight_launches_in_July%E2%80%93September_2026 ; https://spacenews.com/china-launches-guowang-yaogan-40-satellites-sets-up-busy-q4-manifest/",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 45,
+  "text": "Which 12 teams made the 2026 MLB postseason? Give each team's league seed.",
+  "type": "wide",
+  "reference": "Answer (regular season ended 27 Sep 2026): AL: 1 Tampa Bay Rays (East champ, bye), 2 Cleveland Guardians (Central champ, bye), 3 Houston Astros (West champ), 4 New York Yankees (WC), 5 Boston Red Sox (WC), 6 Chicago White Sox (WC). NL: 1 Milwaukee Brewers (Central champ, bye), 2 Los Angeles Dodgers (West champ, bye), 3 Atlanta Braves (East champ), 4 San Diego Padres (WC), 5 Chicago Cubs (WC), 6 Philadelphia Phillies (WC; clinched on the final day over Arizona). Wild Card Series: Red Sox at Yankees, White Sox at Astros, Cubs at Padres, Phillies at Braves. Grading: correct = all 12 teams and at least 10 seeds right; partly = 9-11 teams, or all 12 with several wrong seeds; wrong = 8 or fewer, or a projected (pre-clinch) field. Sources: https://www.mlb.com/news/mlb-playoff-picture-and-bracket-2026 ; https://www.espn.com/mlb/story/_/id/49752366/mlb-2026-playoff-tracker-clinch-scenarios-postseason-bracket-schedule",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 46,
+  "text": "Who won each senior title at the 2026 US Open tennis championships: men's and women's singles, men's, women's and mixed doubles, and the six wheelchair events?",
+  "type": "wide",
+  "reference": "Answer (11 events): Men's singles Alexander Zverev (d. Ben Shelton); Women's singles Elena Rybakina (d. Aryna Sabalenka); Men's doubles Christian Harrison / Neal Skupski; Women's doubles Katerina Siniakova / Taylor Townsend; Mixed doubles Karolina Muchova / Jakub Mensik (d. Bencic/Cobolli; separate event in the week before the main draw). Wheelchair: men's singles Alfie Hewett; women's singles Yui Kamiji; quad singles Niels Vink; men's doubles Alfie Hewett / Gordon Reid; women's doubles Yui Kamiji / Zhu Zhenzhen; quad doubles Sam Schroder / Jin Woodman. Grading: correct = at least 10 of 11 events right; partly = the 5 main events right but wheelchair mostly missing/wrong (5-9 of 11); wrong = fewer than 5 right or 2025 champions (Alcaraz, Sabalenka). Sources: https://en.wikipedia.org/wiki/2026_US_Open_(tennis) ; https://www.cbsnews.com/news/elena-rybakina-defeats-aryna-sabalenka-wins-us-open/",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 47,
+  "text": "What six novels are on the 2026 Booker Prize shortlist, and who wrote each one?",
+  "type": "wide",
+  "reference": "Answer (announced 22 Sep 2026; winner due 9 Nov 2026): The End of Everything - M. John Harrison; The Disappearers - Marlon James; Black Bag - Luke Kennard; May We Feed the King - Rebecca Perry; The Things We Never Say - Elizabeth Strout; John of John - Douglas Stuart. Judges chaired by Mary Beard. Grading: correct = all 6 titles with authors; partly = 4-5 correct, or 6 authors with a wrong title; wrong = 3 or fewer, or the July longlist / 2025 shortlist given instead. Sources: https://lithub.com/heres-the-shortlist-for-the-2026-booker-prize/ ; https://www.npr.org/2026/09/22/nx-s1-5977872/booker-prize-shortlist-2026",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 48,
+  "text": "Which countries signed the Artemis Accords between 1 January and 30 September 2026? List them in order of signing.",
+  "type": "wide",
+  "reference": "Answer (17 countries, 60th-76th signatories): Portugal (Jan 11), Oman (Jan 26), Latvia (Apr 20), Jordan (Apr 23), Morocco (Apr 29), Malta (May 4), Ireland (May 4), Paraguay (May 7), Botswana (Jun 25), Serbia (Jul 16), Mauritius (Jul 17), Turkiye (Aug 31), Djibouti (Sep 14), Albania (Sep 21), Croatia (Sep 23), Cote d'Ivoire (Sep 24), San Marino (Sep 25). Total stood at 76 signatories after San Marino. Grading: correct = at least 15 of the 17 and no pre-2026 signatories (e.g. Philippines/Malaysia Oct 2025) included; partly = 9-14; wrong = 8 or fewer. Countries that signed in October 2026 (e.g. at the IAC in Antalya, 5-9 Oct) are out of scope and should not be counted against or for the answer. Sources: https://en.wikipedia.org/wiki/Artemis_Accords ; https://www.washingtontimes.com/news/2026/sep/28/nasa-welcomes-four-new-nations-artemis-accords-reaching-76/",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 49,
+  "text": "List every named storm of the 2026 Atlantic hurricane season that formed before 1 October 2026, with its formation date and whether it became a hurricane.",
+  "type": "wide",
+  "reference": "Answer (8 storms, all tropical storms, none reached hurricane strength before October): Arthur (formed Jun 17), Bertha (Jul 19), Cristobal (Aug 12), Dolly (Aug 27), Edouard (Aug 31), Fay (Sep 19; strongest, ~70 mph), Gonzalo (Sep 25), Hanna (Sep 28). The season broke the satellite-era record for the latest first hurricane on 11 Sep. Isaias formed 6 Oct and is out of scope (mentioning it as later is fine). Grading: correct = all 8 names, dates within ±1 day for at least 6, and states none became a hurricane; partly = 6-7 names, or all 8 but wrong on hurricane status/dates; wrong = 5 or fewer or lists names from the 2020 list order as if they had formed. Sources: https://en.wikipedia.org/wiki/2026_Atlantic_hurricane_season ; https://www.nhc.noaa.gov/data/tcr/index.php",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 50,
+  "text": "Who won the acting Emmys for 2026 (78th Primetime Emmys): lead and supporting actor and actress in drama, comedy, and limited/anthology series or movie — 12 winners in total?",
+  "type": "wide",
+  "reference": "Answer: Comedy - Lead Actor Matthew Rhys (Widow's Bay); Lead Actress Jean Smart (Hacks); Supporting Actor Stephen Root (Widow's Bay); Supporting Actress Kate O'Flynn (Widow's Bay). Drama - Lead Actor Noah Wyle (The Pitt); Lead Actress Rhea Seehorn (Pluribus); Supporting Actor Tom Pelphrey (Task); Supporting Actress Allison Janney (The Diplomat). Limited/Anthology/Movie - Lead Actor Matthew Rhys (The Beast in Me); Lead Actress Sally Field (Remarkably Bright Creatures); Supporting Actor David Harbour (DTF St. Louis); Supporting Actress Linda Cardellini (DTF St. Louis). Note: the two limited-series supporting awards were moved to the Creative Arts ceremony in 2026, so main-telecast lists omit them. Ceremony 14 Sep 2026 (Monday). Grading: correct = at least 11 of 12; partly = 8-10 (typically missing the two Creative Arts supporting categories); wrong = 7 or fewer, or 2025 winners. Sources: https://en.wikipedia.org/wiki/78th_Primetime_Emmy_Awards ; https://en.wikipedia.org/wiki/78th_Primetime_Creative_Arts_Emmy_Awards",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 51,
+  "text": "Who won each of the 21 stages of the 2026 Tour de France?",
+  "type": "wide",
+  "reference": "Answer: 1 (TTT Barcelona, 4 Jul) Team Visma | Lease a Bike; 2 Isaac del Toro; 3 Tadej Pogacar; 4 Mads Pedersen; 5 Olav Kooij; 6 Pogacar; 7 Tim Merlier; 8 Merlier; 9 Mathieu van der Poel; 10 Pogacar; 11 Soren Waerenskjold; 12 Merlier; 13 Mauro Schmid; 14 Pogacar; 15 Remco Evenepoel; 16 Evenepoel; 17 Jasper Philipsen; 18 Richard Carapaz; 19 Pogacar; 20 Carapaz; 21 (Paris, 26 Jul) van der Poel. Pogacar 5 stage wins; Merlier 3; Evenepoel, Carapaz, van der Poel 2 each. Podium: Pogacar, Evenepoel 2nd, del Toro 3rd; points Pedersen; mountains Carapaz. Grading: correct = at least 19 of 21 stages right; partly = 12-18; wrong = 11 or fewer or a different year's results. Sources: https://en.wikipedia.org/wiki/2026_Tour_de_France",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 52,
+  "text": "Which new orbital rockets (or new variants) made their first launch attempt between 1 January and 30 September 2026? Give the rocket, country, date and whether the maiden flight succeeded.",
+  "type": "wide",
+  "reference": "Answer (11 per Wikipedia's maiden-flight table): Ceres-2 (China, Galactic Energy, 17 Jan, failure); Ariane 64 (Europe/France, 12 Feb, success); Kinetica-2 (China, CAS Space, 30 Mar, success); Tianlong-3 (China, Space Pioneer, 3 Apr, failure); Irtysh / Soyuz-5 (Russia, 30 Apr, success); Starship Block 3 (USA, 22 May, partial success - Flight 12); Long March 12B (China, 1 Jun, success); H3-30S (Japan, 12 Jun, success); Long March 10B (China, 10 Jul, success); Vikram-1 (India, Skyroot, 18 Jul, success); Pallas-1 (China, Galactic Energy, 1 Sep, success). Core = the 8 all-new vehicles (Ceres-2, Kinetica-2, Tianlong-3, Irtysh/Soyuz-5, LM-12B, LM-10B, Vikram-1, Pallas-1); the 3 variants (Ariane 64, Starship Block 3, H3-30S) are optional extras. Grading: correct = at least 7 of 8 core with right outcome and no fabricated debuts (e.g. claiming Neutron, Terran R, Long March 10A or Miura 5 flew in this window); partly = 4-6 core; wrong = 3 or fewer. Sources: https://en.wikipedia.org/wiki/2026_in_spaceflight (Maiden flights table) ; https://news.cgtn.com/news/2026-09-01/PALLAS-1-Y1-rocket-succeeds-in-maiden-flight-1Q4ZyRMWrkI/share_amp.html",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 53,
+  "text": "Under the FCC order of June 2026 on Amazon Leo (Kuiper) missing its July 30, 2026 half-deployment milestone, did the FCC grant Amazon's requested 24-month extension? Give the order number, how many satellites the milestone required, and the condition the FCC imposed instead.",
+  "type": "domain",
+  "reference": "Answer: No extension. The Space Bureau's Order DA 26-553 (adopted/released 5 June 2026, file SAT-MOD-20260129-00065) instead granted a limited, conditional WAIVER of the 50% milestone (47 CFR 25.164(b)(1)) and the automatic-termination rule. Milestone = 1,616 satellites (half of 3,232 Gen1). Condition: satellites not deployed by 30 July 2026 temporarily lose their processing-round priority (2020 Ka/Ku and 2021 V-band rounds) until the earlier of 20 months after 30 July 2026 (30 March 2028) or the date Amazon reaches 50% deployment; this can be shortened to 15 months (30 Oct 2027) if Amazon certifies it has built the satellites and procured launches. Final 100% milestone (30 July 2029) unchanged. Partly correct: says waiver granted with spectrum-priority demotion but wrong/missing numbers or order id; or uses 1,618/3,236 (older pre-modification counts) with otherwise correct conditions. Wrong: says extension to 2028 granted, or says no relief/license revoked. Sources: https://docs.fcc.gov/public/attachments/DA-26-553A1.txt ; https://www.benton.org/headlines/fcc-grants-kuipers-request-extend-or-waive-interim-milestone",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 54,
+  "text": "Which exact frequency bands did the FCC approve transferring from EchoStar to SpaceX in May 2026? List each band with its MHz ranges and give the FCC document number and date.",
+  "type": "domain",
+  "reference": "Answer: Memorandum Opinion and Order DA 26-471 (Wireless Telecommunications Bureau and Space Bureau, adopted and released 12 May 2026). Bands to SpaceX: AWS-4 2000-2020 MHz and 2180-2200 MHz (40 MHz); AWS H Block 1915-1920 MHz and 1995-2000 MHz (10 MHz); unpaired AWS-3 1695-1710 MHz (up to 15 MHz); ~65 MHz total, deal ~$17B, for direct-to-device use. Partly correct: names AWS-4 + H-block + AWS-3 and ~65 MHz but wrong/missing frequency ranges or document number; or describes 2 GHz/AWS-4 only. Wrong: says the 3.45 GHz or 600 MHz licenses went to SpaceX (those went to AT&T), or that the deal was not approved. Sources: https://docs.fcc.gov/public/attachments/DA-26-471A1.txt ; https://www.advanced-television.com/2026/05/13/fcc-approves-echostars-spectrum-sale-to-spacex-att/",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 55,
+  "text": "In its July 2026 'Space Modernization for the 21st Century' order, the FCC replaced Part 25 with a new rule part. Which Part number, what is the order's FCC number and docket, and on what date was it adopted?",
+  "type": "domain",
+  "reference": "Answer: New Part 100 ('Space and Earth Station Services') replacing Part 25; Report and Order and FNPRM FCC 26-47, SB Docket No. 25-306; adopted 22 July 2026, released 23 July 2026. Partly correct: Part 100 correct but wrong/missing FCC number, docket or date (e.g. citing only the late-2025 NPRM). Wrong: says it is still only a proposal, or names a different Part. Sources: https://docs.fcc.gov/public/attachments/FCC-26-47A1.txt ; https://www.morganlewis.com/pubs/2026/04/modernizing-space-fcc-pushes-to-support-and-accelerate-the-space-economy",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 56,
+  "text": "How many Starship-Super Heavy launches per year have been environmentally approved at Kennedy's LC-39A (FAA record of decision, January 2026) and at Cape Canaveral's SLC-37 (Department of the Air Force record of decision, November 2025)?",
+  "type": "domain",
+  "reference": "Answer: LC-39A: up to 44 launches per year (plus up to 44 Super Heavy and 44 Starship landings); FAA ROD signed 29 Jan 2026, announced ~30 Jan, FR notice 3 Feb 2026. SLC-37: up to 76 launches and 152 landings per year; DAF ROD signed 20 Nov 2025, contingent on an FAA supplemental airspace analysis. Partly correct: one of the two numbers right. Wrong: gives Starbase's 25/year for either site, or swaps the numbers. Sources: https://policyrisk.com/federal-register/2026-02108 ; https://public-inspection.federalregister.gov/2025-23314.pdf",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 57,
+  "text": "In the European Commission's first-ever Digital Services Act non-compliance decision against X (December 2025), how was the total fine split across the individual infringements, and which DSA articles were breached?",
+  "type": "domain",
+  "reference": "Answer: Total EUR 120 million, decision 5 Dec 2025: EUR 45m for the deceptive paid blue checkmark (Art. 25(1), dark patterns), EUR 40m for failing to give researchers access to public data (Art. 40(12)), EUR 35m for the non-transparent advertising repository (Art. 39). X got 60 working days (checkmark) and 90 working days (action plan for ads/researcher access). Partly correct: correct EUR 120m and three infringements but no or wrong per-item split, or missing article numbers. Wrong: wrong total (e.g. the rumoured ~$1bn), or describes the Jan 2026 Grok proceedings as the fine. Sources: https://heise.de/-11104571 ; https://www.scottishlegal.com/articles/x-fined-eur120-million-for-breaches-of-eu-digital-services-act",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 58,
+  "text": "The EU's 'Digital Omnibus on AI' amending the AI Act was published in 2026. What is its regulation number, when was it published in the Official Journal, from when do stand-alone (Annex III) high-risk obligations now apply, and from when is the new Article 5 ban on AI systems generating non-consensual intimate imagery or CSAM applicable?",
+  "type": "domain",
+  "reference": "Answer: Regulation (EU) 2026/1744, published in the OJ on 24 July 2026 (in force a few days later; EP final vote 16 June 2026). Annex III high-risk obligations: 2 December 2027 (was 2 Aug 2026); Annex I/embedded high-risk: 2 August 2028. New prohibited practice (AI generating CSAM / non-consensual intimate material): applies from 2 December 2026. Partly correct: correct high-risk dates but missing/wrong regulation number or ban date; or says 'adopted mid-2026' without OJ date. Wrong: says the omnibus is still only a proposal, or gives 2 Aug 2026 as the Annex III date. Sources: https://www.cuatrecasas.com/en/global/intellectual-property/art/digital-omnibus-ai-has-been-published ; https://fpf.org/blog/the-ai-act-implementation-timeline-what-changes-under-the-ai-omnibus/",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 59,
+  "text": "In its July 2026 Upper C-band order, which exact frequency range did the FCC make available for terrestrial wireless, how is the band split into licenses (block size and license area), and what is the order's FCC number?",
+  "type": "domain",
+  "reference": "Answer: 3.98-4.14 GHz (160 MHz) for flexible terrestrial use, with a 4.14-4.16 GHz guard band (satellite stays above); eight 20-MHz unpaired blocks licensed by Partial Economic Area (PEA), contiguous US; Report and Order FCC 26-46 adopted 22 July 2026. Creates a 440 MHz 3.7-4.14 GHz 'super band'; auction must be complete by July 2027; transition deadlines 30 Dec 2030 (top 75 PEAs) and 30 June 2031. Partly correct: 160 MHz / 3.98-4.14 GHz right but wrong block structure or missing FCC number; or says 'about 100+ MHz of 3.98-4.2 GHz'. Wrong: whole 3.98-4.2 GHz (220 MHz) auctioned, or confuses with the 2021 Auction 107 (3.7-3.98 GHz). Sources: https://www.dwt.com/blogs/broadband-advisor/2026/07/fcc-adopts-upper-c-band-transition-order ; https://www.telecomstechnews.com/news/fcc-votes-on-160mhz-upper-c-band-auction-for-5g-and-6g/",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ },
+ {
+  "id": 60,
+  "text": "Ireland's Data Protection Commission has opened two GDPR inquiries into X Internet Unlimited Company related to Grok. What does each one cover and when was each opened?",
+  "type": "domain",
+  "reference": "Answer: (1) Announced 11 April 2025: processing of personal data in publicly accessible posts by EU/EEA users to TRAIN Grok LLMs (lawfulness, transparency). (2) Notified to XIUC 16 Feb 2026, announced 17 Feb 2026: the creation and publication on X of potentially harmful non-consensual intimate and/or sexualised images (incl. of children) generated with Grok (principles, lawfulness, data protection by design). Partly correct: describes only one of the two inquiries correctly, or both topics without dates. Wrong: says the DPC has fined X over Grok, or confuses it with the EU Commission's DSA probe (26 Jan 2026) or Ofcom's (12 Jan 2026). Sources: https://www.dataprotection.ie/en/news-media/latest-news/data-protection-commission-announces-commencement-inquiry-x-internet-unlimited-company-xiuc ; https://www.rte.ie/news/business/2026/0217/1558842-grok-ireland/",
+  "origin": "generated",
+  "as_of": "2026-10-07"
+ }
+]
