@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,6 +12,7 @@ from searchaudit.models import AuditResults
 from searchaudit.report.model import build_view_model
 
 FIXTURE = "fixture"
+log = logging.getLogger(__name__)
 SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 
 
@@ -55,7 +57,11 @@ class AuditStore:
         cached = self._cache.get(slug)
         if cached and cached.mtime == mtime:
             return cached
-        results = AuditResults.model_validate_json(path.read_text())
+        try:
+            results = AuditResults.model_validate_json(path.read_text())
+        except (OSError, ValueError) as exc:  # pydantic's ValidationError is a ValueError
+            log.warning("skipping unreadable audit %s: %s", slug, str(exc).splitlines()[0])
+            return None
         audit = Audit(slug, path.parent, results, build_view_model(results), mtime)
         self._cache[slug] = audit
         return audit
