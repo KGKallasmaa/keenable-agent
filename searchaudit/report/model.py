@@ -524,6 +524,7 @@ def _judge(results: AuditResults, rows: Sequence[VM], ids) -> VM:
         "missing": sum(1 for r in rows for i in ids if r["cells"][i]["missing"]),
         "human_agreement": meta.human_agreement,
         "human_labels_n": meta.human_labels_n,
+        "second": meta.second_judge,
         "inconsistent": inconsistent,
         "splits": [
             {

@@ -248,6 +248,7 @@
 <div class="panel tablewrap"><table class="kv"><tbody>
   <tr><td>Judge model</td><td class="num">{{ j.model }}{% if j.models | length > 1 %} <span class="hint">(mixed: {% for k, v in j.models.items() %}{{ k }} × {{ v }}{{ ", " if not loop.last }}{% endfor %})</span>{% endif %}</td></tr>
   <tr><td>Agreement with human graders</td><td>{% if j.human_agreement is none %}<span class="hint">Not measured yet. No answers in this audit have been hand-graded.</span>{% else %}<span class="num">{{ j.human_agreement | pct }}</span> of {{ j.human_labels_n }} hand-graded answers{% endif %}</td></tr>
+  <tr><td>Agreement with a second judge</td><td>{% if not j.second %}<span class="hint">Not run.</span>{% else %}{% set s2 = j.second %}<span class="num">{{ s2.correct_agreement | pct }}</span> agree on correct vs not, <span class="num">{{ s2.exact_agreement | pct }}</span> on the exact grade (Cohen's κ {{ "%.2f" | format(s2.kappa) }}), over {{ s2.n }} contested answers re-graded by <span class="num">{{ s2.model }}</span>. <span class="hint">Contested = prompts where providers got different grades, i.e. the answers that decide the ranking.</span>{% endif %}</td></tr>
   <tr><td>Grades that break the rubric rule</td><td class="num">{{ j.inconsistent | length }}{% if not j.inconsistent %} <span class="hint">every grade matches its four checks</span>{% endif %}</td></tr>
   {% if j.missing %}<tr><td>Missing runs or judgments</td><td class="num">{{ j.missing }} <span class="hint">(counted as wrong)</span></td></tr>{% endif %}
 </tbody></table></div>

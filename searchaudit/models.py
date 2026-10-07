@@ -121,6 +121,7 @@ class AuditMeta(BaseModel):
     total_cost_usd: float = 0.0  # spend of the whole audit incl. judging
     human_agreement: float | None = None  # judge vs hand labels; None = not measured yet
     human_labels_n: int = 0
+    second_judge: dict = Field(default_factory=dict)  # scripts/second_judge.py output; {} = not run
     notes: list[str] = Field(default_factory=list)  # methodology caveats shown in the report
 
 

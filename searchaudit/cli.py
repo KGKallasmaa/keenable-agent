@@ -203,8 +203,14 @@ def assemble(config: AuditConfig, settings: Settings, registry: Registry) -> Aud
         judge_model=config.judge_model, budget=config.budget.model_dump(),
         total_cost_usd=round(sum(r.cost_usd for r in runs) + judge_cost, 4),
         notes=method_notes(config, settings, runs, judgments, BUNDLE_VERSION),
+        second_judge=_second_judge(config),
     )
     return AuditResults(meta=meta, providers=providers, prompts=prompts, runs=runs, judgments=judgments)
+
+
+def _second_judge(config: AuditConfig) -> dict:
+    path = config.base_dir / "second_judge.json"
+    return json.loads(path.read_text()) if path.exists() else {}
 
 
 async def cmd_assemble(config: AuditConfig, settings: Settings, args: argparse.Namespace,
