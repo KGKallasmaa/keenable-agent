@@ -55,6 +55,7 @@ class Prompt(BaseModel):
     reference: str  # reference answer / grading notes the judge uses
     origin: Literal["generated", "uploaded", "hand"] = "generated"
     as_of: str = ""  # date the reference was checked, ISO
+    tier: Literal["routine", "hard"] | None = None  # prompt-set slice shown as "routine vs hard" in the report
 
 
 class ToolCall(BaseModel):

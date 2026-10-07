@@ -7,3 +7,5 @@
 !audits/*/report.pdf
 !audits/*/prompts.json
 **/__pycache__
+# The synthetic fixture is for local dev and tests only; keep it out of the public site.
+audits/fixture

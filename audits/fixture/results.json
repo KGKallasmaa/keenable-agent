@@ -79,7 +79,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 1; checked against workday.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 2,
@@ -87,7 +88,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 2; checked against databricks.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 3,
@@ -95,7 +97,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 3; checked against notion.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 4,
@@ -103,7 +106,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 4; checked against datadog.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 5,
@@ -111,7 +115,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 5; checked against airtable.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 6,
@@ -119,7 +124,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 6; checked against okta.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 7,
@@ -127,7 +133,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 7; checked against workday.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 8,
@@ -135,7 +142,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 8; checked against hubspot.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 9,
@@ -143,7 +151,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 9; checked against okta.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 10,
@@ -151,7 +160,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 10; checked against ramp.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 11,
@@ -159,7 +169,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 11; checked against okta.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 12,
@@ -167,7 +178,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 12; checked against ramp.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 13,
@@ -175,7 +187,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 13; checked against notion.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 14,
@@ -183,7 +196,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 14; checked against snowflake.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 15,
@@ -191,7 +205,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 15; checked against ramp.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 16,
@@ -199,7 +214,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 16; checked against ramp.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 17,
@@ -207,7 +223,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 17; checked against databricks.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 18,
@@ -215,7 +232,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 18; checked against notion.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 19,
@@ -223,7 +241,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 19; checked against snowflake.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 20,
@@ -231,7 +250,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 20; checked against datadog.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 21,
@@ -239,7 +259,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 21; checked against snowflake.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 22,
@@ -247,7 +268,8 @@
    "type": "lookup",
    "reference": "Illustrative reference for prompt 22; checked against airtable.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 23,
@@ -255,7 +277,8 @@
    "type": "fresh",
    "reference": "Illustrative reference for prompt 23; checked against reuters.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 24,
@@ -263,7 +286,8 @@
    "type": "fresh",
    "reference": "Illustrative reference for prompt 24; checked against reuters.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 25,
@@ -271,7 +295,8 @@
    "type": "fresh",
    "reference": "Illustrative reference for prompt 25; checked against reuters.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 26,
@@ -279,7 +304,8 @@
    "type": "fresh",
    "reference": "Illustrative reference for prompt 26; checked against reuters.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 27,
@@ -287,7 +313,8 @@
    "type": "fresh",
    "reference": "Illustrative reference for prompt 27; checked against reuters.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 28,
@@ -295,7 +322,8 @@
    "type": "fresh",
    "reference": "Illustrative reference for prompt 28; checked against reuters.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 29,
@@ -303,7 +331,8 @@
    "type": "fresh",
    "reference": "Illustrative reference for prompt 29; checked against reuters.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 30,
@@ -311,7 +340,8 @@
    "type": "fresh",
    "reference": "Illustrative reference for prompt 30; checked against reuters.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 31,
@@ -319,7 +349,8 @@
    "type": "fresh",
    "reference": "Illustrative reference for prompt 31; checked against reuters.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 32,
@@ -327,7 +358,8 @@
    "type": "fresh",
    "reference": "Illustrative reference for prompt 32; checked against reuters.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 33,
@@ -335,7 +367,8 @@
    "type": "fresh",
    "reference": "Illustrative reference for prompt 33; checked against reuters.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 34,
@@ -343,7 +376,8 @@
    "type": "fresh",
    "reference": "Illustrative reference for prompt 34; checked against reuters.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 35,
@@ -351,7 +385,8 @@
    "type": "fresh",
    "reference": "Illustrative reference for prompt 35; checked against reuters.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 36,
@@ -359,7 +394,8 @@
    "type": "fresh",
    "reference": "Illustrative reference for prompt 36; checked against reuters.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 37,
@@ -367,7 +403,8 @@
    "type": "multihop",
    "reference": "Illustrative reference for prompt 37; checked against g2.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 38,
@@ -375,7 +412,8 @@
    "type": "multihop",
    "reference": "Illustrative reference for prompt 38; checked against g2.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 39,
@@ -383,7 +421,8 @@
    "type": "multihop",
    "reference": "Illustrative reference for prompt 39; checked against g2.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 40,
@@ -391,7 +430,8 @@
    "type": "multihop",
    "reference": "Illustrative reference for prompt 40; checked against g2.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 41,
@@ -399,7 +439,8 @@
    "type": "multihop",
    "reference": "Illustrative reference for prompt 41; checked against g2.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 42,
@@ -407,7 +448,8 @@
    "type": "multihop",
    "reference": "Illustrative reference for prompt 42; checked against g2.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 43,
@@ -415,7 +457,8 @@
    "type": "multihop",
    "reference": "Illustrative reference for prompt 43; checked against g2.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 44,
@@ -423,7 +466,8 @@
    "type": "multihop",
    "reference": "Illustrative reference for prompt 44; checked against g2.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 45,
@@ -431,7 +475,8 @@
    "type": "multihop",
    "reference": "Illustrative reference for prompt 45; checked against g2.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 46,
@@ -439,7 +484,8 @@
    "type": "multihop",
    "reference": "Illustrative reference for prompt 46; checked against g2.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 47,
@@ -447,7 +493,8 @@
    "type": "multihop",
    "reference": "Illustrative reference for prompt 47; checked against g2.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 48,
@@ -455,7 +502,8 @@
    "type": "multihop",
    "reference": "Illustrative reference for prompt 48; checked against g2.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 49,
@@ -463,7 +511,8 @@
    "type": "multihop",
    "reference": "Illustrative reference for prompt 49; checked against g2.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 50,
@@ -471,7 +520,8 @@
    "type": "multihop",
    "reference": "Illustrative reference for prompt 50; checked against g2.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 51,
@@ -479,7 +529,8 @@
    "type": "multihop",
    "reference": "Illustrative reference for prompt 51; checked against g2.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 52,
@@ -487,7 +538,8 @@
    "type": "multihop",
    "reference": "Illustrative reference for prompt 52; checked against g2.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 53,
@@ -495,7 +547,8 @@
    "type": "multihop",
    "reference": "Illustrative reference for prompt 53; checked against g2.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 54,
@@ -503,7 +556,8 @@
    "type": "multihop",
    "reference": "Illustrative reference for prompt 54; checked against g2.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 55,
@@ -511,7 +565,8 @@
    "type": "wide",
    "reference": "Illustrative reference for prompt 55; checked against crunchbase.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 56,
@@ -519,7 +574,8 @@
    "type": "wide",
    "reference": "Illustrative reference for prompt 56; checked against crunchbase.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 57,
@@ -527,7 +583,8 @@
    "type": "wide",
    "reference": "Illustrative reference for prompt 57; checked against crunchbase.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 58,
@@ -535,7 +592,8 @@
    "type": "wide",
    "reference": "Illustrative reference for prompt 58; checked against crunchbase.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 59,
@@ -543,7 +601,8 @@
    "type": "wide",
    "reference": "Illustrative reference for prompt 59; checked against crunchbase.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 60,
@@ -551,7 +610,8 @@
    "type": "wide",
    "reference": "Illustrative reference for prompt 60; checked against crunchbase.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 61,
@@ -559,7 +619,8 @@
    "type": "wide",
    "reference": "Illustrative reference for prompt 61; checked against crunchbase.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 62,
@@ -567,7 +628,8 @@
    "type": "wide",
    "reference": "Illustrative reference for prompt 62; checked against crunchbase.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 63,
@@ -575,7 +637,8 @@
    "type": "wide",
    "reference": "Illustrative reference for prompt 63; checked against crunchbase.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 64,
@@ -583,7 +646,8 @@
    "type": "wide",
    "reference": "Illustrative reference for prompt 64; checked against crunchbase.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 65,
@@ -591,7 +655,8 @@
    "type": "wide",
    "reference": "Illustrative reference for prompt 65; checked against crunchbase.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 66,
@@ -599,7 +664,8 @@
    "type": "wide",
    "reference": "Illustrative reference for prompt 66; checked against crunchbase.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 67,
@@ -607,7 +673,8 @@
    "type": "wide",
    "reference": "Illustrative reference for prompt 67; checked against crunchbase.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 68,
@@ -615,7 +682,8 @@
    "type": "wide",
    "reference": "Illustrative reference for prompt 68; checked against crunchbase.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 69,
@@ -623,7 +691,8 @@
    "type": "wide",
    "reference": "Illustrative reference for prompt 69; checked against crunchbase.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 70,
@@ -631,7 +700,8 @@
    "type": "wide",
    "reference": "Illustrative reference for prompt 70; checked against crunchbase.com.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 71,
@@ -639,7 +709,8 @@
    "type": "domain",
    "reference": "Illustrative reference for prompt 71; checked against europa.eu.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 72,
@@ -647,7 +718,8 @@
    "type": "domain",
    "reference": "Illustrative reference for prompt 72; checked against europa.eu.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 73,
@@ -655,7 +727,8 @@
    "type": "domain",
    "reference": "Illustrative reference for prompt 73; checked against europa.eu.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 74,
@@ -663,7 +736,8 @@
    "type": "domain",
    "reference": "Illustrative reference for prompt 74; checked against europa.eu.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 75,
@@ -671,7 +745,8 @@
    "type": "domain",
    "reference": "Illustrative reference for prompt 75; checked against europa.eu.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 76,
@@ -679,7 +754,8 @@
    "type": "domain",
    "reference": "Illustrative reference for prompt 76; checked against europa.eu.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 77,
@@ -687,7 +763,8 @@
    "type": "domain",
    "reference": "Illustrative reference for prompt 77; checked against europa.eu.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 78,
@@ -695,7 +772,8 @@
    "type": "domain",
    "reference": "Illustrative reference for prompt 78; checked against europa.eu.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 79,
@@ -703,7 +781,8 @@
    "type": "domain",
    "reference": "Illustrative reference for prompt 79; checked against europa.eu.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   },
   {
    "id": 80,
@@ -711,7 +790,8 @@
    "type": "domain",
    "reference": "Illustrative reference for prompt 80; checked against europa.eu.",
    "origin": "generated",
-   "as_of": "2026-10-05"
+   "as_of": "2026-10-05",
+   "tier": null
   }
  ],
  "runs": [

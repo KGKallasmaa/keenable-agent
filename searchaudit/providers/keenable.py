@@ -24,7 +24,8 @@ from searchaudit.providers.base import (
 API = "https://api.keenable.ai/v1"
 TITLE = "searchaudit"
 MAX_RESULTS = 5
-SNIPPET_CHARS = 800
+# Exa via OpenRouter returns ~2-4k chars of highlights per result; match it so neither side reads less.
+SNIPPET_CHARS = 3000
 PAGE_CHARS = 8000
 EVIDENCE_CHARS = 1500
 
@@ -47,7 +48,7 @@ class KeenableAPI:
 
     async def search(self, query: str, max_results: int = MAX_RESULTS) -> list[dict]:
         response = await self.http.post(
-            f"{API}/search{self.suffix}", json={"query": query, "max_results": max_results},
+            f"{API}/search{self.suffix}", json={"query": query, "max_results": max_results, "snippet_max_length": SNIPPET_CHARS},
             headers=self.headers, timeout=30.0,
         )
         response.raise_for_status()

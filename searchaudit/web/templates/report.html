@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "macros.html" import fav, pv, hfav, gicon, icon %}
-{% from "_sections.html" import ranking, chart, facts, measured, failures, h2h_pair, guide, judge %}
+{% from "_sections.html" import ranking, chart, facts, tiers, measured, failures, h2h_pair, guide, judge %}
 {% from "_prompt.html" import prompt_table %}
 {% block title %}{{ vm.meta.company }} · Search Audit{% endblock %}
 {% block main %}
@@ -19,6 +19,7 @@
   <div class="panel pad">{{ ranking(vm) }}</div>
   <div class="panel pad">{{ chart(vm) }}</div>
 </div>
+{{ tiers(vm) }}
 
 <div class="tabs" role="tablist" aria-label="Report sections">
 {% for id, label, count in [("prompts", "Prompts", vm.n), ("h2h", "Head-to-head", None), ("failures", "Failure modes", None), ("guide", "Implementation guide", None), ("judge", "Judge", None), ("measured", "How we measured", None)] %}

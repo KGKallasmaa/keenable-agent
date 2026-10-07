@@ -99,8 +99,10 @@ th.r, td.r { text-align: right; } th.c, td.c { text-align: center; }
 .facts .k { font: 600 11px var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .facts .v { font: 600 16px/1.35 var(--sans); margin: 4px 0 2px; }
 .facts .d { font-size: 13px; color: var(--muted); }
-.summary { display: grid; grid-template-columns: 1.2fr 1fr; gap: 18px; margin-top: 24px; }
+.summary { display: grid; grid-template-columns: 1.45fr 1fr; gap: 18px; margin-top: 24px; }
 .summary > *, .two > * { min-width: 0; }
+#ranking th, #ranking td { padding-left: 6px; padding-right: 6px; }
+#ranking .scorebar { min-width: 48px; }
 .ptitle { font: 600 14px var(--sans); margin: 0 0 2px; }
 .weights { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 12px 0 8px; }
 .weights label { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
@@ -240,3 +242,7 @@ tr.link:hover td { background: var(--soft); }
   header.top, .banner-screen, .tabs, .no-print { display: none !important; }
   a { text-decoration: none; }
 }
+
+.tiers { margin-top: 18px; }
+.takeaways { margin: 12px 0 0; padding-left: 18px; font-size: 14px; }
+.takeaways li { margin: 4px 0; }

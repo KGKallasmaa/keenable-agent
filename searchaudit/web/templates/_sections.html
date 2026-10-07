@@ -14,7 +14,7 @@
 {% endfor %}
 </div>
 {% endif %}
-<div class="tablewrap"><table id="ranking"><thead><tr><th>#</th><th>Provider</th><th>Value score</th><th class="r">Correct</th><th class="r">$ / prompt</th><th class="r">Time p50 / p90</th></tr></thead><tbody>
+<div class="tablewrap"><table id="ranking"><thead><tr><th>#</th><th>Provider</th><th>Value score</th><th class="r">Correct</th><th class="r">$ / prompt</th><th class="r">Time</th></tr></thead><tbody>
 {% for id in vm.by_score %}{% set s = vm.summary[id] %}{% set p = vm.provider[id] %}
 <tr data-id="{{ id }}">
   <td class="num hint rank">{{ loop.index }}</td>
@@ -22,7 +22,7 @@
   <td><div style="display:flex;align-items:center;gap:8px"><div class="scorebar" style="flex:1"><i style="width:{{ (s.score / maxs * 100) | round(1) }}%;background:{{ p.hex }}"></i></div><span class="num sc">{{ hl(vm.highlight.score[id], s.score | round | int) }}</span></div></td>
   <td class="r num" title="95% interval for share correct: {{ s.ci[0] | pct }}–{{ s.ci[1] | pct }}">{{ hl(vm.highlight.k[id], s.k ~ "/" ~ s.n) }}{% if id in vm.tied %}<div class="hint small">tied</div>{% endif %}</td>
   <td class="r num">{{ hl(vm.highlight.cost[id], s.per_prompt | money(3, s.est)) }}</td>
-  <td class="r num" style="white-space:nowrap">{{ hl(vm.highlight.t50[id], s.t50 | secs) }}<span class="hint"> / {{ s.t90 | secs }}</span></td>
+  <td class="r num" style="white-space:nowrap">{{ hl(vm.highlight.t50[id], s.t50 | secs) }}<div class="hint small">p90 {{ s.t90 | secs }}</div></td>
 </tr>
 {% endfor %}
 </tbody></table></div>
@@ -49,6 +49,25 @@
   <div><div class="k">{{ f.key }}</div><div class="v">{{ f.value }}</div><div class="d">{{ f.detail }}</div></div>
 {% endfor %}
 </div>
+{%- endmacro %}
+
+{% macro tiers(vm) -%}
+{% if vm.tiers %}
+<div class="panel pad tiers">
+<p class="ptitle">Routine vs hard prompts</p>
+<p class="hint" style="margin:0 0 10px">Routine prompts are everyday lookups any good search handles. Hard prompts were built to separate providers: very fresh facts, long-tail due diligence, non-English sources and big lists. Tied = gap within chance (McNemar, Holm) inside that slice.</p>
+<div class="tablewrap"><table><thead><tr><th>Provider</th>{% for t in vm.tiers %}<th class="r">{{ t.name }} ({{ t.n }})</th><th class="r">$ / prompt</th>{% endfor %}</tr></thead><tbody>
+{% for id in vm.ids %}{% set p = vm.provider[id] %}
+<tr><td>{{ pv(p) }}{{ today(p) }}</td>
+{% for t in vm.tiers %}
+  <td class="r num">{{ hl(t.k_hl[id], t.k[id] ~ "/" ~ t.n) }}{% if id in t.tied %}<div class="hint small">tied</div>{% endif %}</td>
+  <td class="r num">{{ t.per_prompt[id] | money(3, t.est[id]) }}</td>
+{% endfor %}</tr>
+{% endfor %}
+</tbody></table></div>
+<ul class="takeaways">{% for t in vm.tiers %}<li><b>{{ t.name }}:</b> {{ t.takeaway }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
 {%- endmacro %}
 
 {% macro measured(vm) -%}

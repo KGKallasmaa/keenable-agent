@@ -50,6 +50,7 @@ def build_view_model(results: AuditResults, weights: Weights = DEFAULT_WEIGHTS) 
     )
 
     prompt_rows = _prompt_rows(prompts, ids, cells, outcomes, weights)
+    tiers = _tiers(prompts, ids, labels, cells, outcomes, weights)
     types = _types(prompt_rows, ids)
     guide = _guide(types, ids, labels, summary, prompt_rows)
     log.info(
@@ -71,6 +72,7 @@ def build_view_model(results: AuditResults, weights: Weights = DEFAULT_WEIGHTS) 
         "n": n,
         "headline": {"kind": head.kind, "text": head.text},
         "facts": _facts(summary, ties, labels, n),
+        "tiers": tiers,
         "summary": summary,
         "highlight": {
             "score": _extremes({i: round(summary[i]["score"], 1) for i in ids}, lower_is_better=False),
@@ -574,3 +576,48 @@ def _client(company, ids, providers, rows, summary, ties, kind, weights: Weights
             for r in rows
         ],
     }
+
+
+TIER_NAMES = {"routine": "Routine prompts", "hard": "Hard prompts"}
+
+
+def _tiers(prompts, ids, labels, cells, outcomes, weights: Weights) -> list[VM]:
+    """Routine vs hard slices: accuracy ties and value winner within each slice (empty if one slice)."""
+    present = [t for t in TIER_NAMES if any(p.tier == t for p in prompts)]
+    if len(present) < 2:
+        return []
+    out: list[VM] = []
+    for tier in present:
+        idx = [i for i, p in enumerate(prompts) if p.tier == tier]
+        sub = [prompts[i] for i in idx]
+        summary = _summary(sub, ids, cells, [outcomes[i] for i in idx], weights)
+        by_accuracy = sorted(ids, key=lambda i: (-summary[i]["k"], summary[i]["per_prompt"], labels[i]))
+        correct = {pid: [cells[(p.id, pid)]["grade"] == "c" for p in sub] for pid in ids}
+        ties = stats.accuracy_ties(correct, by_accuracy)
+        by_score = sorted(ids, key=lambda i: (-summary[i]["score"], -summary[i]["k"], summary[i]["per_prompt"]))
+        tied = [i for i in by_accuracy if i in ties.tied]
+        cheapest_tied = min(tied, key=lambda i: summary[i]["per_prompt"])
+        if len(tied) == len(ids):
+            takeaway = (f"All {len(ids)} providers tie on accuracy here, so price decides: "
+                        f"{labels[cheapest_tied]} is cheapest.")
+        elif len(tied) == 1:
+            takeaway = (f"{labels[ties.leader]} is clearly most accurate here "
+                        f"({summary[ties.leader]['k']} of {len(sub)}).")
+        else:
+            takeaway = (f"{', '.join(labels[i] for i in tied)} tie for most accurate; "
+                        f"{labels[cheapest_tied]} is the cheapest of them.")
+        out.append({
+            "id": tier,
+            "name": TIER_NAMES[tier],
+            "n": len(sub),
+            "k": {i: summary[i]["k"] for i in ids},
+            "score": {i: summary[i]["score"] for i in ids},
+            "per_prompt": {i: summary[i]["per_prompt"] for i in ids},
+            "est": {i: summary[i]["est"] for i in ids},
+            "tied": tied,
+            "leader": ties.leader,
+            "value_winner": by_score[0],
+            "takeaway": takeaway,
+            "k_hl": _extremes({i: summary[i]["k"] for i in ids}, lower_is_better=False),
+        })
+    return out
