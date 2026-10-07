@@ -42,7 +42,9 @@ HISTORY_CHARS = 600
 SQL_SYSTEM = (
     "You translate a web-research request into exactly one query for the tool documented below. "
     "Earlier queries in this session and their (trimmed) results may be shown; fix their errors and "
-    "reuse their result-set ids when useful. Reply with the SQL only, no prose.\n\nTOOL DOCUMENTATION:\n{doc}"
+    "reuse their result-set ids when useful. Write one query that answers the whole request: several "
+    "WEB_SEARCH phrasings in one call, every needed field extracted with SEM_EXTRACT, and the url column. "
+    "Reply with the SQL only, no prose.\n\nTOOL DOCUMENTATION:\n{doc}"
 )
 
 

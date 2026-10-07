@@ -152,3 +152,11 @@ async def test_routed_tool_call_through_agent_loop_counts_router_cost_as_search(
     assert run.via == "keen" and run.route_confidence == 0.7
     assert run.cost_search_usd == 0.0045 and run.cost_model_usd == 0.002
     assert run.searches == 1
+
+
+def test_select_session_carries_usage_guidance() -> None:
+    from searchaudit.providers.select import SELECT_GUIDANCE, SelectSession
+
+    session = SelectSession(client=None, tools=[], keenable=type("K", (), {"usd": 0.004})())
+    assert session.instructions() == SELECT_GUIDANCE
+    assert "ONE comprehensive query" in SELECT_GUIDANCE

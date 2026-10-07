@@ -71,12 +71,28 @@ def result_text(result: Any) -> str:
     return text
 
 
+# SELECT's strength is breadth per call: one query can run several searches and extract every field
+# from every result page into one table. Without this hint agents use it like keyword search, one
+# narrow call at a time, and pay for more requests than plain search (StackAI routine run, 2026-10-07).
+SELECT_GUIDANCE = (
+    "Using the select tool well: one select call can run several WEB_SEARCH phrasings at once and "
+    "extract every field you need from all result pages into one table. Prefer ONE comprehensive query "
+    "that returns the whole answer (every list item with its attributes and source url) over several "
+    "narrow calls. Select the url column so you can cite it. Use SEM_EXTRACT with evidence instead of "
+    "fetching pages, and fetch a page only when the table lacks a value you need. To refine, query the "
+    "earlier result set id instead of searching again."
+)
+
+
 class SelectSession(ProviderSession):
     def __init__(self, client: Any, tools: list[Any], keenable: KeenableTools) -> None:
         self.client = client
         self.tools = {t.name: t for t in tools}
         self.keenable = keenable
         self.usd = keenable.usd
+
+    def instructions(self) -> str:
+        return SELECT_GUIDANCE
 
     def function_tools(self) -> list[dict]:
         schemas = [mcp_tool_schema(t) for t in self.tools.values()]
@@ -128,7 +144,8 @@ def select_unavailable(ctx: ProviderContext) -> str | None:
 
 class SelectProvider(KeenablePriced):
     id = "select"
-    via = f"Keenable SELECT MCP ({SELECT_URL}) tools via list_tools + Keenable fetch"
+    via = (f"Keenable SELECT MCP ({SELECT_URL}) tools via list_tools + Keenable fetch; the agent gets a "
+           "short usage guide: one comprehensive query per answer rather than many narrow ones")
 
     def __init__(self, connect: Connect = connect_select) -> None:
         self.connect = connect
