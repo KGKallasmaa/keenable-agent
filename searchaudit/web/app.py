@@ -136,6 +136,11 @@ def create_app(audits_dir: Path | None = None, show_fixture: bool | None = None)
             return page(request, "pitch.html", pitch=build_pitch(root), nav="home", solo=True, printing=True)
         return page(request, "print.html", **report_ctx(audit_or_404(slug)), printing=True)
 
+    @app.get("/r/{slug}/print/full", response_class=HTMLResponse)
+    def report_print_full(request: Request, slug: str) -> HTMLResponse:
+        """The print view plus every prompt with its reference and every provider's full answer."""
+        return page(request, "print.html", **report_ctx(audit_or_404(slug)), printing=True, full=True)
+
     @app.get("/r/{slug}/q/{prompt_id}", response_class=HTMLResponse)
     def prompt_page(request: Request, slug: str, prompt_id: int) -> HTMLResponse:
         audit = audit_or_404(slug)

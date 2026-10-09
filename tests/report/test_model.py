@@ -46,6 +46,14 @@ def test_answer_html_renders_markdown_and_escapes_tags():
     assert 'href="https://www.sec.gov/a"' in html
 
 
+def test_answer_html_renders_pipe_tables_only_with_a_rule():
+    html = str(answer_html("Grants:\n| File | Date |\n|---|:--|\n| SES-1 | **5 June** |\nDone | ok"))
+    assert '<table class="mdt"><thead><tr><th>File</th><th>Date</th></tr></thead>' in html
+    assert "<td>SES-1</td><td><strong>5 June</strong></td>" in html
+    assert html.endswith("Done | ok")
+    assert "<table" not in str(answer_html("| no rule |\n| here |"))
+
+
 def test_a_statistical_tie_is_not_also_marked_worst(vm):
     for pid in vm["tied"]:
         assert vm["highlight"]["k"].get(pid) != "worst"

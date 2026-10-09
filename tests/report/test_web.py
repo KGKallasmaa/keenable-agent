@@ -5,6 +5,7 @@ import shutil
 import pytest
 from fastapi.testclient import TestClient
 
+from searchaudit.report.format import answer_html
 from searchaudit.web.app import create_app
 
 from .conftest import FIXTURE, make_results
@@ -142,6 +143,20 @@ def test_print_view_stacks_every_section(client):
     ):
         assert title in html
     assert 'class="printdoc"' in html and 'role="tab"' not in html
+
+
+def test_full_print_has_every_answer(client):
+    resp = client.get("/r/fixture/print/full")
+    assert resp.status_code == 200
+    html = resp.text
+    results = json.loads(FIXTURE.read_text())
+    assert "What this is" in html and "Every prompt in full" in html
+    assert "Where providers disagree" not in html
+    for p in results["prompts"]:
+        assert f'id="q-{p["id"]}"' in html and f'href="#q-{p["id"]}"' in html
+    assert "Reference answer" in html
+    answer = next(r["answer"] for r in results["runs"] if r["answer"])
+    assert str(answer_html(answer))[:60] in html
 
 
 def test_results_json_download(client, fixture_results):
