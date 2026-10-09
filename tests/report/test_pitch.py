@@ -32,10 +32,6 @@ def test_preflight_uses_the_cap_as_a_gate():
 
 
 def test_spacex_run_configs_stay_capped():
-    config = load_config("audits/spacex-grok/audit.yaml")
-    assert config.model == "x-ai/grok-4.7"
-    assert config.cost_cap_usd == 200
-    assert config.prompts_file == "../spacex/prompts.json"
     jobs = load_config("audits/spacex-jobs/audit.yaml")
     assert jobs.model == "x-ai/grok-4.7"
     assert jobs.cost_cap_usd == 800  # raised 2026-10-09 for the batch55 prompts (Karl's call)
@@ -81,7 +77,6 @@ def test_finished_deepseek_run_is_shown_apart_from_the_grok_block(tmp_path):
     directory.mkdir()
     (directory / "results.json").write_text(results.model_dump_json())
     view = build_pitch(tmp_path)
-    assert view["parity"]["status"] == "empty"
     assert view["prior"]["model"] == "deepseek/deepseek-v4.1-flash"
     exa = next(row for row in view["prior"]["rows"] if row["id"] == "exa")
     assert exa["correct"] == 1 and exa["n"] == 1
@@ -90,17 +85,15 @@ def test_finished_deepseek_run_is_shown_apart_from_the_grok_block(tmp_path):
 
 def test_empty_and_partial_blocks_stay_blank(tmp_path):
     view = build_pitch(tmp_path)
-    assert view["parity"]["status"] == "empty"
-    assert view["parity"]["empty"] == "Not run yet."
     from searchaudit.report.pitch import PLAN
     assert view["plan_n"] == sum(row[2] for row in PLAN)
     assert view["jobs"]["hypothesis"] == ""
-    directory = tmp_path / "spacex-grok"
+    directory = tmp_path / "spacex-jobs"
     directory.mkdir()
     results = _results({"exa": "c", "keen": "c"})
     results.judgments.pop()
     (directory / "results.json").write_text(results.model_dump_json())
-    assert build_pitch(tmp_path)["parity"]["status"] == "empty"
+    assert build_pitch(tmp_path)["jobs"]["status"] == "empty"
 
 
 def test_complete_block_counts_and_hypothesis(tmp_path):

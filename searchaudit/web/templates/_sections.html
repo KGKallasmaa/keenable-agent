@@ -267,10 +267,11 @@
 <p class="sub">Search + agent model per prompt, from this audit, times prompts per month. ~ = at least one input priced from a list price.</p>
 <div class="panel tablewrap"><table><thead><tr><th>Setup</th>{% for c in g.volumes[0].cells %}<th class="r">{{ c.volume | volume }} prompts / mo</th>{% endfor %}</tr></thead><tbody>
 {% for r in g.volumes %}
-<tr><td>{% if r.id == "router" %}<span class="pv"><span class="sw" style="background:{{ vm.provider.routed.hex if 'routed' in vm.provider else 'var(--ink)' }}"></span>Keenable router, this setup{% if not g.to_select %} (equals Keenable search: every type routes to search){% endif %}</span>{% else %}{{ pv(vm.provider[r.id]) }}{{ today(vm.provider[r.id]) }}{% endif %}</td>
+<tr><td>{% if r.id == "router" %}<span class="pv"><span class="sw" style="background:{{ vm.provider.routed.hex if 'routed' in vm.provider else 'var(--ink)' }}"></span>Keenable router, this setup</span>{% else %}{{ pv(vm.provider[r.id]) }}{{ today(vm.provider[r.id]) }}{% endif %}</td>
 {% for c in r.cells %}<td class="r num">{{ hl(r.hl, c.usd | big_money(c.est)) }}</td>{% endfor %}</tr>
 {% endfor %}
 </tbody></table></div>
+{% if not g.to_select %}<p class="hint">The router line equals Keenable search here, because every prompt type routes to search under this rule.</p>{% endif %}
 <h2>Rollout</h2>
 <div class="panel" style="padding:4px 18px">
 {% set fb = vm.labels[g.fallback] if g.fallback else "the current provider" %}
@@ -292,7 +293,7 @@
   <tr><td>Agreement with human graders</td><td>{% if j.human_agreement is none %}<span class="hint">Not measured. No answers in this audit were hand-graded.</span>{% else %}<span class="num">{{ j.human_agreement | pct }}</span> of {{ j.human_labels_n }} hand-graded answers{% endif %}</td></tr>
   <tr><td>Agreement with a second judge</td><td>{% if not j.second or not j.second.n %}<span class="hint">Not run.</span>{% else %}{% set s2 = j.second %}<span class="num">{{ s2.correct_agreement | pct }}</span> agree on correct vs not, <span class="num">{{ s2.exact_agreement | pct }}</span> on the exact grade (Cohen's κ {{ "%.2f" | format(s2.kappa) }}), over {{ s2.n }} answers re-graded by <span class="num">{{ s2.model }}</span>. <span class="hint">Scope: {{ s2.scope }}.</span>{% endif %}</td></tr>
   {% if not (j.checklist and not j.inconsistent) %}<tr><td>Grades that break the rubric rule</td><td class="num">{% if j.checklist and not j.inconsistent %}<span class="hint">Not applicable: each grade follows from its prompt's checklist.</span>{% else %}{{ j.inconsistent | length }}{% if not j.inconsistent %} <span class="hint">every grade matches its four checks</span>{% endif %}{% endif %}</td></tr>{% endif %}
-  {% if j.missing %}<tr><td>Missing runs or judgments</td><td class="num">{{ j.missing }} <span class="hint">(counted as wrong)</span></td></tr>{% endif %}
+  {% if j.missing %}<tr><td>Missing runs or judgments</td><td class="num">{{ j.missing }} <span class="hint">(counted as wrong{% if j.missing_cells %}: {% for c in j.missing_cells %}prompt {{ c.prompt }} {{ c.label }}{{ ", " if not loop.last }}{% endfor %}{% endif %})</span></td></tr>{% endif %}
 </tbody></table></div>
 <div class="two" style="margin-top:8px">
   <div><h2>Rubric</h2>{% if j.checklist %}<p class="sub">Each prompt's reference is turned once into a checklist of core, required and context facts, plus traps (wrong claims to watch for). The judge marks every item. ✓ = every core and required fact present and nothing contradicted · ✗ = a core fact missing or contradicted, or a trap asserted · ◐ = anything in between. The four checks below are recorded for each answer as a summary.</p>{% else %}<p class="sub">✓ = passes all four · ◐ = passes the first and all but one · ✗ = otherwise.</p>{% endif %}<ol class="method">{% for r in vm.rubric %}<li>{{ r }}</li>{% endfor %}</ol></div>

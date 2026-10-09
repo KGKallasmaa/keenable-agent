@@ -35,7 +35,7 @@
 
   <section id="accuracy" data-pitch-panel="accuracy">
     <h3>Accuracy</h3>
-    <p>A partial is not counted as correct. "Out of budget" is how many runs used up the tool-call or time budget and were made to answer.</p>
+    <p>A partial is not counted as correct.{% if pitch.jobs.missing %} {{ pitch.jobs.missing | length }} router prompt{{ "s" if pitch.jobs.missing | length != 1 }} never ran (one Keenable arm failed); they count against accuracy but sit in neither the partial nor the wrong column.{% endif %} "Out of budget" is how many runs used up the tool-call or time budget and were made to answer.</p>
     <div class="tablewrap"><table class="plainrank">
     <thead><tr><th>Provider</th><th class="r">Correct</th><th class="r">95% interval</th><th class="r">Partial</th><th class="r">Wrong</th><th class="r">Out of budget</th></tr></thead>
     <tbody>

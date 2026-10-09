@@ -136,7 +136,7 @@ def build_view_model(results: AuditResults, weights: Weights = DEFAULT_WEIGHTS) 
         ),
         "failures": _failures(prompt_rows, ids),
         "guide": guide,
-        "judge": _judge(results, prompt_rows, ids),
+        "judge": _judge(results, prompt_rows, ids, labels),
         "client": _client(
             results.meta.company, ids, providers, prompt_rows, summary, ties, head.kind, weights, n, base
         ),
@@ -732,7 +732,7 @@ def _router_config(types: Sequence[VM], fallback: str | None) -> str:
         "from searchaudit.router import JevRouter",
         "",
         "router = JevRouter(",
-        '    classify="typesafe/jev-router",  # the Jev decision model, via OpenRouter',
+        '    classify="typesafe/jev-1.13",  # Jev, the decision model, via OpenRouter',
         "    routes={",
     ]
     for t in types:
@@ -741,7 +741,7 @@ def _router_config(types: Sequence[VM], fallback: str | None) -> str:
                "too_few": "too few prompts"}[
             r["status"]
         ]
-        lines.append(f'        "{t["id"]}": "{arm[r["choice"]]}",  # {why}')
+        lines.append(f'        "{t["id"]}": "{arm[r["choice"]]}",  # {t["name"]}: {why}')
     lines += ["    },", '    default="keenable-search",']
     if fallback:
         lines.append(f'    fallback="{fallback}",  # the most accurate other provider, used on a Keenable error')
@@ -859,7 +859,7 @@ def _failures(rows: Sequence[VM], ids) -> VM:
     return {"matrix": matrix, "totals": totals}
 
 
-def _judge(results: AuditResults, rows: Sequence[VM], ids) -> VM:
+def _judge(results: AuditResults, rows: Sequence[VM], ids, labels: Mapping[str, str] | None = None) -> VM:
     meta = results.meta
     models = Counter(j.judge_model for j in results.judgments if j.judge_model)
     inconsistent = [
@@ -876,6 +876,7 @@ def _judge(results: AuditResults, rows: Sequence[VM], ids) -> VM:
         "models": dict(models),
         "answers": sum(1 for r in rows for i in ids if not r["cells"][i]["missing"]),
         "missing": sum(1 for r in rows for i in ids if r["cells"][i]["missing"]),
+        "missing_cells": [{"prompt": r["id"], "label": (labels or {}).get(i, i)} for r in rows for i in ids if r["cells"][i]["missing"]],
         "human_agreement": meta.human_agreement,
         "human_labels_n": meta.human_labels_n,
         "second": meta.second_judge,
@@ -1064,8 +1065,10 @@ def _economics(prompts, ids, labels, cells, providers) -> VM | None:
     def verdict(r: VM, b: VM) -> VM:
         if not r["price"] or not b["price"] or not b["requests"]:
             return {"price_ratio": None, "request_ratio": None, "cheaper": None}
-        price_ratio = b["price"] / r["price"]
-        request_ratio = r["requests"] / b["requests"]
+        # Ratios from the figures as printed ($ per 1k to 2 decimals, requests to 1 decimal), so a reader
+        # who recomputes from the table lands on the same number.
+        price_ratio = round(b["price"] * 1000, 2) / round(r["price"] * 1000, 2)
+        request_ratio = round(r["requests"], 1) / round(b["requests"], 1)
         return {"price_ratio": price_ratio, "request_ratio": request_ratio,
                 "cheaper": request_ratio < price_ratio}
 
@@ -1104,7 +1107,7 @@ def _sources_view(prompts, ids, cells) -> VM:
             "unique": len(unique),
             "unique_examples": unique[:5],
             "per_answer": sum(len(x["sources"]) for x in xs) / len(xs) if xs else 0,
-            "uncited": sum(1 for x in xs if not x["sources"]),
+            "uncited": sum(1 for x in xs if not x["sources"] and not x["missing"]),
             "wrong_uncited": sum(1 for x in wrong if not x["sources"]),
             "wrong": len(wrong),
             "n": len(xs),

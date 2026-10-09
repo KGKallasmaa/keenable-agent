@@ -352,7 +352,6 @@ def build_pitch(root: Path, spacex_vm: dict | None = None) -> dict:
         "plan_n": sum(row["n"] for row in plan),
         "reset": _reset(root / "spacex-jobs"),
         "prior": _prior(root / "spacex", spacex_vm),
-        "parity": _block(root / "spacex-grok"),
         "jobs": _block(root / "spacex-jobs", hypothesis=True),
     }
 
@@ -1596,7 +1595,7 @@ def _cell(run: Run | None, grade: str, judgment=None) -> dict:
     if run is None:
         failure = "error"
         note = ("No run: one Keenable arm failed on this prompt, and the router replay needs a finished "
-                "answer from both arms before Jev picks one. Counted as wrong.")
+                "answer from both arms before Jev picks one. Counted as not correct.")
     return {
         "missing": run is None,
         "grade": grade,

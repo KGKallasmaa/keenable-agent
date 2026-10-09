@@ -43,8 +43,6 @@ It adds a **Search added** fact (prompts the best provider got right that no-sea
 whether that gain is within chance) and a **Search lift** line per provider (split by routine/hard when
 both tiers exist). If no-search scores like the providers, the prompt set measures the model, not search.
 
-The design is in `docs/designs/search-audit.md`, and the approved report UI is in
-`docs/prototype/index.html`.
 
 ## Layout
 
