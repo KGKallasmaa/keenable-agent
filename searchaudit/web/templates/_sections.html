@@ -26,7 +26,22 @@
 </tr>
 {% endfor %}
 </tbody></table></div>
-<p class="hint" style="margin:10px 0 0"><span class="best">green</span> best · <span class="worst">grey</span> worst · tied = accuracy gap within chance (paired McNemar test, Holm-corrected, vs {{ vm.labels[vm.leader] }}). ~ = priced from a list price. <a href="/methodology#scoring">How scoring works</a></p>
+<p class="hint" style="margin:10px 0 0"><span class="best">green</span> marks the best on this table. A tie means the accuracy gap is within chance (paired McNemar test, Holm-corrected, vs {{ vm.labels[vm.leader] }}). ~ = priced from a list price. <a class="weblink" href="/methodology#scoring">How scoring works</a></p>
+{%- endmacro %}
+
+{% macro plain_rank(vm, order, kind) -%}
+<div class="tablewrap"><table class="plainrank"><thead><tr>
+  <th>#</th><th>Provider</th>
+  <th class="r">{% if kind == "acc" %}Correct{% elif kind == "cost" %}$ / prompt{% else %}Median time{% endif %}</th>
+</tr></thead><tbody>
+{% for id in order %}{% set s = vm.summary[id] %}
+<tr>
+  <td class="num hint">{{ loop.index }}</td>
+  <td>{{ pv(vm.provider[id]) }}</td>
+  <td class="r num">{% if loop.first %}<span class="best">{% endif %}{% if kind == "acc" %}{{ s.k }}/{{ s.n }}{% elif kind == "cost" %}{{ s.per_prompt | money(4, s.est) }}{% else %}{{ s.t50 | secs }}{% endif %}{% if loop.first %}</span>{% endif %}</td>
+</tr>
+{% endfor %}
+</tbody></table></div>
 {%- endmacro %}
 
 {% macro chart(vm) -%}
@@ -45,7 +60,7 @@
 
 {% macro facts(vm) -%}
 <div class="facts">
-{% for f in vm.facts %}
+{% for f in vm.facts if "no search" not in ((f.value ~ " " ~ f.detail) | lower) %}
   <div><div class="k">{{ f.key }}</div><div class="v">{{ f.value }}</div><div class="d">{{ f.detail }}</div></div>
 {% endfor %}
 </div>
@@ -85,22 +100,22 @@
 <div class="panel pad" style="margin-top:18px">
 <p class="ptitle">Cost break-even vs {{ e.ref_label }}</p>
 <p class="hint" style="margin:0 0 10px">A cheaper price per request only wins if the agent doesn't need proportionally more requests. A provider is cheaper on search than {{ e.ref_label }} when its <b>request ratio</b> (its requests per prompt ÷ {{ e.ref_label }}'s) is below its <b>price advantage</b> ({{ e.ref_label }}'s price per request ÷ its own). Requests = searches + page fetches (+ SQL queries for SELECT). Model tokens are excluded here; they are in the ranking.</p>
-<div class="tablewrap"><table><thead><tr><th>Provider</th><th class="r">Price / 1k requests</th><th class="r">Requests / prompt</th><th class="r">Price advantage</th><th class="r">Request ratio</th><th class="r">Search $ / prompt</th><th class="r">Search $ / correct answer</th></tr></thead><tbody>
-{% for id in e.ids %}{% set r = e.rows[id] %}
+<div class="tablewrap"><table class="econ"><thead><tr><th>Provider</th><th class="r">Price / 1k requests</th><th class="r">Requests / prompt</th><th class="r">Price advantage</th><th class="r">Request ratio</th><th class="r">Search $ / prompt</th><th class="r">Search $ / correct answer</th></tr></thead><tbody>
+{% for id in e.ids if id in vm.shown %}{% set r = e.rows[id] %}
 <tr><td>{{ pv(vm.provider[id]) }}{{ today(vm.provider[id]) }}</td>
 <td class="r num">{% if r.price %}{{ (r.price * 1000) | money(2, r.est) }}{% else %}—{% endif %}</td>
 <td class="r num">{{ "%.1f" | format(r.requests) }}</td>
 <td class="r num">{% if r.price_ratio %}{{ "%.2f" | format(r.price_ratio) }}×{% else %}—{% endif %}</td>
-<td class="r num">{% if r.request_ratio %}<span class="{{ 'best' if r.cheaper and id != e.ref else ('worst' if id != e.ref else '') }}">{{ "%.2f" | format(r.request_ratio) }}×</span>{% else %}—{% endif %}</td>
+<td class="r num">{% if r.request_ratio %}<span class="{{ 'best' if r.cheaper and id != e.ref else '' }}">{{ "%.2f" | format(r.request_ratio) }}×</span>{% else %}—{% endif %}</td>
 <td class="r num">{{ r.search_per_prompt | money(4, r.est) }}</td>
 <td class="r num">{% if r.search_per_correct %}{{ r.search_per_correct | money(4, r.est) }}{% else %}—{% endif %}</td></tr>
 {% endfor %}
 </tbody></table></div>
 <p class="ptitle" style="margin-top:16px">By prompt type: request ratio vs price advantage</p>
-<p class="hint" style="margin:0 0 8px">Green = cheaper on search than {{ e.ref_label }} for that type (request ratio below price advantage); grey = more expensive.</p>
-<div class="tablewrap"><table><thead><tr><th>Type</th>{% for id in e.ids if id != e.ref %}<th class="r">{{ vm.provider[id].short }}</th>{% endfor %}</tr></thead><tbody>
+<p class="hint" style="margin:0 0 8px">Green = cheaper on search than {{ e.ref_label }} for that type (request ratio below price advantage).</p>
+<div class="tablewrap"><table><thead><tr><th>Type</th>{% for id in e.ids if id != e.ref and id in vm.shown %}<th class="r">{{ vm.provider[id].short }}</th>{% endfor %}</tr></thead><tbody>
 {% for t in e.by_type %}<tr><td>{{ t.name }} <span class="hint num">· {{ t.n }}</span></td>
-{% for id in e.ids if id != e.ref %}{% set c = t.cells[id] %}<td class="r num">{% if c.request_ratio %}<span class="{{ 'best' if c.cheaper else 'worst' }}">{{ "%.2f" | format(c.request_ratio) }}×</span><span class="hint"> / {{ "%.2f" | format(c.price_ratio) }}×</span>{% else %}—{% endif %}</td>{% endfor %}</tr>
+{% for id in e.ids if id != e.ref and id in vm.shown %}{% set c = t.cells[id] %}<td class="r num">{% if c.request_ratio %}<span class="{{ 'best' if c.cheaper else '' }}">{{ "%.2f" | format(c.request_ratio) }}×</span><span class="hint"> / {{ "%.2f" | format(c.price_ratio) }}×</span>{% else %}—{% endif %}</td>{% endfor %}</tr>
 {% endfor %}
 </tbody></table></div>
 </div>
@@ -109,7 +124,7 @@
 <p class="ptitle">Sources each provider's answers cite</p>
 <p class="hint" style="margin:0 0 10px">Domains cited in final answers. "Only here" = domains no other provider cited anywhere in this audit, a rough measure of index coverage. "Wrong, uncited" = wrong answers with no source at all (often answered from memory after search failed).</p>
 <div class="tablewrap"><table><thead><tr><th>Provider</th><th class="r">Sources / answer</th><th class="r">Distinct domains</th><th class="r">Only here</th><th class="r">Uncited answers</th><th class="r">Wrong, uncited</th><th>Most cited</th></tr></thead><tbody>
-{% for id in vm.ids %}{% set s = vm.sources_view[id] %}
+{% for id in vm.ids if id in vm.shown %}{% set s = vm.sources_view[id] %}
 <tr><td>{{ pv(vm.provider[id]) }}</td>
 <td class="r num">{{ "%.1f" | format(s.per_answer) }}</td>
 <td class="r num">{{ s.distinct }}</td>
@@ -131,7 +146,7 @@
       <tr><td>Prompts</td><td>{{ m.n }} · run {{ m.date }}</td></tr>
       <tr><td>Agent model</td><td class="num">{{ m.agent_model }}{% if m.agent_model_note %}<div class="hint">{{ m.agent_model_note }}</div>{% endif %}</td></tr>
       <tr><td>Judge model</td><td class="num">{{ m.judge_model }}</td></tr>
-      {% if m.budget %}<tr><td>Budget per answer</td><td>{% for k, v in m.budget.items() %}{{ k | replace("_", " ") }} {{ v }}{{ ", " if not loop.last }}{% endfor %}</td></tr>{% endif %}
+      {% if m.budget %}<tr><td>Budget per answer</td><td>{% for k, v in m.budget.items() %}{{ k | replace("_", " ") }} {{ v | int }}{{ ", " if not loop.last }}{% endfor %}</td></tr>{% endif %}
       <tr><td>Cost of this audit</td><td class="num">{{ m.total_cost_usd | money(2) }}</td></tr>
     </tbody></table>
   </div>
@@ -148,25 +163,25 @@
 <h3>Caveats</h3>
 <ul class="method">{% for n in m.notes %}<li>{{ n }}</li>{% endfor %}</ul>
 {% endif %}
-<p class="hint">Full method: <a href="/methodology">Methodology</a>. Raw data: <a href="/r/{{ m.slug }}/results.json">results.json</a>.</p>
+<p class="hint weblink">Full method: <a href="/methodology">Methodology</a>. Raw data: <a href="/r/{{ m.slug }}/results.json">results.json</a>.</p>
 {%- endmacro %}
 
 {% macro failures(vm) -%}
-<p class="sub" style="margin-top:18px">How each provider's answers went wrong across all {{ vm.n }} prompts (the judge's main reason per answer). Click a number to open an example.</p>
-<div class="panel tablewrap"><table><thead><tr><th>Failure mode</th>{% for p in vm.providers %}<th class="r">{{ pv(p, True) }}</th>{% endfor %}</tr></thead><tbody>
+<p class="sub" style="margin-top:18px">How each provider's answers went wrong across all {{ vm.n }} prompts (the judge's main reason per answer).<span class="weblink"> Click a number to open an example.</span></p>
+<div class="panel tablewrap"><table><thead><tr><th>Failure mode</th>{% for p in vm.providers if p.id in vm.shown %}<th class="r">{{ pv(p, True) }}</th>{% endfor %}</tr></thead><tbody>
 {% for row in vm.failures.matrix %}
 <tr><td><span style="font-weight:500">{{ row.name }}</span><div class="hint">{{ row.definition }}</div></td>
-{% for id in vm.ids %}{% set n = row.count[id] %}
+{% for id in vm.ids if id in vm.shown %}{% set n = row.count[id] %}
   <td class="r num">{% if n %}<a href="#p{{ row.example[id] }}" data-open="{{ row.example[id] }}" data-ans="{{ id }}" title="Open an example">{{ hl(row.hl[id], n) }}</a>{% else %}{{ hl(row.hl[id], 0) }}{% endif %}</td>
 {% endfor %}</tr>
 {% endfor %}
-<tr><td><b>All failures</b></td>{% for id in vm.ids %}<td class="r num"><b>{{ vm.failures.totals[id] }}</b></td>{% endfor %}</tr>
+<tr><td><b>All failures</b></td>{% for id in vm.ids if id in vm.shown %}<td class="r num"><b>{{ vm.failures.totals[id] }}</b></td>{% endfor %}</tr>
 </tbody></table></div>
 <h2>Failures by prompt type</h2>
 <p class="sub">Prompts each provider did not get fully right, per type. Lower is better.</p>
-<div class="panel tablewrap"><table><thead><tr><th>Type</th><th class="r">Prompts</th>{% for p in vm.providers %}<th class="r">{{ pv(p, True) }}</th>{% endfor %}</tr></thead><tbody>
+<div class="panel tablewrap"><table><thead><tr><th>Type</th><th class="r">Prompts</th>{% for p in vm.providers if p.id in vm.shown %}<th class="r">{{ pv(p, True) }}</th>{% endfor %}</tr></thead><tbody>
 {% for t in vm.types %}
-<tr><td>{{ t.name }}</td><td class="r num">{{ t.n }}</td>{% for id in vm.ids %}<td class="r num">{{ hl(t.not_right_hl[id], t.not_right[id]) }}</td>{% endfor %}</tr>
+<tr><td>{{ t.name }}</td><td class="r num">{{ t.n }}</td>{% for id in vm.ids if id in vm.shown %}<td class="r num">{{ hl(t.not_right_hl[id], t.not_right[id]) }}</td>{% endfor %}</tr>
 {% endfor %}
 </tbody></table></div>
 {%- endmacro %}
@@ -179,6 +194,11 @@
   <div><div class="k">Only {{ b.label }}</div><div class="v" style="color:{{ b.hex }}">{{ pair.only_b_idx | length }}</div></div>
   <div><div class="k">Neither</div><div class="v">{{ pair.neither }}</div></div>
 </div>
+{% if pair.by_type and pair.by_type | length > 1 %}
+<div class="tablewrap"><table class="plainrank"><thead><tr><th>Type</th><th class="r">Prompts</th><th class="r">Both</th><th class="r">Only {{ a.label }}</th><th class="r">Only {{ b.label }}</th></tr></thead><tbody>
+{% for t in pair.by_type %}<tr><td>{{ t.name }}</td><td class="r num">{{ t.n }}</td><td class="r num">{{ t.both }}</td><td class="r num" style="color:{{ a.hex }}">{{ t.only_a }}</td><td class="r num" style="color:{{ b.hex }}">{{ t.only_b }}</td></tr>
+{% endfor %}</tbody></table></div>
+{% endif %}
 <p class="sub" style="margin-top:10px">
   {% if pair.significant %}<b>{{ pair.verdict }}</b>{% else %}{{ pair.verdict }}{% endif %} (paired McNemar test, p {{ pair.p | pvalue }}; difference in share correct {{ "%+d" | format((pair.diff * 100) | round | int) }} points, 95% bootstrap interval {{ "%+d" | format((pair.diff_low * 100) | round | int) }} to {{ "%+d" | format((pair.diff_high * 100) | round | int) }}).
   {{ a.label }} was cheaper on {{ pair.cheaper }} of {{ vm.n }} prompts and faster on {{ pair.faster }}.
@@ -198,15 +218,15 @@
 
 {% macro guide(vm) -%}
 {% set g = vm.guide %}
-<p class="sub" style="margin-top:18px">Generated from this audit's results; it changes when the results change.</p>
+<p class="sub" style="margin-top:18px">Derived from this audit's results.{% if vm.leader not in ("keen", "select", "routed") %} On this audit {{ vm.labels[vm.leader] }} is the most accurate provider; this section is how {{ vm.meta.company }} would wire Keenable if it chose it, with {{ vm.labels[vm.leader] }} as the fallback.{% endif %}</p>
 {% if g.available %}
 <div class="two guide-two">
-  <div class="panel pad"><p class="ptitle">Recommended setup for {{ vm.meta.company }}</p>
+  <div class="panel pad"><p class="ptitle">Keenable setup for {{ vm.meta.company }}</p>
     <p class="hint" style="margin:0 0 6px">One search tool for {{ vm.meta.company }}'s agents. Jev classifies each call. A prompt type goes to SELECT only when SELECT was clearly better than search on it (paired test, p &lt; 0.05); otherwise it defaults to search, which is cheaper and faster.</p>
     {% for r in g.routes %}
     <div class="route"><span>{{ r.name }} <span class="hint num">· {{ r.n }}</span></span><span class="hint">→</span><span>{{ pv(vm.provider[r.choice]) }}
       {% if r.status == "clear" %}<span class="pill ok" title="Search {{ r.search_only }} vs SELECT {{ r.select_only }} prompts only one got right; p {{ r.p | pvalue }}">clear</span>
-      {% elif r.status == "lean" %}<span class="pill" title="The search vs SELECT difference on this type could be chance (search {{ r.search_only }}, SELECT {{ r.select_only }}, p {{ r.p | pvalue }}). Defaulting to search.">lean · re-test</span>
+      {% elif r.status == "lean" %}<span class="pill" title="The search vs SELECT difference on this type could be chance (search {{ r.search_only }}, SELECT {{ r.select_only }}, p {{ r.p | pvalue }}). Defaulting to search.">search by default</span>
       {% else %}<span class="pill" title="Fewer than 10 prompts of this type: no routing decision.">too few prompts</span>{% endif %}</span></div>
     {% endfor %}
     {% for r in g.routes if r.alt %}
@@ -216,16 +236,38 @@
   <div class="panel pad"><p class="ptitle">Router config</p>
 <pre>{{ g.config }}</pre>
     <p class="hint">{% if g.to_select %}Routes {{ g.to_select | join(", ") }} prompts to SELECT.{% else %}No prompt type routes to SELECT on this data.{% endif %} Drop-in search tool for any agent framework.</p>
+    {% if g.per_prompt_note %}<p class="hint">{{ g.per_prompt_note }}</p>{% endif %}
   </div>
 </div>
 {% else %}
 <p class="note">Routing needs both Keenable search and Keenable SELECT in the audit, so no router is recommended here.</p>
 {% endif %}
+<h2>Where one call is the table</h2>
+<p class="sub">Two prompts from this set and four of the same shape for any customer. Exa and Parallel return ranked links. They find a page. A table whose rows live on different pages is the SELECT job: one SQL call, not a loop of three searches.</p>
+<div class="panel tablewrap"><table>
+<thead><tr><th>From</th><th>The question</th><th>Why a short search loop stops</th></tr></thead>
+<tbody>
+<tr><td>Example</td><td>List every orbital launch attempt by a Chinese rocket in September 2026, with the date and the vehicle.</td><td>The rows are a month of launches, not one headline.</td></tr>
+<tr><td>Example</td><td>Which countries signed the Artemis Accords between 1 January and 30 September 2026? List them in order of signing.</td><td>Seventeen signings, each its own announcement.</td></tr>
+<tr><td>SpaceX</td><td>Every special temporary authority granted to SpaceX Services for the Hillsboro and Atlanta gateways in 2026: file number, grant date, term and basis.</td><td>Eight rows across four weekly FCC notices. A snippet shows one.</td></tr>
+<tr><td>SpaceX</td><td>For Guernsey, Jersey, Cayman, Turks and Caicos and the Falklands: Starlink's licensee entity, licence class, date and one distinctive condition.</td><td>Five regulators, five documents, no roundup page.</td></tr>
+<tr><td>Any customer</td><td>For each of the six largest US banks: Q2 net interest income, the credit provision, and the 10-Q URL.</td><td>Three searches cover three filings.</td></tr>
+<tr><td>Any customer</td><td>Series A rounds in European legal-AI companies announced this year: company, lead, amount, and the announcement from the company or the investor.</td><td>Three searches return the same two news posts.</td></tr>
+</tbody></table></div>
+<h2>The same table, as of a date</h2>
+<p class="sub">Search takes <code>query_time</code> and reads the index as it stood then. Exa can bound the same question with <code>start_published_date</code> and <code>end_published_date</code>, or pin a stored page with <code>snapshotAsOf</code>. Parallel can set <code>after_date</code>. A list that already sits on one page is still a lookup: fetch that page. These rows are the job. They are not a score on this audit.</p>
+<div class="panel tablewrap"><table>
+<thead><tr><th>Ask it as of</th><th>The question</th></tr></thead>
+<tbody>
+<tr><td>1 May 2026</td><td>Which countries had signed the Artemis Accords by then, in order.</td></tr>
+<tr><td>28 September 2026</td><td>The OFAC Sinaloa designations, the day before the action.</td></tr>
+<tr><td>The prior quarter's filing date</td><td>The same six-bank table, from the filings that existed then.</td></tr>
+</tbody></table></div>
 <h2>Monthly cost at your volume</h2>
 <p class="sub">Search + agent model per prompt, from this audit, times prompts per month. ~ = at least one input priced from a list price.</p>
 <div class="panel tablewrap"><table><thead><tr><th>Setup</th>{% for c in g.volumes[0].cells %}<th class="r">{{ c.volume | volume }} prompts / mo</th>{% endfor %}</tr></thead><tbody>
 {% for r in g.volumes %}
-<tr><td>{% if r.id == "router" %}<span class="pv"><span class="sw" style="background:{{ vm.provider.routed.hex if 'routed' in vm.provider else 'var(--ink)' }}"></span>Recommended router</span>{% else %}{{ pv(vm.provider[r.id]) }}{{ today(vm.provider[r.id]) }}{% endif %}</td>
+<tr><td>{% if r.id == "router" %}<span class="pv"><span class="sw" style="background:{{ vm.provider.routed.hex if 'routed' in vm.provider else 'var(--ink)' }}"></span>Keenable router, this setup</span>{% else %}{{ pv(vm.provider[r.id]) }}{{ today(vm.provider[r.id]) }}{% endif %}</td>
 {% for c in r.cells %}<td class="r num">{{ hl(r.hl, c.usd | big_money(c.est)) }}</td>{% endfor %}</tr>
 {% endfor %}
 </tbody></table></div>
@@ -247,13 +289,13 @@
 <p class="sub" style="margin-top:18px">An AI judge graded all {{ j.answers }} answers against the reference for each prompt. This is how far to trust it.</p>
 <div class="panel tablewrap"><table class="kv"><tbody>
   <tr><td>Judge model</td><td class="num">{{ j.model }}{% if j.models | length > 1 %} <span class="hint">(mixed: {% for k, v in j.models.items() %}{{ k }} × {{ v }}{{ ", " if not loop.last }}{% endfor %})</span>{% endif %}</td></tr>
-  <tr><td>Agreement with human graders</td><td>{% if j.human_agreement is none %}<span class="hint">Not measured yet. No answers in this audit have been hand-graded.</span>{% else %}<span class="num">{{ j.human_agreement | pct }}</span> of {{ j.human_labels_n }} hand-graded answers{% endif %}</td></tr>
-  <tr><td>Agreement with a second judge</td><td>{% if not j.second %}<span class="hint">Not run.</span>{% else %}{% set s2 = j.second %}<span class="num">{{ s2.correct_agreement | pct }}</span> agree on correct vs not, <span class="num">{{ s2.exact_agreement | pct }}</span> on the exact grade (Cohen's κ {{ "%.2f" | format(s2.kappa) }}), over {{ s2.n }} contested answers re-graded by <span class="num">{{ s2.model }}</span>. <span class="hint">Contested = prompts where providers got different grades, i.e. the answers that decide the ranking.</span>{% endif %}</td></tr>
-  <tr><td>Grades that break the rubric rule</td><td class="num">{{ j.inconsistent | length }}{% if not j.inconsistent %} <span class="hint">every grade matches its four checks</span>{% endif %}</td></tr>
+  <tr><td>Agreement with human graders</td><td>{% if j.human_agreement is none %}<span class="hint">Not measured. No answers in this audit were hand-graded.</span>{% else %}<span class="num">{{ j.human_agreement | pct }}</span> of {{ j.human_labels_n }} hand-graded answers{% endif %}</td></tr>
+  <tr><td>Agreement with a second judge</td><td>{% if not j.second or not j.second.n %}<span class="hint">Not run.</span>{% else %}{% set s2 = j.second %}<span class="num">{{ s2.correct_agreement | pct }}</span> agree on correct vs not, <span class="num">{{ s2.exact_agreement | pct }}</span> on the exact grade (Cohen's κ {{ "%.2f" | format(s2.kappa) }}), over {{ s2.n }} answers re-graded by <span class="num">{{ s2.model }}</span>. <span class="hint">Scope: {{ s2.scope }}.</span>{% endif %}</td></tr>
+  <tr><td>Grades that break the rubric rule</td><td class="num">{% if j.checklist and not j.inconsistent %}<span class="hint">Not applicable: each grade follows from its prompt's checklist.</span>{% else %}{{ j.inconsistent | length }}{% if not j.inconsistent %} <span class="hint">every grade matches its four checks</span>{% endif %}{% endif %}</td></tr>
   {% if j.missing %}<tr><td>Missing runs or judgments</td><td class="num">{{ j.missing }} <span class="hint">(counted as wrong)</span></td></tr>{% endif %}
 </tbody></table></div>
 <div class="two" style="margin-top:8px">
-  <div><h2>Rubric</h2><p class="sub">✓ = passes all four · ◐ = passes the first and all but one · ✗ = otherwise.</p><ol class="method">{% for r in vm.rubric %}<li>{{ r }}</li>{% endfor %}</ol></div>
+  <div><h2>Rubric</h2>{% if j.checklist %}<p class="sub">Each prompt's reference is turned once into a checklist of core, required and context facts, plus traps (wrong claims to watch for). The judge marks every item. ✓ = every core and required fact present and nothing contradicted · ✗ = a core fact missing or contradicted, or a trap asserted · ◐ = anything in between. The four checks below are recorded for each answer as a summary.</p>{% else %}<p class="sub">✓ = passes all four · ◐ = passes the first and all but one · ✗ = otherwise.</p>{% endif %}<ol class="method">{% for r in vm.rubric %}<li>{{ r }}</li>{% endfor %}</ol></div>
   <div><h2>Partial credit</h2><p class="sub">◐ counts half in value scores and as not correct in the paired accuracy tests, so a tie is never won on half-right answers.</p></div>
 </div>
 {% if j.inconsistent %}
@@ -267,9 +309,9 @@
 {% endif %}
 <h2>Closest calls</h2>
 <p class="sub">Prompts where providers split most evenly between right and wrong: the judge's decision there moves the ranking most. Worth a human look.</p>
-<div class="panel tablewrap"><table><thead><tr><th>Prompt</th><th>Type</th>{% for p in vm.providers %}<th class="c">{{ hfav(p) }}</th>{% endfor %}</tr></thead><tbody>
+<div class="panel tablewrap"><table><thead><tr><th>Prompt</th><th>Type</th>{% for p in vm.providers if p.id in vm.shown %}<th class="c">{{ hfav(p) }}</th>{% endfor %}</tr></thead><tbody>
 {% for s in j.splits %}
-<tr class="link" data-open="{{ s.id }}"><td><a href="#p{{ s.id }}" data-open="{{ s.id }}">{{ s.text }}</a></td><td><span class="pill">{{ s.type_name }}</span></td>{% for id in vm.ids %}<td class="c">{{ gicon(s.grades[id], vm.labels[id]) }}</td>{% endfor %}</tr>
+<tr class="link" data-open="{{ s.id }}"><td><a href="#p{{ s.id }}" data-open="{{ s.id }}">{{ s.text }}</a></td><td><span class="pill">{{ s.type_name }}</span></td>{% for id in vm.ids if id in vm.shown %}<td class="c">{{ gicon(s.grades[id], vm.labels[id]) }}</td>{% endfor %}</tr>
 {% endfor %}
 </tbody></table></div>
 {%- endmacro %}

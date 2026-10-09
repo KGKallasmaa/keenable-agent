@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 
@@ -25,8 +26,66 @@ def client(audits):
     return TestClient(create_app(audits, show_fixture=False))
 
 
+def test_spacex_pitch_page(client):
+    html = client.get("/r/spacex-pitch").text
+    assert "Keenable for SpaceX compliance" in html
+    assert "best back end model" in html
+    assert ">Accuracy<" in html
+    assert ">Cost<" in html
+    assert ">Speed<" in html
+    assert "General results" not in html
+    assert "Results by accuracy" not in html
+    assert "Out of budget" in html
+    assert "Wrong answer it tests for" in html
+    assert "<th>Answer</th>" not in html  # the plan column is the trap, not the reference answer
+    # The 100 prompts are listed once, in By prompt, not again under each tab.
+    assert "Correct answers for each question" not in html
+    assert "How long each question took" not in html
+    assert "By prompt" in html
+    assert "Dollars and time" in html
+    assert "Dollars and correct answers" in html
+    assert "Final thoughts" in html
+    assert "Summary" in html
+    assert "typesafe/jev-1.13" in html
+    assert "Canada" in html
+    assert "Exa 59" not in html
+    assert "first Starship flight to reach orbit" not in html  # the consumer 60 stay off this page
+    assert "Five ways to read" not in html
+    method = client.get("/methodology").text
+    assert "one choice question" in method
+    assert "about 90 seconds" in method
+    assert "does not describe this router" not in method
+    assert client.get("/").text.count("/r/spacex-pitch") == 1
+
+
+def test_homepage_spacex_row_opens_the_merged_report(audits):
+    spacex = audits / "spacex"
+    spacex.mkdir()
+    (spacex / "results.json").write_text((audits / "mini" / "results.json").read_text())
+    client = TestClient(create_app(audits, show_fixture=False))
+    html = client.get("/").text
+    assert 'href="/r/spacex-pitch"' not in html
+    assert html.count('href="/r/spacex"') == 2
+    old = client.get("/r/spacex-pitch", follow_redirects=False)
+    assert old.status_code == 302
+    assert old.headers["location"] == "/r/spacex"
+    merged = client.get("/r/spacex").text
+    assert "Keenable for SpaceX compliance" in merged
+    assert "Final thoughts" in merged
+    assert ">p99<" not in merged
+
+
 def test_health(client):
     assert client.get("/health").json() == {"status": "ok"}
+
+
+def test_diplomat_route_is_gone(audits):
+    slug = audits / "diplomat"
+    slug.mkdir()
+    (slug / "gap.json").write_text(json.dumps({"kind": "gap", "company": "Model Diplomat"}))
+    client = TestClient(create_app(audits, show_fixture=False))
+    assert "/r/diplomat" not in client.get("/").text
+    assert client.get("/r/diplomat").status_code == 404
 
 
 def test_home_hides_fixture_unless_asked(audits, client):
@@ -76,6 +135,8 @@ def test_print_view_stacks_every_section(client):
         "Failure modes",
         "Head-to-head",
         "Implementation guide",
+        "Where one call is the table",
+        "query_time",
         "Judge",
         "How we measured",
     ):
@@ -132,7 +193,23 @@ def test_report_with_no_search_baseline_renders_lift(audits):
     for path in ("/r/base", "/r/base/print", "/r/base/q/1"):
         assert c.get(path).status_code == 200, path
     html = c.get("/r/base").text
-    assert "Search lift" in html and "Search added" in html and "No search (model memory)" in html
+    assert "Accuracy" in html and 'id="scatter"' in html and 'id="graph-cost"' in html
+    assert 'id="graph-time"' in html and 'id="graph-acc"' in html and 'id="map-3d"' in html
+    assert 'id="graph-fail"' in html and 'id="graph-search"' in html and 'id="scatter-ca"' in html
+    assert 'data-view="fail"' in html and "hollow dot" in html and 'data-panel="search"' in html
+    assert "plot-3d" not in html and "strip-cost" not in html and "$ / correct" in html
+    assert "Routine vs hard prompts" not in html and "Search lift" not in html
+    head = html.split('class="head"', 1)[1].split("</div>", 1)[0]
+    assert "No search" not in head
     assert 'class="mono-badge"' in html  # no domain -> monogram
     h1 = html.split('id="headline"', 1)[1].split("</h1>", 1)[0]
     assert "No search" not in h1
+
+
+def test_spacex_pitch_print_view_shows_every_panel(client):
+    resp = client.get("/r/spacex/print")
+    assert resp.status_code == 200
+    html = resp.text
+    assert 'class="printdoc"' in html
+    assert "history.replaceState" not in html  # no tab script, so all three panels print
+    assert client.get("/r/spacex.pdf").status_code in (200, 404)

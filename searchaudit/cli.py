@@ -1,9 +1,9 @@
 """Command line: run -> judge -> assemble, plus probe.
 
-    uv run python -m searchaudit run audits/stackai/audit.yaml [--limit N] [--providers exa,keen]
-    uv run python -m searchaudit judge audits/stackai/audit.yaml
-    uv run python -m searchaudit assemble audits/stackai/audit.yaml
-    uv run python -m searchaudit probe audits/stackai/audit.yaml
+    uv run python -m searchaudit run audits/spacex-jobs/audit.yaml [--limit N] [--providers exa,keen]
+    uv run python -m searchaudit judge audits/spacex-jobs/audit.yaml
+    uv run python -m searchaudit assemble audits/spacex-jobs/audit.yaml
+    uv run python -m searchaudit probe audits/spacex-jobs/audit.yaml
     uv run python -m searchaudit querygen audits/<slug>/audit.yaml --target 60 [--pilot exa,keen]
 """
 
@@ -12,6 +12,7 @@ import asyncio
 import hashlib
 import json
 import logging
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -20,13 +21,28 @@ from dotenv import load_dotenv
 
 from searchaudit.agent import AgentResult, AgentSettings, Job, resolve_model, run_jobs
 from searchaudit.config import AuditConfig, Settings, load_config, load_prompts, provider_info
-from searchaudit.cost import CostCap, ModelPricing, pricing_from_models
-from searchaudit.judge import BUNDLE_VERSION, JudgeBundle, judge_run
+from searchaudit.cost import (
+    CostCap,
+    ModelPricing,
+    credit_failure,
+    grok_pin_error,
+    preflight_usd,
+    pricing_from_models,
+)
+from searchaudit.judge import (
+    BUNDLE_VERSION,
+    JudgeBundle,
+    build_checklist,
+    judge_checklist,
+    judge_run,
+    reference_key,
+)
 from searchaudit.models import AuditMeta, AuditResults, Judgment, Run
 from searchaudit.notes import method_notes
 from searchaudit.providers import Registry, default_registry
 from searchaudit.providers.base import Provider, ProviderContext
 from searchaudit.providers.openrouter import OpenRouterClient, OpenRouterError
+from searchaudit.providers.routed import classify, copied_answer
 
 log = logging.getLogger("searchaudit")
 
@@ -55,16 +71,30 @@ def run_fingerprint(row: dict) -> str:
     return hashlib.sha1(raw.encode()).hexdigest()[:12]
 
 
+def _tool_failed(row: dict) -> bool:
+    return any(not call.get("ok", True) for call in row.get("tool_calls") or [])
+
+
 def pending_pairs(
-    prompt_ids: list[int], provider_ids: list[str], existing: list[dict], retry_errors: bool
+    prompt_ids: list[int], provider_ids: list[str], existing: list[dict], retry_errors: bool,
+    retry_tool_failures: bool = False, retry_budget_hits: bool = False,
 ) -> list[tuple[int, str]]:
-    """Query-major (prompt, provider) pairs not yet in runs.jsonl (or errored, with retry_errors)."""
+    """Query-major (prompt, provider) pairs not yet in runs.jsonl.
+
+    retry_errors re-runs a pair whose last run errored. retry_tool_failures re-runs a pair whose
+    last run recorded a tool call that was not ok. retry_budget_hits re-runs a pair whose last run
+    used up the tool-call or time budget, so a raised budget only re-does the runs it could change.
+    """
     latest = latest_by_pair(existing)
     pairs = []
     for pid in prompt_ids:
         for prov in provider_ids:
             row = latest.get((pid, prov))
-            if row is None or (retry_errors and row.get("error")):
+            # A credit refusal is not an answer. The next run does that cell again.
+            unpaid = credit_failure((row or {}).get("error") or "")
+            if (row is None or unpaid or (retry_errors and row.get("error"))
+                    or (retry_tool_failures and _tool_failed(row))
+                    or (retry_budget_hits and row.get("budget_hit"))):
                 pairs.append((pid, prov))
     return pairs
 
@@ -83,6 +113,22 @@ def available_providers(
         else:
             providers.append(provider)
     return providers
+
+
+def _record_unavailable(
+    config: AuditConfig, registry: Registry, ctx: ProviderContext, only: list[str] | None, running: set[str]
+) -> None:
+    """A provider that cannot run stays on the page as unavailable. It is not dropped in silence."""
+    path = config.base_dir / "unavailable.json"
+    reasons = {}
+    for cfg in config.enabled_providers(only):
+        if cfg.id in running:
+            continue
+        reasons[cfg.id] = registry.get(cfg.id).unavailable_reason(ctx) or "unavailable"
+    if reasons:
+        path.write_text(json.dumps(reasons, indent=2))
+    elif path.exists():
+        path.unlink()
 
 
 async def pin_model(config: AuditConfig, client: OpenRouterClient) -> tuple[str, str]:
@@ -116,6 +162,10 @@ async def cmd_run(config: AuditConfig, settings: Settings, args: argparse.Namesp
         return 1
     prompts = load_prompts(config)[: args.limit or None]
     client = OpenRouterClient(http, settings.openrouter_api_key)
+    pin_error = grok_pin_error([m.get("id", "") for m in await client.models()], config.model)
+    if pin_error:
+        log.error("%s", pin_error)
+        return 1
     agent_model, _ = await pin_model(config, client)
     router_model = config.router_model
     if not await client.model_exists(router_model):
@@ -123,16 +173,29 @@ async def cmd_run(config: AuditConfig, settings: Settings, args: argparse.Namesp
         router_model = agent_model
     ctx = ProviderContext(settings, http, client, agent_model, router_model, config.budget.max_tool_calls)
     providers = {p.id: p for p in available_providers(config, registry, ctx, args.providers)}
+    _record_unavailable(config, registry, ctx, args.providers, set(providers))
+    estimate = preflight_usd(
+        len(prompts), list(providers), {"keenable": settings.keenable_usd_per_request}
+    )
+    log.info("preflight estimate $%.2f against cap $%.2f", estimate, config.cost_cap_usd)
+    if estimate > config.cost_cap_usd:
+        log.error("preflight estimate $%.2f is over the $%.2f cap; not starting", estimate, config.cost_cap_usd)
+        return 1
     existing = read_jsonl(config.runs_path)
     by_id = {p.id: p for p in prompts}
-    pairs = pending_pairs(list(by_id), list(providers), existing, args.retry_errors)
+    pairs = pending_pairs(list(by_id), list(providers), existing, args.retry_errors, args.retry_tool_failures,
+                          args.retry_budget_hits)
+    pairs = [pair for pair in pairs if pair[1] != "routed"]
     log.info("%d runs to do (%d already in %s)", len(pairs), len(existing), config.runs_path)
     agent = AgentSettings(agent_model, config.temperature, config.budget.max_tool_calls,
                           config.budget.max_seconds, await pricing_for(client, agent_model))
     cap = CostCap(config.cost_cap_usd, sum(row.get("cost_usd", 0.0) for row in existing))
 
     async def save(result: AgentResult) -> None:
-        append_jsonl(config.runs_path, {**result.run.model_dump(mode="json"), "evidence": result.evidence})
+        row = {**result.run.model_dump(mode="json"), "evidence": result.evidence}
+        if result.archive:
+            row["archive"] = result.archive
+        append_jsonl(config.runs_path, row)
         r = result.run
         log.info("prompt %s %-8s %s searches=%d $%.4f %s", r.prompt_id, r.provider,
                  "ERROR" if r.error else "ok", r.searches, r.cost_usd, r.error[:80])
@@ -142,8 +205,83 @@ async def cmd_run(config: AuditConfig, settings: Settings, args: argparse.Namesp
         global_limit=config.concurrency.global_limit, per_provider=config.concurrency.limit_for,
         cap=cap, on_result=save,
     )
-    log.info("finished %d runs; audit run spend $%.2f of $%.2f cap", done, cap.spent_usd, cap.cap_usd)
+    replayed = 0
+    if "routed" in providers:
+        replayed = await replay_routed(config, ctx, by_id, cap, reroute=args.reroute)
+    log.info("finished %d runs, %d routed lookups; audit run spend $%.2f of $%.2f cap",
+             done, replayed, cap.spent_usd, cap.cap_usd)
+    if cap.halted:
+        log.error("stopped: %s", cap.halted)
+        return 2
     return 0
+
+
+async def replay_routed(config: AuditConfig, ctx: ProviderContext, by_id: dict, cap: CostCap,
+                        reroute: bool = False) -> int:
+    """Jev picks search or SELECT and the routed row copies that answer. No third agent call.
+
+    reroute asks Jev again for every prompt, for after the route question changes.
+    """
+    latest = latest_by_pair(read_jsonl(config.runs_path))
+    judged = latest_by_pair(read_jsonl(config.judgments_path))
+    done = 0
+    for prompt in by_id.values():
+        keen = latest.get((prompt.id, "keen"))
+        select = latest.get((prompt.id, "select"))
+        if not keen or not select or keen.get("error") or select.get("error"):
+            log.info("prompt %s routed skipped: search and SELECT both need a finished answer", prompt.id)
+            continue
+        already = latest.get((prompt.id, "routed"))
+        # A routed row is current while it still carries its source arm's latest answer.
+        if already and not already.get("error") and not reroute:
+            source_now = select if already.get("via") == "select" else keen
+            if already.get("answer", "") == source_now.get("answer", ""):
+                continue
+        started = time.monotonic()
+        arm, confidence, call, decision = await classify(ctx, prompt.text)
+        jev_ms = int((time.monotonic() - started) * 1000)
+        if call.error:
+            log.error("prompt %s routed classify failed: %s", prompt.id, call.error[:160])
+            if credit_failure(call.error):
+                cap.halt(
+                    "OpenRouter has no credits. Routing stopped. "
+                    "Finished cells stay in runs.jsonl; run the same command again after a top-up."
+                )
+                return done
+            continue
+        source = select if arm == "select" else keen
+        row = copied_answer(source, arm, confidence, call, jev_ms, decision)
+        append_jsonl(config.runs_path, row)
+        prior = judged.get((prompt.id, arm))
+        # Copy the grade only if it is for this exact source run; otherwise judge grades the routed row.
+        if prior and prior.get("run") == run_fingerprint(source):
+            copied = {key: value for key, value in prior.items() if key not in ("cost_usd", "run")}
+            copied["provider"] = "routed"
+            copied["cost_usd"] = 0
+            copied["run"] = run_fingerprint(row)
+            append_jsonl(config.judgments_path, copied)
+        log.info("prompt %s routed  %s conf=%s $%.4f", prompt.id, arm, confidence, call.cost_usd)
+        done += 1
+    return done
+
+
+async def ensure_checklists(config: AuditConfig, client: OpenRouterClient, model: str, prompts: list,
+                            gate: asyncio.Semaphore) -> dict[int, dict]:
+    """One checklist per prompt, cached in checklists.json and rebuilt only when the reference changes."""
+    path = config.base_dir / "checklists.json"
+    cached = {c["prompt_id"]: c for c in json.loads(path.read_text())} if path.exists() else {}
+    stale = [p for p in prompts if cached.get(p.id, {}).get("reference") != reference_key(p)]
+    if stale:
+        log.info("building %d checklists with %s", len(stale), model)
+
+        async def one(prompt):
+            async with gate:
+                checklist, _ = await build_checklist(client, model, prompt)
+            cached[prompt.id] = checklist
+
+        await asyncio.gather(*(one(p) for p in stale))
+        path.write_text(json.dumps([cached[k] for k in sorted(cached)], indent=2, ensure_ascii=False))
+    return cached
 
 
 async def cmd_judge(config: AuditConfig, settings: Settings, args: argparse.Namespace,
@@ -160,22 +298,30 @@ async def cmd_judge(config: AuditConfig, settings: Settings, args: argparse.Name
     prompts = {p.id: p for p in load_prompts(config)}
     judged = latest_by_pair(read_jsonl(config.judgments_path))
     todo = [row for key, row in latest_by_pair(read_jsonl(config.runs_path)).items()
-            if key[0] in prompts and judged.get(key, {}).get("run") != run_fingerprint(row)]
+            if key[0] in prompts and not credit_failure(row.get("error") or "")
+            and (judged.get(key, {}).get("run") != run_fingerprint(row)
+                 or judged.get(key, {}).get("bundle") != bundle.version)]
     log.info("%d runs to judge with %s (%s)", len(todo), bundle.model, bundle.version)
     gate = asyncio.Semaphore(config.concurrency.global_limit)
+    checklists = await ensure_checklists(config, client, bundle.model, list(prompts.values()), gate)
 
     async def one(row: dict) -> None:
         run = Run.model_validate(row)
         async with gate:
+            held: list = []
             try:
-                judgment, cost = await judge_run(client, bundle, prompts[run.prompt_id], run,
-                                                 row.get("evidence") or [], pricing)
+                judgment, cost = await judge_checklist(
+                    client, bundle, prompts[run.prompt_id], run, row.get("evidence") or [],
+                    checklists[run.prompt_id], pricing, store=held)
             except OpenRouterError as exc:
                 log.error("judge failed for prompt %s %s: %s", run.prompt_id, run.provider, exc)
                 return
-        append_jsonl(config.judgments_path,
-                     {**judgment.model_dump(mode="json"), "cost_usd": cost, "bundle": bundle.version,
-                      "run": run_fingerprint(row)})
+        saved = {**judgment.model_dump(mode="json"), "cost_usd": cost, "bundle": bundle.version,
+                 "run": run_fingerprint(row)}
+        if held:
+            saved["request"] = held[0]["request"]
+            saved["response"] = held[0]["response"]
+        append_jsonl(config.judgments_path, saved)
 
     await asyncio.gather(*(one(row) for row in todo))
     return 0
@@ -209,8 +355,12 @@ def assemble(config: AuditConfig, settings: Settings, registry: Registry) -> Aud
 
 
 def _second_judge(config: AuditConfig) -> dict:
+    """The second-judge summary, or {} when it was never run or every re-grade failed (n == 0)."""
     path = config.base_dir / "second_judge.json"
-    return json.loads(path.read_text()) if path.exists() else {}
+    if not path.exists():
+        return {}
+    summary = json.loads(path.read_text())
+    return summary if summary.get("n") else {}
 
 
 async def cmd_assemble(config: AuditConfig, settings: Settings, args: argparse.Namespace,
@@ -275,12 +425,26 @@ async def cmd_querygen(config: AuditConfig, settings: Settings, args: argparse.N
     judge_pricing = await pricing_for(client, bundle.model)
     baseline = NoSearchProvider()
 
+    calls_path = config.querygen_dir / "calls.jsonl"
+
     async def closed_book(prompt):
         async with baseline.open(ctx) as session:
-            return (await run_agent(prompt, "none", session, client, agent)).run
+            result = await run_agent(prompt, "none", session, client, agent)
+        append_jsonl(calls_path, {
+            "kind": "closed_book", "text": prompt.text,
+            "answer": result.run.answer, "error": result.run.error, "archive": result.archive,
+        })
+        return result.run
 
     async def judge(prompt, run, evidence):
-        return await judge_run(client, bundle, prompt, run, evidence, judge_pricing)
+        held: list = []
+        judgment, cost = await judge_run(client, bundle, prompt, run, evidence, judge_pricing, store=held)
+        if held:
+            append_jsonl(calls_path, {
+                "kind": "judge", "text": prompt.text, "provider": run.provider,
+                "request": held[0]["request"], "response": held[0]["response"],
+            })
+        return judgment, cost
 
     pilot_ids = args.pilot or []
     try:
@@ -295,6 +459,10 @@ async def cmd_querygen(config: AuditConfig, settings: Settings, args: argparse.N
 
     async def pilot(prompt, provider_id):
         result = await run_one(Job(prompt, pilot_providers[provider_id]), ctx, agent)
+        append_jsonl(calls_path, {
+            "kind": "pilot", "provider": provider_id, "text": prompt.text,
+            "answer": result.run.answer, "error": result.run.error, "archive": result.archive,
+        })
         return result.run, result.evidence
 
     deps = Deps(
@@ -325,6 +493,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--providers", type=lambda s: [p.strip() for p in s.split(",") if p.strip()],
                         help="comma-separated provider ids, e.g. exa,keen")
     parser.add_argument("--retry-errors", action="store_true", help="re-run pairs whose last run errored")
+    parser.add_argument("--reroute", action="store_true",
+                        help="run: ask Jev again for every routed prompt (after the route question changes)")
+    parser.add_argument("--retry-budget-hits", action="store_true",
+                        help="re-run pairs whose last run used up the budget (after raising it in audit.yaml)")
+    parser.add_argument("--retry-tool-failures", action="store_true",
+                        help="re-run pairs whose last run has a failed tool call")
     parser.add_argument("--target", type=int, default=0, help="querygen: number of prompts to produce")
     parser.add_argument("--pilot", type=lambda s: [p.strip() for p in s.split(",") if p.strip()],
                         help="querygen: providers for the optional pilot stage, e.g. exa,keen")

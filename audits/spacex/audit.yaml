@@ -1,4 +1,7 @@
-# Search Audit: SpaceX. Run with `uv run python -m searchaudit run audits/spacex/audit.yaml`.
+# Search Audit: SpaceX. The customer-decision report (which provider this workload should use).
+# Finished at 60 prompts. A 100-prompt rerun is a new generation: do not pass --force over this
+# directory, or the scored runs stop matching the prompts.
+# Run with `uv run python -m searchaudit run audits/spacex/audit.yaml`.
 slug: spacex
 company: SpaceX
 category: "Consumer AI assistant (Grok on X)"
@@ -20,8 +23,9 @@ budget:
 cost_cap_usd: 40
 
 concurrency:
-  global: 12
-  default_per_provider: 4
+  global: 32
+  default_per_provider: 10
+  per_provider: {select: 2, routed: 2}  # SELECT returns MCP errors under load (2026-10-07)
 
 providers:
   - {id: exa, label: Exa, short: Exa, domain: exa.ai, hex: "#c2410c"}
@@ -29,3 +33,4 @@ providers:
   - {id: keen, label: Keenable search, short: Search, domain: keenable.ai, hex: "#2563eb"}
   - {id: select, label: Keenable SELECT, short: SELECT, domain: keenable.ai, hex: "#dc2626"}
   - {id: routed, label: Keenable routed, short: Routed, domain: keenable.ai, hex: "#7c3aed"}
+  - {id: none}

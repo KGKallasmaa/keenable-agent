@@ -17,7 +17,7 @@
 {% macro trace(cell) -%}
 <pre>
 {%- for t in cell.trace -%}
-{{ loop.index }} <span class="k">{{ t.tool }}</span>({{ t.args }})  {{ (t.ms / 1000) | secs }}{% if t.chars %}  {{ t.chars }} chars{% endif %}{% if t.cost %}  ${{ "%.4f" | format(t.cost) }}{% endif %}{% if not t.ok %}  <span class="e">error: {{ t.error }}</span>{% endif %}{{ "\n" if not loop.last }}
+{{ loop.index }} <span class="k">{{ t.tool }}</span>({{ t.args }})  {% if t.ms %}{{ (t.ms / 1000) | secs }}{% else %}—{% endif %}{% if t.chars %}  {{ t.chars }} chars{% endif %}{% if t.cost %}  ${{ "%.4f" | format(t.cost) }}{% endif %}{% if not t.ok %}  <span class="e">error: {{ t.error }}</span>{% endif %}{{ "\n" if not loop.last }}
 {%- else -%}<span class="c"># no tool calls recorded</span>
 {%- endfor -%}
 </pre>
@@ -27,18 +27,44 @@
 <div class="two wide-left">
   <div>
     <h3 style="margin-top:0">Answer</h3>
-    <p class="anstext">{{ cell.answer or "(no answer)" }}</p>
+    <p class="anstext">{{ (cell.answer or "(no answer)") | answer_html }}</p>
     {% if cell.error %}<p class="hint">Run error: {{ cell.error }}</p>{% endif %}
     {% if cell.budget_hit %}<p class="hint">The agent hit its tool-call or time budget and was forced to answer.</p>{% endif %}
     <h3>Judge</h3>
     <p class="anstext">{{ cell.note }}{% if cell.failure %} <span class="hint">{{ cell.failure_name }}: {{ cell.failure_def }}</span>{% endif %}</p>
     <h3>Sources</h3>
+    {% if cell.search_mode %}<p class="hint">{{ cell.search_mode }}</p>{% endif %}
     <p class="anstext srclist">
     {%- for s in cell.sources -%}
-      <a href="{{ s.url }}" rel="noopener nofollow" target="_blank">{{ fav(s.domain, s.domain) }}{{ s.title or s.domain }}</a>
+      <span class="hint">{{ loop.index }}.</span> <a href="{{ s.url }}" rel="noopener nofollow" target="_blank">{{ fav(s.domain, s.domain) }}{{ s.title or s.domain }}</a>
     {%- else -%}<span class="hint">No sources cited.</span>
     {%- endfor -%}
     </p>
+    <p class="hint">Missed reference URLs</p>
+    <p class="anstext srclist">
+    {%- for url in cell.missed -%}
+      <a href="{{ url }}" rel="noopener nofollow" target="_blank">{{ url }}</a>
+    {%- else -%}<span class="hint">None of the reference URLs are missing from this answer.</span>
+    {%- endfor -%}
+    </p>
+    <p class="hint">URLs only this provider cited on this prompt</p>
+    <p class="anstext srclist">
+    {%- for url in cell.only_here -%}
+      <a href="{{ url }}" rel="noopener nofollow" target="_blank">{{ url }}</a>
+    {%- else -%}<span class="hint">Every cited URL was also cited by another provider.</span>
+    {%- endfor -%}
+    </p>
+    <p class="hint">Fetched and not cited</p>
+    {% if not cell.fetch_urls_reported %}
+    <p class="hint">This provider does not return the URL of a page it fetched and did not cite.</p>
+    {% else %}
+    <p class="anstext srclist">
+    {%- for url in cell.fetched_uncited -%}
+      <a href="{{ url }}" rel="noopener nofollow" target="_blank">{{ url }}</a>
+    {%- else -%}<span class="hint">No fetched page was left out of the answer.</span>
+    {%- endfor -%}
+    </p>
+    {% endif %}
   </div>
   <div>
     <h3 style="margin-top:0">Tool trace</h3>
@@ -50,11 +76,12 @@
 
 {# expanded: every answer panel open (per-prompt page). #}
 {% macro prompt_table(p, vm, expanded=False) -%}
+{% set ids = vm.shown if vm.shown is defined else vm.ids %}
 <div class="tablewrap"><table class="ptable" data-prompt="{{ p.id }}"><thead><tr>
   <th>Provider</th><th class="c">Result</th><th title="{{ vm.rubric | join(' · ') }}">Judge checks</th><th>Failure mode</th>
   <th class="r">Score</th><th class="r">Time</th><th class="r">Cost</th><th class="r">Searches</th><th>Sources</th>
 </tr></thead><tbody>
-{% for id in vm.ids %}
+{% for id in ids %}
 {% set c = p.cells[id] %}{% set pr = vm.provider[id] %}
 <tr class="sel" tabindex="0" role="button" aria-expanded="{{ 'true' if expanded else 'false' }}" aria-controls="a{{ p.id }}-{{ id }}" aria-label="{{ pr.label }}: show answer and trace">
   <td>{{ pv(pr) }}{{ via_line(c, vm) }}</td>
@@ -63,7 +90,7 @@
   <td class="fm">{{ c.failure_name or "" }}{% if not c.failure %}<span class="hint">—</span>{% endif %}</td>
   <td class="r num" data-score="{{ id }}">{{ hl(p.highlight.score[id], (c.score * 100) | round | int) }}</td>
   <td class="r num">{{ hl(p.highlight.seconds[id], c.seconds | secs) }}</td>
-  <td class="r num">{{ hl(p.highlight.cost[id], c.cost | money(3, c.est)) }}</td>
+  <td class="r num">{{ hl(p.highlight.cost[id], c.cost | money(3, false)) }}</td>
   <td class="r num">{{ hl(p.highlight.searches[id], c.searches) }}</td>
   <td>{{ sources(c, pr) }}</td>
 </tr>

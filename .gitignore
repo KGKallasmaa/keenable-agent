@@ -1,4 +1,7 @@
+# Secrets. .env.example is the empty template and stays in git.
 .env
+.env.*
+!.env.example
 .venv/
 __pycache__/
 *.pyc
@@ -7,3 +10,17 @@ __pycache__/
 .gstack/
 # Old Exa-vs-Keenable prototype database (the app was removed; see commit 5e6068d).
 data/
+# Local audit working files. They stay on the machine that ran the audit.
+# Publish results.json, report.pdf, prompts.json, audit.yaml, cut-*.json and prompts.batch55.json.
+audits/*/runs*.jsonl
+audits/*/judgments*.jsonl
+audits/*/second_judgments.jsonl
+audits/*/checklists.json
+audits/*/pinned.json
+audits/*/probes/
+audits/*/querygen/
+audits/*/prompts.candidates.jsonl
+audits/*/prompts.more.json
+audits/*/prompts.next.json
+audits/*/prompts.batch*.json
+!audits/*/prompts.batch55.json

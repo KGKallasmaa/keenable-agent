@@ -17,6 +17,7 @@ from searchaudit.providers.base import (
     timed_call,
 )
 from searchaudit.providers.keenable import EVIDENCE_CHARS, FETCH_TOOL, KeenablePriced, KeenableTools
+from searchaudit.providers.research_skill import RESEARCH_SKILL
 
 SELECT_URL = "https://select.keenable.ai/mcp"
 # Server tools that publish or revoke shareable reports: side effects, not retrieval. Never shown to the agent.
@@ -40,17 +41,6 @@ async def connect_select(ctx: ProviderContext) -> AsyncIterator[ClientSession]:
         yield session
 
 
-def mcp_tool_schema(tool: Any) -> dict:
-    return {
-        "type": "function",
-        "function": {
-            "name": tool.name,
-            "description": tool.description or tool.title or tool.name,
-            "parameters": tool.input_schema or {"type": "object", "properties": {}},
-        },
-    }
-
-
 def query_arg(tool: Any) -> str | None:
     """The argument of a SELECT tool that takes free text, so routed can pass a query to it."""
     schema = tool.input_schema or {}
@@ -71,17 +61,16 @@ def result_text(result: Any) -> str:
     return text
 
 
-# SELECT's strength is breadth per call: one query can run several searches and extract every field
-# from every result page into one table. Without this hint agents use it like keyword search, one
-# narrow call at a time, and pay for more requests than plain search (StackAI routine run, 2026-10-07).
-SELECT_GUIDANCE = (
-    "Using the select tool well: one select call can run several WEB_SEARCH phrasings at once and "
-    "extract every field you need from all result pages into one table. Prefer ONE comprehensive query "
-    "that returns the whole answer (every list item with its attributes and source url) over several "
-    "narrow calls. Select the url column so you can cite it. Use SEM_EXTRACT with evidence instead of "
-    "fetching pages, and fetch a page only when the table lacks a value you need. To refine, query the "
-    "earlier result set id instead of searching again."
-)
+def result_raw(result: Any) -> dict | str:
+    """The MCP result as JSON, including structured content the text extract leaves out."""
+    if hasattr(result, "model_dump"):
+        dumped = result.model_dump(mode="json")
+        if isinstance(dumped, dict):
+            return dumped
+    return result_text(result)
+
+
+SELECT_GUIDANCE = RESEARCH_SKILL
 
 
 class SelectSession(ProviderSession):
@@ -92,11 +81,26 @@ class SelectSession(ProviderSession):
         self.usd = keenable.usd
 
     def instructions(self) -> str:
-        return SELECT_GUIDANCE
+        return SELECT_GUIDANCE if self.query_tool() else ""
 
     def function_tools(self) -> list[dict]:
-        schemas = [mcp_tool_schema(t) for t in self.tools.values()]
-        return schemas if "fetch" in self.tools else [*schemas, FETCH_TOOL]
+        """The MCP schema, including the SQL usage guidance in the tool description."""
+        tools = []
+        for tool in self.tools.values():
+            schema = dict(tool.input_schema or {})
+            schema.setdefault("type", "object")
+            schema.setdefault("properties", {})
+            tools.append({
+                "type": "function",
+                "function": {
+                    "name": tool.name,
+                    "description": tool.description or "",
+                    "parameters": schema,
+                },
+            })
+        if "fetch" not in self.tools:
+            tools.append(FETCH_TOOL)
+        return tools
 
     def query_tool(self) -> tuple[str, str] | None:
         """(tool name, query argument) for the first SELECT tool that accepts free text."""
@@ -108,25 +112,29 @@ class SelectSession(ProviderSession):
 
     async def call_tool(self, name: str, args: dict) -> ToolOutcome:
         if name in self.tools:
-            return await self.call_select(name, args)
+            return await self.call_select(name, dict(args))
         if name == "fetch":
             return await self.keenable.fetch(str(args.get("url", "")))
         raise KeyError(f"unknown tool: {name}")
 
     async def call_select(self, name: str, args: dict, label: str = "select") -> ToolOutcome:
+        held: dict[str, dict | str] = {}
+
         async def work() -> tuple[str, list[str], float]:
             try:
                 result = await self.client.call_tool(name, args)
             except MCPError as exc:
                 raise ValueError(f"MCP error: {exc}") from exc
             text = result_text(result)
+            held["raw"] = result_raw(result)
             if result.is_error:
                 raise ValueError(text[:300] or "tool returned an error")
             return text[:RESULT_CHARS], list(dict.fromkeys(URL_RE.findall(text))), self.usd
 
         text, call = await timed_call(label, {"tool": name, **args}, work())
         return ToolOutcome(text=text, calls=[call], searches=1, cost_estimated=True,
-                           evidence=[text[:EVIDENCE_CHARS]] if call.ok else [])
+                           evidence=[text[:EVIDENCE_CHARS]] if call.ok else [],
+                           raw=held.get("raw"))
 
 
 @asynccontextmanager
@@ -144,8 +152,7 @@ def select_unavailable(ctx: ProviderContext) -> str | None:
 
 class SelectProvider(KeenablePriced):
     id = "select"
-    via = (f"Keenable SELECT MCP ({SELECT_URL}) tools via list_tools + Keenable fetch; the agent gets a "
-           "short usage guide: one comprehensive query per answer rather than many narrow ones")
+    via = (f"Keenable SELECT MCP ({SELECT_URL}); the agent writes the SQL the tool describes, plus Keenable fetch")
 
     def __init__(self, connect: Connect = connect_select) -> None:
         self.connect = connect

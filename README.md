@@ -5,16 +5,30 @@ pinned agent model, system prompt and budget** for each. A judge model grades ev
 checked reference answer. The result is a neutral report that ranks the providers on accuracy, cost
 and speed.
 
-The first audit is **StackAI**, an enterprise AI-agent platform that uses Exa today. It has 60 prompts
-across five types: lookup, freshness, multi-hop, list-building and regulation.
+The main audit is **SpaceX** (`audits/spacex-jobs`): 100 regulatory research prompts across three types,
+regulation, list-building and multi-hop, with Grok as the native baseline and Exa and Parallel as the
+providers it is compared against.
+
+The comparison set is three companies, each aimed at 100 prompts (one run per prompt). Sixty prompts
+can show that search beats model memory. It cannot reliably separate providers that differ by about
+10 points. The [NEEDLE](https://keenableai.github.io/needle/) standings (7 days through 7 Oct 2026)
+picked the workloads, because that is where a better index would change the product. The prompts are
+the company's real jobs, not items written so one provider wins. Rankings go stale as models and
+indexes change, so rerun before using one.
+
+| Company | Workload | Why it is in the set |
+|---|---|---|
+| SpaceX | Consumer assistant (Grok) | The customer decision. The finished report is 60 prompts; a 100-prompt rerun is a new generation, not an overwrite. |
+| Rogo | Investment-banking research | Head to head with Exa. On NEEDLE finance, Exa is 0.91 of the pooled best and Keenable is 0.89, and the intervals overlap. |
+| Elicit | Scientific literature | The wide gap. On NEEDLE scholar, Keenable is 0.71 and Exa is 0.52, and the intervals do not overlap. That is a snippet benchmark, so this audit checks whether the lead survives an agent that also fetches pages. |
 
 | Provider | id | How it is called |
 |---|---|---|
 | Exa | `exa` | OpenRouter server tool `openrouter:web_search` (engine=exa) |
 | Parallel | `parallel` | OpenRouter server tool (engine=parallel) |
 | Keenable search | `keen` | Keenable REST search and fetch as function tools in our own agent loop |
-| Keenable SELECT | `select` | Keenable SELECT MCP. The agent writes one SQL query per call |
-| Keenable routed | `routed` | A router model picks SELECT or Keenable search for each call |
+| Keenable SELECT | `select` | Keenable SELECT MCP. The agent writes the SQL the tool describes |
+| Keenable routed | `routed` | Jev chooses search or SELECT once, then the agent has only that tool |
 | No search (baseline) | `none` | Same agent, model, prompt and budget with zero tools: the model answers from memory |
 
 ### The no-search baseline
@@ -66,9 +80,9 @@ can be resumed: `run` skips (prompt, provider) pairs that are already in `runs.j
 skips runs it has already judged.
 
 ```
-A=audits/stackai/audit.yaml
+A=audits/spacex-jobs/audit.yaml
 
-# 1. Probe: one snapshot per provider of its tool list and response shape -> audits/stackai/probes/
+# 1. Probe: one snapshot per provider of its tool list and response shape -> audits/spacex-jobs/probes/
 uv run python -m searchaudit probe $A
 
 # 2. Smoke test: first 2 prompts, every provider (costs well under $1)
@@ -85,11 +99,11 @@ uv run python -m searchaudit judge $A
 # 5. Assemble results.json, the file the report reads
 uv run python -m searchaudit assemble $A
 
-# 6. Render the PDF (starts the app itself) -> audits/stackai/report.pdf
-uv run python scripts/make_pdf.py stackai
+# 6. Render the PDF (starts the app itself) -> audits/spacex-jobs/report.pdf
+uv run python scripts/make_pdf.py spacex-jobs
 ```
 
-The audit's directory name is its URL slug, so `audits/stackai/` is served at `/r/stackai`.
+The audit's directory name is its URL slug, so `audits/spacex-jobs/` is served at `/r/spacex-jobs`.
 
 Settings live in `audit.yaml`: agent model, judge model, router model, budget (15 tool calls and 180 s
 by default), cost cap, concurrency and the provider list. `KEENABLE_USD_PER_REQUEST` sets the
@@ -101,8 +115,8 @@ The prompt set decides what an audit measures. If the agent model can answer a p
 provider gets it right and the audit measures the model. `querygen` builds prompts that need search:
 
 ```
-uv run python -m searchaudit querygen audits/<slug>/audit.yaml --target 60
-uv run python -m searchaudit querygen audits/<slug>/audit.yaml --target 60 --pilot exa,keen   # + pilot stage
+uv run python -m searchaudit querygen audits/<slug>/audit.yaml --target 100
+uv run python -m searchaudit querygen audits/<slug>/audit.yaml --target 100 --pilot exa,keen   # + pilot stage
 ```
 
 | Stage | What it does | Output |

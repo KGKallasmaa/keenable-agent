@@ -40,6 +40,7 @@ class FakeOpenRouter:
     def __init__(self, script: list[dict] | Callable[[dict], dict]) -> None:
         self.script = script
         self.requests: list[dict] = []
+        self.decision = "search"
 
     def __call__(self, body: dict) -> dict:
         self.requests.append(body)
@@ -59,6 +60,13 @@ def transport(openrouter: FakeOpenRouter | None = None, keenable_calls: list | N
         host, path = request.url.host, request.url.path
         if host == "openrouter.ai" and path.endswith("/models"):
             return httpx.Response(200, json=MODELS)
+        if host == "openrouter.ai" and path.endswith("/decisions") and openrouter is not None:
+            return httpx.Response(200, json={
+                "model": "typesafe/jev-1.13",
+                "answers": {"tool": {"type": "choice", "choice": openrouter.decision, "confidence": 0.9,
+                                     "probabilities": {"search": 0.1, "select": 0.9}}},
+                "usage": {"input_tokens": 20, "output_tokens": 0, "cost": 0.00001},
+            })
         if host == "openrouter.ai" and openrouter is not None:
             return httpx.Response(200, json=openrouter(json.loads(request.content)))
         if host == "api.keenable.ai":

@@ -1,0 +1,90 @@
+{% set study = pitch.jobs.study %}
+<article class="pitch">
+  <div class="rhead"><span class="co">SpaceX</span><span class="pill">Compliance</span></div>
+  <h1 id="headline">Keenable for SpaceX compliance</h1>
+  {% if study %}
+  <p class="lede">{{ study.read }}</p>
+  {% else %}
+  <p class="lede">Not run yet.</p>
+  {% endif %}
+
+  {% if study %}
+  {% set tk = study.takeaways %}
+  <h2 id="takeaways">What the run shows</h2>
+  <h3>Where Keenable wins</h3>
+  <ul class="takeaways">
+    {% for line in tk.wins %}<li>{{ line }}</li>{% else %}<li>Nowhere on this set: no Keenable column beat a rival on correct answers, cost per correct answer, or speed.</li>{% endfor %}
+  </ul>
+  {% if study.wins %}
+  <div class="tablewrap"><table class="plainrank">
+    <thead><tr><th>Prompt Keenable got and rivals missed</th><th>Right</th></tr></thead>
+    <tbody>{% for w in study.wins %}<tr><td><a href="#p-{{ w.id }}"><span class="num">{{ w.id }}</span> {{ w.class_title }}</a></td><td>{{ w.arms }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% endif %}
+  <h3>Where it falls short</h3>
+  <ul class="takeaways">{% for line in tk.short %}<li>{{ line }}</li>{% endfor %}</ul>
+  <h3>What would change the result</h3>
+  <ul class="takeaways">{% for line in tk.next %}<li>{{ line }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  <h2 id="why">Why SpaceX</h2>
+  <p>SpaceX is not a random pick. There are three reasons.</p>
+  <h3>1. They have said they will pick the best tool</h3>
+  <p>On 7 October Elon Musk said SpaceX will use the best back-end model for each task. He was talking about models, not search. I expect the same rule to reach search, and under that rule a search provider gets in by being more accurate on SpaceX's own work.</p>
+  <blockquote class="quote">
+    <p>Going forward, @SpaceX will use the best back end model for any given task, including Claude Opus 5.5, MidJourney, Suno and other leading APIs. Whatever is most likely to give you the best outcome.</p>
+    <p class="hint"><svg class="xlogo" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.727-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>Elon Musk, 7 October 2026. <a href="https://postcutoff.com/p/2026-10-07-elonmusk-grok-bot-best-back-end-model/">link</a></p>
+  </blockquote>
+  <h3>2. Compliance is heavy there, and it is a search problem</h3>
+  <p>SpaceX is the largest satellite operator. That means launch licenses, spectrum orders, launch insurance, and the law of every country it sells service in, much of it not in English. In Canada the decision is often in French, and the English summary is a different document. A compliance specialist I know at an EF company told me this is a real problem, and the company's CEO and CTO said the same. If Keenable does this well for SpaceX, the same work carries over to every space operator behind it, including newer ones like Starcloud.</p>
+  <h3>3. It is a way into Cursor and Grok</h3>
+  <p>Cursor joined SpaceX on 14 August 2026. Compliance is the first job; the larger prize is a place as a search provider inside Grok and Cursor. My rough estimate is that this alone would more than double Keenable's daily queries, and the queries are data Keenable can learn from. Developers rarely want to depend on one search provider. Exa is the default today: it publishes a Cursor plugin, though I don't know whether Cursor's own agent uses it. A Keenable listing next to Exa in Cursor puts the name in front of millions of developers.</p>
+  <p>None of this works unless Keenable is accurate on the compliance work. That is what the rest of this document tests.</p>
+
+  <h2 id="method">How I'm comparing them</h2>
+  <p>Inside Grok or Claude, search is one tool among many, so a bad answer is hard to blame on search. Here the search tool is the only thing that changes. Every column runs <span class="mono">x-ai/grok-4.7</span> with the same instructions (find sources, read the pages, answer, cite the URLs, say what you could not verify) and the same budget of {% if study and study.budget %}{{ study.budget.max_tool_calls }} tool calls and {{ study.budget.max_seconds | int }} seconds{% else %}30 tool calls and 600 seconds{% endif %}. A run that hits the budget is made to answer, and that answer is graded like any other.</p>
+  <p>Two exceptions. SELECT gets a short note on how to write its SQL, because that is how SELECT is meant to be used. The router, Jev (<span class="mono">typesafe/jev-1.13</span>), picks search or SELECT once per question, and then the agent has only that tool.</p>
+  <div class="tablewrap"><table class="plainrank">
+    <thead><tr><th>Column</th><th>What it is</th></tr></thead>
+    <tbody>
+      <tr><td>Exa</td><td>Exa search.</td></tr>
+      <tr><td>Parallel</td><td>Parallel search.</td></tr>
+      <tr><td>Grok native</td><td>Grok's own web search.</td></tr>
+      <tr><td>Keenable search</td><td>Keenable's search endpoint.</td></tr>
+      <tr><td>Keenable SELECT</td><td>Keenable's SQL-over-the-web tool, plus the SQL note.</td></tr>
+      <tr><td>Keenable router</td><td>Jev picks search or SELECT for each question.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Each prompt has a reference answer I wrote from the primary document, naming that document. Once per prompt, the reference is turned into a checklist of facts and of wrong answers to watch for, and every provider is graded against the same checklist. {% if study and study.judge %}<span class="mono">{{ study.judge }}</span>{% else %}The judge model{% endif %} marks each item, and the grade follows a fixed rule over those marks rather than the judge's overall impression. Only a correct grade counts toward accuracy. Cost is the dollars for the run. Speed is wall-clock time, wrong answers included.</p>
+  {% if study and study.second and study.second.n %}<p>A second judge model, <span class="mono">{{ study.second.model }}</span>, re-graded every answer against the same checklists. It agreed with the first judge on correct-versus-not {{ (study.second.correct_agreement * 100) | round | int }}% of the time and on the exact grade {{ (study.second.exact_agreement * 100) | round | int }}% (Cohen's κ {{ "%.2f" | format(study.second.kappa) }}).</p>{% endif %}
+  <p>Cost and speed are recorded, but the bar is accuracy. A cheap wrong answer is not a reason to switch.</p>
+
+  <h2 id="set">The prompts</h2>
+  {% set foreign = pitch.plan | rejectattr("lang", "equalto", "English") | list %}
+  <p>{{ pitch.plan_n }} prompts about SpaceX's licenses, spectrum, launch rules, and insurance. Each is written so that reading only the headline of the filing gives a wrong answer. The right answer is in the order itself. {{ foreign | length }} are asked in the language of the source ({{ foreign | map(attribute="lang") | unique | join(", ") }}). No prompt pins the search index to a date. Where a date matters, it is in the prompt.{% if pitch.reset %} The set was reset once, on {{ pitch.reset.date }}: {{ pitch.reset.cut }} prompts that every provider had answered correctly were removed, since they could not separate anyone, and {{ pitch.reset.added }} harder ones were written in their place, cross-document tables and multi-step chains checked against the primary documents. Every prompt that was removed had been answered correctly by all six columns.{% else %} Every prompt drafted for this set is in it; none was removed after results came in.{% endif %}</p>
+  <details class="fold"{% if printing %} open{% endif %}>
+    <summary>All {{ pitch.plan_n }} prompts, with the wrong answer each one tests for</summary>
+    <div class="tablewrap"><table class="plainrank">
+      <thead><tr><th>Question</th><th>Wrong answer it tests for</th><th>Language</th><th>Source</th></tr></thead>
+      <tbody>
+      {% for row in pitch.plan %}
+        <tr>
+          <td>{{ row.title }}</td>
+          <td>{{ row.kind }}</td>
+          <td>{{ row.lang }}</td>
+          <td>{{ row.why }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+  </details>
+
+  <h2 id="results">Results</h2>
+  {% if study %}
+  <p>Finished {{ study.when }}.</p>
+  {% else %}
+  <p>{{ pitch.jobs.empty }} The numbers below stay blank until every question has a grade for every provider.</p>
+  {% endif %}
+
+{% include "_spacex_results_body.html" %}
+</article>

@@ -1,10 +1,11 @@
-"""Second-judge check: re-grade contested answers with a different model and measure agreement.
+"""Second-judge check: re-grade answers with a model from another family and measure agreement.
 
-Contested = prompts where the primary judge did not grade every search provider the same, i.e.
-the answers that decide the ranking. Writes <audit dir>/second_judge.json; `assemble` copies it
-into meta.second_judge and the report's Judge tab shows it.
+With checklists.json present (judge-v3), every answer is re-graded against the same checklist and the
+output adds per-fact agreement. Without it, only contested answers are re-graded (the old behaviour).
+Writes <audit dir>/second_judge.json and second_judgments.jsonl; `assemble` copies the summary into
+meta.second_judge and the report's Judge tab shows it.
 
-    uv run python scripts/second_judge.py audits/stackai/audit.yaml [--model anthropic/claude-opus-5.5]
+    uv run python scripts/second_judge.py audits/spacex-jobs/audit.yaml [--model openai/gpt-6.1-sol]
 """
 
 import argparse
@@ -18,7 +19,7 @@ from dotenv import load_dotenv
 
 from searchaudit.cli import latest_by_pair, pricing_for, read_jsonl
 from searchaudit.config import Settings, load_config, load_prompts
-from searchaudit.judge import JudgeBundle, judge_run
+from searchaudit.judge import JudgeBundle, judge_checklist, judge_run
 from searchaudit.models import Run
 from searchaudit.providers.openrouter import OpenRouterClient, OpenRouterError
 
@@ -54,8 +55,15 @@ async def main(path: str, model: str) -> None:
     prompts = {p.id: p for p in load_prompts(config)}
     runs = latest_by_pair(read_jsonl(config.runs_path))
     judged = latest_by_pair(read_jsonl(config.judgments_path))
-    keys = contested(runs, judged)
-    log.info("%s: %d contested answers to re-grade with %s", config.slug, len(keys), model)
+    cl_path = config.base_dir / "checklists.json"
+    checklists = {c["prompt_id"]: c for c in json.loads(cl_path.read_text())} if cl_path.exists() else {}
+    if checklists:
+        keys = sorted(k for k in runs if k[0] in prompts and k in judged)
+        scope = "every answer, graded against the same checklist as the primary judge"
+    else:
+        keys = contested(runs, judged)
+        scope = "answers on prompts where the primary judge graded the search providers differently"
+    log.info("%s: %d answers to re-grade with %s", config.slug, len(keys), model)
     async with httpx.AsyncClient() as http:
         client = OpenRouterClient(http, settings.openrouter_api_key)
         bundle, pricing = JudgeBundle(model), await pricing_for(client, model)
@@ -65,21 +73,37 @@ async def main(path: str, model: str) -> None:
             row = runs[key]
             async with gate:
                 try:
-                    j, cost = await judge_run(client, bundle, prompts[key[0]], Run.model_validate(row),
-                                              row.get("evidence") or [], pricing)
+                    if checklists:
+                        j, cost = await judge_checklist(client, bundle, prompts[key[0]], Run.model_validate(row),
+                                                        row.get("evidence") or [], checklists[key[0]], pricing)
+                    else:
+                        j, cost = await judge_run(client, bundle, prompts[key[0]], Run.model_validate(row),
+                                                  row.get("evidence") or [], pricing)
                 except OpenRouterError as exc:
                     log.error("second judge failed for %s: %s", key, exc)
                     return None
-            return key, j.grade, cost
+            return key, j, cost
 
-        done = [r for r in await asyncio.gather(*(one(k) for k in keys)) if r]
+        graded = [r for r in await asyncio.gather(*(one(k) for k in keys)) if r]
+    with (config.base_dir / "second_judgments.jsonl").open("w") as fh:
+        for _, j, _ in graded:
+            fh.write(j.model_dump_json() + "\n")
+    done = [(k, j.grade, c) for k, j, c in graded]
     pairs = [(judged[k]["grade"], g) for k, g, _ in done]
+    fact_pairs = []
+    for k, j, _ in graded:
+        first = {f["id"]: f["status"] for f in judged[k].get("facts") or []}
+        fact_pairs += [(first[f["id"]], f["status"]) for f in j.facts if f["id"] in first]
     binary = [(a == "c", b == "c") for a, b in pairs]
     out = {
         "model": model,
         "primary_model": config.judge_model,
         "n": len(pairs),
-        "scope": "answers on prompts where the primary judge graded the search providers differently",
+        "scope": scope,
+        "fact_n": len(fact_pairs),
+        "fact_agreement": sum(a == b for a, b in fact_pairs) / len(fact_pairs) if fact_pairs else None,
+        "fact_kappa": kappa(fact_pairs),
+        "second_correct": dict(Counter(k[1] for k, g, _ in done if g == "c")),
         "exact_agreement": sum(a == b for a, b in pairs) / len(pairs) if pairs else None,
         "correct_agreement": sum(a == b for a, b in binary) / len(binary) if binary else None,
         "kappa": kappa(pairs),
@@ -101,6 +125,6 @@ if __name__ == "__main__":
     logging.getLogger("httpx").setLevel(logging.WARNING)
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("audit")
-    ap.add_argument("--model", default="anthropic/claude-opus-5.5")
+    ap.add_argument("--model", default="openai/gpt-6.1-sol")
     a = ap.parse_args()
     asyncio.run(main(a.audit, a.model))

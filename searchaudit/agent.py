@@ -8,7 +8,7 @@ import time
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass, field
 
-from searchaudit.cost import CostCap, ModelPricing, model_cost
+from searchaudit.cost import CostCap, ModelPricing, credit_failure, model_cost
 from searchaudit.models import Citation, Prompt, Run, ToolCall
 from searchaudit.providers.base import Provider, ProviderContext, ProviderSession, ServerUsage
 from searchaudit.providers.openrouter import OpenRouterClient, OpenRouterError, url_citations
@@ -43,6 +43,7 @@ class AgentSettings:
 class AgentResult:
     run: Run
     evidence: list[str] = field(default_factory=list)  # trimmed tool results, for the judge
+    archive: dict = field(default_factory=dict)  # full OpenRouter responses and tool bodies
 
 
 class _Trace:
@@ -57,8 +58,11 @@ class _Trace:
         self.titles: dict[str, str] = {}
         self.cited: list[str] = []
         self.model = ""
+        self.completions: list[dict] = []
+        self.tools: list[dict] = []
 
-    def add_completion(self, response: dict, session: ProviderSession, pricing: ModelPricing) -> dict:
+    def add_completion(self, response: dict, session: ProviderSession, pricing: ModelPricing, request: dict) -> dict:
+        self.completions.append({"request": request, "response": response})
         usage = response.get("usage") or {}
         self.tokens_in += int(usage.get("prompt_tokens") or 0)
         self.tokens_out += int(usage.get("completion_tokens") or 0)
@@ -119,7 +123,10 @@ async def run_agent(
         {"role": "user", "content": prompt.text},
     ]
     answer, error, budget_hit = "", "", False
+    payload: dict | None = None
     session.start(prompt.text)
+    session.bind_query_time(prompt.query_time)
+    await session.prepare(prompt.text)
     try:
         while True:
             remaining = deadline - clock()
@@ -137,7 +144,7 @@ async def run_agent(
                 budget_hit = True
                 deadline = clock()  # out of time: next turn forces an answer
                 continue
-            message = trace.add_completion(response, session, settings.pricing)
+            message = trace.add_completion(response, session, settings.pricing, payload)
             tool_calls = message.get("tool_calls") or []
             if exhausted or not tool_calls:
                 answer = (message.get("content") or "").strip()
@@ -148,6 +155,9 @@ async def run_agent(
             budget_hit |= trace.used() > settings.max_tool_calls
     except (OpenRouterError, TimeoutError) as exc:
         error = f"{type(exc).__name__}: {exc}"[:500]
+        body = getattr(exc, "body", None)
+        if body is not None:
+            trace.completions.append({"request": payload, "response": body, "error": error})
     run = Run(
         prompt_id=prompt.id, provider=provider_id, answer=answer, citations=_citations(answer, trace),
         searches=trace.searches, fetches=trace.fetches, tool_calls=trace.calls,
@@ -158,7 +168,8 @@ async def run_agent(
         model=trace.model or settings.model,
     )
     session.finish(run)
-    return AgentResult(run=run, evidence=trace.evidence[:EVIDENCE_LIMIT])
+    archive = {"completions": trace.completions, "tools": trace.tools, **session.archive_extra()}
+    return AgentResult(run=run, evidence=trace.evidence[:EVIDENCE_LIMIT], archive=archive)
 
 
 def _payload(settings: AgentSettings, messages: list[dict], session: ProviderSession, final: bool) -> dict:
@@ -186,16 +197,22 @@ async def _execute(
     except (json.JSONDecodeError, KeyError, TimeoutError) as exc:
         error = f"{type(exc).__name__}: {str(exc) or 'run time budget exhausted'}"[:300]
         trace.calls.append(ToolCall(tool=name, args={"raw": function.get("arguments", "")}, ok=False, error=error))
+        trace.tools.append({"name": name, "args": {"raw": function.get("arguments", "")}, "text": f"ERROR: {error}"})
         trace.searches += 1  # a failed call still spends budget
         return {**reply, "content": f"ERROR: {error}"}
     trace.calls.extend(outcome.calls)
     trace.searches += outcome.searches
     trace.fetches += outcome.fetches
-    trace.cost_search += sum(c.cost_usd for c in outcome.calls)
+    # jev_route is a classifier call. Its cost is trivial next to a search and stays on the call only.
+    trace.cost_search += sum(c.cost_usd for c in outcome.calls if c.tool != "jev_route")
     trace.estimated |= outcome.cost_estimated
     trace.evidence.extend(outcome.evidence)
     for cite in outcome.citations:
         trace.titles.setdefault(cite.url, cite.title)
+    stored = {"name": name, "args": args, "text": outcome.text}
+    if outcome.raw is not None:
+        stored["raw"] = outcome.raw
+    trace.tools.append(stored)
     return {**reply, "content": outcome.text}
 
 
@@ -209,7 +226,7 @@ def _citations(answer: str, trace: _Trace) -> list[Citation]:
 async def resolve_model(client: OpenRouterClient, requested: str) -> tuple[str, str]:
     """Pin `openrouter/auto` to a concrete model with one tiny calibration call."""
     if requested != "openrouter/auto":
-        return requested, f"{requested} set explicitly in the audit config"
+        return requested, f"{requested}, pinned in the audit config"
     response = await client.chat({
         "model": requested, "max_tokens": 5,
         "messages": [{"role": "user", "content": "Reply with OK."}],
@@ -246,6 +263,12 @@ async def run_jobs(
             if cap.exceeded():
                 return
             result = await run_one(job, ctx, settings)
+            if credit_failure(result.run.error):
+                cap.halt(
+                    "OpenRouter has no credits. This cell was not saved. "
+                    "Finished cells stay in runs.jsonl; run the same command again after a top-up."
+                )
+                return
             cap.add(result.run.cost_usd)
             await on_result(result)
             done += 1

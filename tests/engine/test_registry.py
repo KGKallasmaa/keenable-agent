@@ -39,7 +39,7 @@ class EchoProvider(Provider):
 
 
 def test_default_registry_has_all_five_plus_baseline():
-    assert default_registry().ids() == ["exa", "parallel", "keen", "select", "routed", "none"]
+    assert default_registry().ids() == ["exa", "parallel", "keen", "select", "grok", "routed", "none"]
 
 
 def test_duplicate_and_unknown_ids_are_rejected():

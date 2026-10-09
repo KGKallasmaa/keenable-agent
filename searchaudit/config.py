@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from searchaudit.models import Prompt, ProviderId, ProviderInfo
 
+DEFAULT_AGENT_MODEL = "~google/gemini-pro-latest"
 DEFAULT_JUDGE_MODEL = "anthropic/claude-sonnet-5.5"
 DEFAULT_ROUTER_MODEL = "typesafe/jev-1.13"
 DEFAULT_QUERYGEN_MODEL = "anthropic/claude-sonnet-5.5"
@@ -73,9 +74,10 @@ class AuditConfig(BaseModel):
     category: str
     company_url: str = ""  # querygen: the company's site, to research its agent workflows
     use_case_hints: list[str] = Field(default_factory=list)  # querygen: workflows to make sure are covered
+    focus: str = ""  # querygen: hard scope. Empty means the category is the scope.
     querygen: QuerygenConfig = Field(default_factory=QuerygenConfig)
     prompts_file: str = "prompts.json"
-    model: str = "openrouter/auto"
+    model: str = DEFAULT_AGENT_MODEL
     temperature: float = 0.2
     judge_model: str = DEFAULT_JUDGE_MODEL
     router_model: str = DEFAULT_ROUTER_MODEL

@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/report.css">
+<link rel="stylesheet" href="/static/report.css?v=toc8">
 <script>
 function favFallback(img) { var s = document.createElement("span"); s.className = "mono-badge"; s.setAttribute("aria-hidden", "true"); s.textContent = img.dataset.mono; img.replaceWith(s); }
 </script>
@@ -18,8 +18,8 @@ function favFallback(img) { var s = document.createElement("span"); s.className 
 {% if is_fixture %}<div class="banner">Illustrative fixture: seeded synthetic data, not real results.</div>{% endif %}
 {% if not printing %}
 <header class="top">
-  <a class="mark" href="/"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#111827"/><circle cx="14" cy="14" r="6.5" fill="none" stroke="#fff" stroke-width="3"/><path d="M19 19l6.5 6.5" stroke="#22c55e" stroke-width="3.5" stroke-linecap="round"/></svg>Search Audit</a>
-  <nav aria-label="Main"><a href="/"{% if nav == "home" %} aria-current="page"{% endif %}>Reports</a><a href="/methodology"{% if nav == "methodology" %} aria-current="page"{% endif %}>Methodology</a></nav>
+  {% if solo %}<span class="mark"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#111827"/><circle cx="14" cy="14" r="6.5" fill="none" stroke="#fff" stroke-width="3"/><path d="M19 19l6.5 6.5" stroke="#22c55e" stroke-width="3.5" stroke-linecap="round"/></svg>Search Audit</span>{% else %}<a class="mark" href="/"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#111827"/><circle cx="14" cy="14" r="6.5" fill="none" stroke="#fff" stroke-width="3"/><path d="M19 19l6.5 6.5" stroke="#22c55e" stroke-width="3.5" stroke-linecap="round"/></svg>Search Audit</a>
+  <nav aria-label="Main"><a href="/"{% if nav == "home" %} aria-current="page"{% endif %}>Reports</a><a href="/methodology"{% if nav == "methodology" %} aria-current="page"{% endif %}>Methodology</a></nav>{% endif %}
 </header>
 {% endif %}
 <main id="main">

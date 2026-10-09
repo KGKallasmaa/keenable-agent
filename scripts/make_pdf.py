@@ -1,7 +1,7 @@
 """Render a report's print view (/r/<slug>/print) to audits/<slug>/report.pdf with headless Chromium.
 
     uv run python scripts/make_pdf.py fixture                      # starts the app on a free port
-    uv run python scripts/make_pdf.py stackai --url http://127.0.0.1:8000
+    uv run python scripts/make_pdf.py spacex-jobs --url http://127.0.0.1:8000
     uv run python scripts/make_pdf.py fixture --screenshots out/   # also PNGs of /r/<slug> and the print view
 
 Needs Chromium once: `uv run playwright install chromium`.

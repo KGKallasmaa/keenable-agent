@@ -1,0 +1,96 @@
+{% set pic = pitch.prior.picture %}
+<h3>{{ pic.title }}</h3>
+<ul class="takeaways">
+  {% for line in pic.takeaways %}<li>{{ line }}</li>{% endfor %}
+</ul>
+
+{% if pic.share %}
+<figure class="plot" id="fig-share">
+  <h3>Figure 1. Correct answers, as a share of each job</h3>
+  <svg class="chart" viewBox="0 0 {{ pic.share.w }} {{ pic.share.h }}" width="100%" role="img" aria-label="Share of prompts graded correct, by provider and job.">
+    {% for tick in pic.share.yticks %}
+    <line class="axis" x1="{{ pic.share.left }}" y1="{{ tick.y }}" x2="{{ pic.share.w - 8 }}" y2="{{ tick.y }}"/>
+    <text x="{{ pic.share.left - 6 }}" y="{{ tick.y + 3 }}" text-anchor="end">{{ tick.label }}</text>
+    {% endfor %}
+    {% for group in pic.share.groups %}
+      {% for bar in group.bars %}<rect class="{{ bar.cls }}" x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.w }}" height="{{ bar.h }}"><title>{{ bar.title }}</title></rect>{% endfor %}
+      <text x="{{ group.x }}" y="{{ pic.share.base + 16 }}" text-anchor="middle">{{ group.label }}</text>
+    {% endfor %}
+  </svg>
+  <p class="legend">{% for item in pic.share.legend %}<span><i class="swatch {{ item.cls }}"></i>{{ item.name }}</span>{% endfor %}</p>
+  <figcaption>A partial counts as not correct. Finished {{ pitch.prior.when }}. Model <span class="mono">{{ pitch.prior.model }}</span>. Grok's own search was not a column.</figcaption>
+</figure>
+{% endif %}
+
+{% if pic.pair %}
+<figure class="plot" id="fig-pair">
+  <h3>Figure 2. Seconds on the SpaceX prompts</h3>
+  <svg class="chart" viewBox="0 0 {{ pic.pair.w }} {{ pic.pair.h }}" width="100%" role="img" aria-label="Exa and Keenable search seconds on each compliance and flight prompt.">
+    {% for row in pic.pair.rows %}
+      <text x="0" y="{{ row.y }}" dominant-baseline="middle">{{ row.label }}</text>
+      {% for bar in row.bars %}
+      <rect class="{{ bar.cls }}" x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.w }}" height="{{ bar.h }}"><title>{{ bar.title }}</title></rect>
+      <text class="val" x="{{ bar.lx }}" y="{{ bar.ly }}">{{ bar.text }}</text>
+      {% endfor %}
+    {% endfor %}
+    {% for tick in pic.pair.xticks %}<text x="{{ tick.x }}" y="{{ pic.pair.axis_y }}" text-anchor="middle">{{ tick.label }}</text>{% endfor %}
+  </svg>
+  <p class="legend">{% for item in pic.pair.legend %}<span><i class="swatch {{ item.cls }}"></i>{{ item.name }}</span>{% endfor %}</p>
+  <figcaption>Wall-clock seconds for the agent run. The grade for each prompt is in the table under the figures.</figcaption>
+</figure>
+{% endif %}
+
+{% if pic.select %}
+<figure class="plot" id="fig-select">
+  <h3>Figure 3. SELECT on the same prompts</h3>
+  <svg class="chart" viewBox="0 0 {{ pic.select.w }} {{ pic.select.h }}" width="100%" role="img" aria-label="SELECT seconds on the compliance and flight prompts, with Exa's median marked.">
+    {% if pic.select.ref %}<line class="ref" x1="{{ pic.select.ref.x }}" y1="14" x2="{{ pic.select.ref.x }}" y2="{{ pic.select.axis_y - 14 }}"/><text class="val" x="{{ pic.select.ref.x + 4 }}" y="12">{{ pic.select.ref.label }}</text>{% endif %}
+    {% for row in pic.select.rows %}
+      <text x="0" y="{{ row.y }}" dominant-baseline="middle">{{ row.label }}</text>
+      {% for bar in row.bars %}
+      <rect class="{{ bar.cls }}" x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.w }}" height="{{ bar.h }}"><title>{{ bar.title }}</title></rect>
+      <text class="val" x="{{ bar.lx }}" y="{{ bar.ly }}">{{ bar.text }}</text>
+      {% endfor %}
+    {% endfor %}
+    {% for tick in pic.select.xticks %}<text x="{{ tick.x }}" y="{{ pic.select.axis_y }}" text-anchor="middle">{{ tick.label }}</text>{% endfor %}
+  </svg>
+  <figcaption>SELECT seconds. The dashed line is Exa's median on the whole file.</figcaption>
+</figure>
+{% endif %}
+
+{% if pic.scatter %}
+<figure class="plot" id="fig-scatter">
+  <h3>Figure 4. Every prompt, search against Exa</h3>
+  <svg class="chart" viewBox="0 0 {{ pic.scatter.w }} {{ pic.scatter.h }}" width="100%" role="img" aria-label="Each dot is one prompt. Horizontal axis is Exa seconds. Vertical axis is Keenable search seconds.">
+    {% for tick in pic.scatter.xticks %}
+    <line class="axis" x1="{{ tick.x }}" y1="{{ pic.scatter.top }}" x2="{{ tick.x }}" y2="{{ pic.scatter.base }}"/>
+    <text x="{{ tick.x }}" y="{{ pic.scatter.h - 8 }}" text-anchor="middle">{{ tick.label }}</text>
+    {% endfor %}
+    {% for tick in pic.scatter.yticks %}
+    <line class="axis" x1="{{ pic.scatter.left }}" y1="{{ tick.y }}" x2="{{ pic.scatter.w - 8 }}" y2="{{ tick.y }}"/>
+    <text x="{{ pic.scatter.left - 6 }}" y="{{ tick.y + 3 }}" text-anchor="end">{{ tick.label }}</text>
+    {% endfor %}
+    <line class="eq" x1="{{ pic.scatter.line.x1 }}" y1="{{ pic.scatter.line.y1 }}" x2="{{ pic.scatter.line.x2 }}" y2="{{ pic.scatter.line.y2 }}"/>
+    {% for dot in pic.scatter.dots %}
+    <circle cx="{{ dot.cx }}" cy="{{ dot.cy }}" r="{{ dot.r }}" class="{{ dot.cls }}{% if dot.open %} open{% endif %}"><title>{{ dot.title }}</title></circle>
+    {% endfor %}
+    <text x="{{ (pic.scatter.left + pic.scatter.w) / 2 }}" y="{{ pic.scatter.h - 1 }}" text-anchor="middle">Exa seconds</text>
+  </svg>
+  <p class="legend"><span><i class="swatch bar-ink"></i>Compliance</span><span><i class="swatch bar-fade"></i>Flight configuration</span><span><i class="swatch bar-muted"></i>The other prompts</span></p>
+  <figcaption>A filled dot means both were graded correct. A hollow dot means at least one was partial or wrong. A dot above the dashed line is search slower than Exa.</figcaption>
+</figure>
+{% endif %}
+
+{% if pic.rows %}
+<div class="tablewrap"><table class="plainrank">
+  <thead><tr><th>Prompt</th>{% for head in pic.rows[0].heads %}<th class="r">{{ head }}</th>{% endfor %}</tr></thead>
+  <tbody>
+  {% for row in pic.rows %}
+  <tr>
+    <td>{{ row.label }}</td>
+    {% for cell in row.cells %}<td class="r num">{{ cell }}</td>{% endfor %}
+  </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endif %}

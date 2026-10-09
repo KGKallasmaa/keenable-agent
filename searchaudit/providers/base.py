@@ -40,6 +40,7 @@ class ToolOutcome:
     cost_estimated: bool = False
     evidence: list[str] = field(default_factory=list)  # trimmed result text for the judge
     citations: list[Citation] = field(default_factory=list)  # titles for urls the tools surfaced
+    raw: dict | str | None = None  # provider body, kept so a later read does not repeat the call
 
 
 @dataclass
@@ -72,11 +73,21 @@ class ProviderSession:
         """Extra system-prompt text for this run ('' = none). The no-search baseline uses it."""
         return ""
 
+    def bind_query_time(self, when: str) -> None:
+        """Harness pin for a date cut. Search sessions send it. Other sessions ignore it."""
+
     def start(self, task: str) -> None:
-        """Called once with the user's prompt before the first model turn (routed uses it as context)."""
+        """Called once with the user's prompt before the first model turn."""
+
+    async def prepare(self, task: str) -> None:
+        """Async setup before the first model turn. The router classifies the query here."""
 
     def finish(self, run: Run) -> None:
         """Last chance to annotate the run (routed sets `via` and `route_confidence`)."""
+
+    def archive_extra(self) -> dict:
+        """Paid calls made outside the chat loop, such as the Jev decision."""
+        return {}
 
 
 class Provider(ABC):

@@ -1,0 +1,911 @@
+{
+  "model": "openai/gpt-6.1-sol",
+  "primary_model": "anthropic/claude-sonnet-5.5",
+  "n": 598,
+  "scope": "every answer, graded against the same checklist as the primary judge",
+  "fact_n": 9217,
+  "fact_agreement": 0.9126613865682978,
+  "fact_kappa": 0.8092915556498915,
+  "second_correct": {
+    "exa": 44,
+    "grok": 45,
+    "routed": 41,
+    "select": 36,
+    "keen": 30,
+    "parallel": 44
+  },
+  "exact_agreement": 0.7525083612040134,
+  "correct_agreement": 0.7709030100334449,
+  "kappa": 0.6093228568906155,
+  "disagreements": [
+    {
+      "prompt_id": 1,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 7,
+      "provider": "parallel",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 8,
+      "provider": "keen",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 8,
+      "provider": "routed",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 8,
+      "provider": "select",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 11,
+      "provider": "exa",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 11,
+      "provider": "grok",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 11,
+      "provider": "keen",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 11,
+      "provider": "parallel",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 11,
+      "provider": "routed",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 12,
+      "provider": "select",
+      "primary": "p",
+      "second": "w"
+    },
+    {
+      "prompt_id": 14,
+      "provider": "keen",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 14,
+      "provider": "routed",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 15,
+      "provider": "select",
+      "primary": "w",
+      "second": "c"
+    },
+    {
+      "prompt_id": 23,
+      "provider": "grok",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 26,
+      "provider": "grok",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 26,
+      "provider": "routed",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 26,
+      "provider": "select",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 35,
+      "provider": "parallel",
+      "primary": "w",
+      "second": "c"
+    },
+    {
+      "prompt_id": 42,
+      "provider": "exa",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 42,
+      "provider": "grok",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 43,
+      "provider": "exa",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 43,
+      "provider": "keen",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 44,
+      "provider": "exa",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 44,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 45,
+      "provider": "keen",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 47,
+      "provider": "parallel",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 48,
+      "provider": "parallel",
+      "primary": "p",
+      "second": "w"
+    },
+    {
+      "prompt_id": 50,
+      "provider": "routed",
+      "primary": "w",
+      "second": "p"
+    },
+    {
+      "prompt_id": 50,
+      "provider": "select",
+      "primary": "w",
+      "second": "p"
+    },
+    {
+      "prompt_id": 52,
+      "provider": "exa",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 52,
+      "provider": "grok",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 52,
+      "provider": "parallel",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 52,
+      "provider": "routed",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 52,
+      "provider": "select",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 53,
+      "provider": "exa",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 53,
+      "provider": "grok",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 55,
+      "provider": "exa",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 55,
+      "provider": "grok",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 55,
+      "provider": "keen",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 55,
+      "provider": "routed",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 56,
+      "provider": "grok",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 56,
+      "provider": "keen",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 56,
+      "provider": "routed",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 56,
+      "provider": "select",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 58,
+      "provider": "keen",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 58,
+      "provider": "routed",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 62,
+      "provider": "grok",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 63,
+      "provider": "keen",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 63,
+      "provider": "parallel",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 69,
+      "provider": "select",
+      "primary": "w",
+      "second": "c"
+    },
+    {
+      "prompt_id": 72,
+      "provider": "select",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 76,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 83,
+      "provider": "exa",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 83,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 83,
+      "provider": "routed",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 85,
+      "provider": "select",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 93,
+      "provider": "grok",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 93,
+      "provider": "parallel",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 95,
+      "provider": "grok",
+      "primary": "w",
+      "second": "c"
+    },
+    {
+      "prompt_id": 95,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 95,
+      "provider": "select",
+      "primary": "w",
+      "second": "c"
+    },
+    {
+      "prompt_id": 98,
+      "provider": "grok",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 98,
+      "provider": "keen",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 99,
+      "provider": "exa",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 99,
+      "provider": "grok",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 99,
+      "provider": "keen",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 99,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 100,
+      "provider": "parallel",
+      "primary": "p",
+      "second": "w"
+    },
+    {
+      "prompt_id": 101,
+      "provider": "exa",
+      "primary": "w",
+      "second": "p"
+    },
+    {
+      "prompt_id": 101,
+      "provider": "grok",
+      "primary": "p",
+      "second": "w"
+    },
+    {
+      "prompt_id": 101,
+      "provider": "routed",
+      "primary": "p",
+      "second": "w"
+    },
+    {
+      "prompt_id": 102,
+      "provider": "exa",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 102,
+      "provider": "grok",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 102,
+      "provider": "keen",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 102,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 102,
+      "provider": "routed",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 102,
+      "provider": "select",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 104,
+      "provider": "exa",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 104,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 105,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 106,
+      "provider": "exa",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 106,
+      "provider": "grok",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 106,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 106,
+      "provider": "routed",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 106,
+      "provider": "select",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 108,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 108,
+      "provider": "select",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 109,
+      "provider": "select",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 113,
+      "provider": "keen",
+      "primary": "p",
+      "second": "w"
+    },
+    {
+      "prompt_id": 113,
+      "provider": "routed",
+      "primary": "p",
+      "second": "w"
+    },
+    {
+      "prompt_id": 116,
+      "provider": "keen",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 116,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 118,
+      "provider": "exa",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 118,
+      "provider": "keen",
+      "primary": "p",
+      "second": "c"
+    },
+    {
+      "prompt_id": 118,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 118,
+      "provider": "routed",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 118,
+      "provider": "select",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 119,
+      "provider": "keen",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 121,
+      "provider": "routed",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 121,
+      "provider": "select",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 122,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 124,
+      "provider": "exa",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 124,
+      "provider": "grok",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 124,
+      "provider": "keen",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 124,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 125,
+      "provider": "exa",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 125,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 126,
+      "provider": "exa",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 126,
+      "provider": "grok",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 126,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 127,
+      "provider": "exa",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 127,
+      "provider": "grok",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 127,
+      "provider": "keen",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 129,
+      "provider": "keen",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 130,
+      "provider": "exa",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 130,
+      "provider": "grok",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 130,
+      "provider": "keen",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 130,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 130,
+      "provider": "routed",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 131,
+      "provider": "exa",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 131,
+      "provider": "grok",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 132,
+      "provider": "grok",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 132,
+      "provider": "keen",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 132,
+      "provider": "routed",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 132,
+      "provider": "select",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 133,
+      "provider": "keen",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 133,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 135,
+      "provider": "exa",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 135,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 135,
+      "provider": "select",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 138,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 139,
+      "provider": "grok",
+      "primary": "p",
+      "second": "w"
+    },
+    {
+      "prompt_id": 139,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 139,
+      "provider": "select",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 140,
+      "provider": "exa",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 140,
+      "provider": "grok",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 140,
+      "provider": "keen",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 140,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 140,
+      "provider": "routed",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 140,
+      "provider": "select",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 141,
+      "provider": "keen",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 141,
+      "provider": "parallel",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 141,
+      "provider": "routed",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 141,
+      "provider": "select",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 142,
+      "provider": "exa",
+      "primary": "c",
+      "second": "w"
+    },
+    {
+      "prompt_id": 142,
+      "provider": "select",
+      "primary": "c",
+      "second": "p"
+    },
+    {
+      "prompt_id": 143,
+      "provider": "grok",
+      "primary": "c",
+      "second": "p"
+    }
+  ],
+  "cost_usd": 8.8218
+}

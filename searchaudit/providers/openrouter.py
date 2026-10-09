@@ -8,11 +8,14 @@ from collections.abc import Awaitable, Callable
 import httpx
 
 BASE_URL = "https://openrouter.ai/api/v1"
+DECISIONS_URL = "https://openrouter.ai/api/alpha/decisions"
 RETRY_STATUS = {429, 500, 502, 503, 504}
 
 
 class OpenRouterError(RuntimeError):
-    pass
+    def __init__(self, message: str, *, body: dict | str | None = None) -> None:
+        super().__init__(message)
+        self.body = body
 
 
 class OpenRouterClient:
@@ -37,6 +40,7 @@ class OpenRouterClient:
         if not self.api_key:
             raise OpenRouterError("OPENROUTER_API_KEY is not set")
         last = ""
+        last_body: dict | str | None = None
         for attempt in range(self.retries + 1):
             try:
                 response = await self.http.post(
@@ -47,10 +51,32 @@ class OpenRouterClient:
             else:
                 if response.status_code not in RETRY_STATUS:
                     return _parse(response)
+                last_body = _response_body(response)
                 last = f"HTTP {response.status_code}: {response.text[:200]}"
             if attempt < self.retries:
                 await self._sleep(2**attempt + random.uniform(0, 1))
-        raise OpenRouterError(last)
+        raise OpenRouterError(last, body=last_body)
+
+    async def decide(self, model: str, state: dict, questions: dict, timeout: float = 30.0) -> dict:
+        """POST /api/alpha/decisions. Jev returns a typed answer, not chat text."""
+        if not self.api_key:
+            raise OpenRouterError("OPENROUTER_API_KEY is not set")
+        last = ""
+        last_body: dict | str | None = None
+        payload = {"model": model, "state": state, "questions": questions}
+        for attempt in range(self.retries + 1):
+            try:
+                response = await self.http.post(DECISIONS_URL, json=payload, headers=self._headers, timeout=timeout)
+            except httpx.TransportError as exc:
+                last = f"{type(exc).__name__}: {exc}"
+            else:
+                if response.status_code not in RETRY_STATUS:
+                    return _parse_decision(response)
+                last_body = _response_body(response)
+                last = f"HTTP {response.status_code}: {response.text[:200]}"
+            if attempt < self.retries:
+                await self._sleep(2**attempt + random.uniform(0, 1))
+        raise OpenRouterError(last, body=last_body)
 
     async def models(self) -> list[dict]:
         """The public model catalog (free, unauthenticated GET). Cached per client."""
@@ -64,19 +90,37 @@ class OpenRouterClient:
         return any(m.get("id") == model_id for m in await self.models())
 
 
-def _parse(response: httpx.Response) -> dict:
+def _response_body(response: httpx.Response) -> dict | str:
     try:
         body = response.json()
-    except json.JSONDecodeError as exc:
-        raise OpenRouterError(f"HTTP {response.status_code}: non-JSON body") from exc
+    except json.JSONDecodeError:
+        return response.text
+    return body if isinstance(body, dict) else response.text
+
+
+def _parse_decision(response: httpx.Response) -> dict:
+    body = _response_body(response)
+    if not isinstance(body, dict):
+        raise OpenRouterError(f"HTTP {response.status_code}: non-JSON body", body=body)
+    if response.status_code >= 400 or "answers" not in body:
+        error = body.get("error") or {}
+        message = error.get("message") if isinstance(error, dict) else str(error or response.text[:200])
+        raise OpenRouterError(f"HTTP {response.status_code}: {message}", body=body)
+    return body
+
+
+def _parse(response: httpx.Response) -> dict:
+    body = _response_body(response)
+    if not isinstance(body, dict):
+        raise OpenRouterError(f"HTTP {response.status_code}: non-JSON body", body=body)
     if response.status_code >= 400 or "error" in body:
         error = body.get("error") or {}
         message = error.get("message") if isinstance(error, dict) else str(error)
         raw = ((error.get("metadata") or {}).get("raw") or "") if isinstance(error, dict) else ""
         detail = f" ({str(raw)[:300]})" if raw else ""
-        raise OpenRouterError(f"HTTP {response.status_code}: {message or response.text[:200]}{detail}")
+        raise OpenRouterError(f"HTTP {response.status_code}: {message or response.text[:200]}{detail}", body=body)
     if not body.get("choices"):
-        raise OpenRouterError("response has no choices")
+        raise OpenRouterError("response has no choices", body=body)
     return body
 
 

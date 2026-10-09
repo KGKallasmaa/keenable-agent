@@ -30,7 +30,6 @@
   header.top nav { display: flex; gap: 20px; font-size: 14px; }
   header.top nav a { text-decoration: none; color: var(--muted); }
   header.top nav a[aria-current] { color: var(--ink); font-weight: 500; }
-  header.top .plus { margin-left: auto; }
   main { max-width: 1120px; margin: 0 auto; padding: 32px 24px 96px; }
   h1 { font: 600 32px/1.2 var(--serif); letter-spacing: -.01em; margin: 0 0 12px; max-width: 34ch; }
   h2 { font: 600 19px/1.3 var(--sans); margin: 40px 0 6px; }
@@ -131,41 +130,16 @@
   .note { border-left: 3px solid var(--part); background: #fffbeb; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 14px; margin: 12px 0; }
   .two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: var(--r); font-size: 14px; z-index: 20; }
-  .steps { display: flex; gap: 6px; margin: 0 0 26px; font-size: 13px; flex-wrap: wrap; }
-  .steps span { padding: 4px 10px; border-radius: 99px; color: var(--muted); background: var(--soft); }
-  .steps span.on { color: #fff; background: var(--ink); } .steps span.done { color: var(--ok); background: var(--best-bg); }
-  label.f { display: block; font: 500 13px var(--sans); margin: 18px 0 6px; }
-  input[type=text], input[type=email], input[type=number], select { width: 100%; max-width: 520px; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r); padding: 8px 10px; font: inherit; color: inherit; }
-  .seg { display: inline-flex; border: 1px solid var(--line-2); border-radius: var(--r); overflow: hidden; background: var(--panel); }
-  .seg a { padding: 7px 13px; text-decoration: none; font-size: 14px; } .seg a.on { background: var(--ink); color: #fff; }
-  .cb { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); max-width: 640px; }
-  .drop { border: 1.5px dashed var(--line-2); border-radius: var(--r); padding: 24px; max-width: 560px; color: var(--muted); text-align: center; background: var(--panel); }
   .method p { max-width: 74ch; color: var(--ink-2); }
   .hfav { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; font: 600 10px var(--sans); line-height: 1; }
   .hfav .fav, .hfav .mono-badge { margin: 0; }
   .hfav .bar2 { width: 18px; height: 3px; border-radius: 2px; }
-  .modal-bg { position: fixed; inset: 0; background: rgba(17,24,39,.42); z-index: 30; display: flex; align-items: flex-start; justify-content: center; padding: 8vh 16px; overflow-y: auto; }
-  .modal { background: var(--panel); border-radius: 12px; width: 100%; max-width: 620px; box-shadow: 0 20px 50px rgba(0,0,0,.18); }
-  .modal header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
-  .modal header h2 { margin: 0; font-size: 16px; }
-  .modal header .x { margin-left: auto; text-decoration: none; font-size: 20px; color: var(--muted); line-height: 1; }
-  .modal .mb { padding: 18px 20px; }
-  .modal footer { display: flex; align-items: center; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--line); }
-  .modal footer .grow { flex: 1; }
-  .dots { display: flex; gap: 6px; } .dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line-2); } .dots i.on { background: var(--ink); }
-  .modal input[type=text], .modal input[type=email] { max-width: none; }
-  .plist-mini { max-height: 220px; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--r); margin-top: 10px; }
-  .plist-mini div { display: flex; gap: 10px; align-items: center; padding: 7px 10px; border-bottom: 1px solid var(--line); font-size: 13px; }
-  .plist-mini div:last-child { border-bottom: 0; }
-  .plist-mini .x2 { margin-left: auto; color: var(--muted); text-decoration: none; }
-  .provgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .provgrid label { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: var(--r); padding: 9px 10px; cursor: pointer; }
   .h2h { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
   .h2h > div { padding: 14px 16px; border-left: 1px solid var(--line); } .h2h > div:first-child { border-left: 0; }
   .h2h .v { font: 600 26px var(--serif); } .h2h .k { font-size: 12px; color: var(--muted); }
   select.inl { width: auto; display: inline-block; padding: 5px 8px; }
   @media (max-width: 860px) {
-    .h2h { grid-template-columns: 1fr 1fr; } .provgrid { grid-template-columns: 1fr; }
+    .h2h { grid-template-columns: 1fr 1fr; }
     header.top { padding: 10px 16px; gap: 14px; } main { padding: 24px 16px 72px; }
     h1, .hero h1 { font-size: 26px; }
     .summary, .two { grid-template-columns: 1fr; }
@@ -184,7 +158,6 @@
 <header class="top">
   <a class="mark" href="#/"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#111827"/><circle cx="14" cy="14" r="6.5" fill="none" stroke="#fff" stroke-width="3"/><path d="M19 19l6.5 6.5" stroke="#22c55e" stroke-width="3.5" stroke-linecap="round"/></svg>Search Audit</a>
   <nav aria-label="Main"><a href="#/" data-nav="home">Reports</a><a href="#/methodology" data-nav="methodology">Methodology</a></nav>
-  <a class="btn plus" href="#/new" onclick="state.step=1">+ New audit</a>
 </header>
 <main id="app" tabindex="-1"></main>
 
@@ -289,7 +262,7 @@ const ok = (p, id) => p.r[id].g === "c";
 const median = (xs) => { const s = [...xs].sort((a, b) => a - b); return s.length ? (s[(s.length - 1) >> 1] + s[s.length >> 1]) / 2 : 0; };
 
 // Value score: a wrong answer scores 0; otherwise credit × (wA + wC·cheapness + wS·speed) / (wA+wC+wS), relative to the best on that prompt.
-const state = { step: 1, a: "routed", b: "exa", w: { a: 60, c: 25, s: 15 }, tab: "prompts", filter: "disagree", type: "all", open: null, ans: {}, emptyPreview: false, source: "generate", harness: "mini" };
+const state = { a: "routed", b: "exa", w: { a: 60, c: 25, s: 15 }, tab: "prompts", filter: "disagree", type: "all", open: null, ans: {}, emptyPreview: false };
 function promptScore(p, id, w) {
   const credit = { c: 1, p: 0.5, w: 0 }[p.r[id].g];
   if (!credit) return 0;
@@ -362,10 +335,10 @@ const views = {
     const listed = state.emptyPreview ? [] : REPORTS.filter((r) => r.listed);
     return `<section class="hero"><h1>Which search provider makes your AI agents answer best?</h1>
       <p class="lede">Run your agent's real prompts through every search provider, grade each answer, and compare accuracy, cost and speed on your own workload.</p>
-      <div class="row"><a class="btn" href="#/new">+ New audit</a><a class="btn ghost" href="#/methodology">Methodology</a></div></section>
-      <h2>Public reports</h2><p class="sub">Shown here only when the creator opted in.</p>
+      <div class="row"><a class="btn ghost" href="#/methodology">Methodology</a></div></section>
+      <h2>Public reports</h2>
       <div class="list panel">${listed.length ? listed.map((r) => `<a class="it" href="#/r/${r.id}"><span><span class="co">${fav(r.domain, r.co)}${esc(r.co)}</span><span class="cat">${esc(r.cat)}</span></span><span class="m">${r.q} prompts · ${r.p} providers</span><span class="m">${r.date}</span></a>`).join("")
-        : `<p class="empty">No public reports yet. Tick "Show on the public list" when you run an audit.</p>`}</div>
+        : `<p class="empty">No public reports yet.</p>`}</div>
       <p class="hint" style="margin-top:12px">Prototype: <a href="#/" onclick="state.emptyPreview=!state.emptyPreview">toggle empty state</a></p>`;
   },
   report() {
@@ -390,36 +363,6 @@ const views = {
       <h2>Is a difference real?</h2><p>Providers answer the same prompts, so accuracy gaps are tested pair-wise (McNemar test, Holm correction). "Tied" means the gap could be chance. The Pareto view rings providers that no other provider beats on accuracy, cost and speed at once.</p>
       <h2>What it does not measure</h2><p>Generated prompts approximate a workload. Results hold for this agent and model. Prices change. Every report can be forked, and every prompt shows the command to reproduce it.</p>
       <h2>This report (StackAI)</h2><p>80 generated prompts, reviewed by hand. Run 2026-10-08. Judge: anthropic/claude-sonnet via OpenRouter, rubric v1; agreed with human graders on 27 of 30 answers. <a href="#/r/7f3c9a2e">Back to the report</a></p></div>`;
-  },
-  modal() {
-    const st = state.step, gen = state.source === "generate";
-    const body = {
-      1: `<label class="f" for="co" style="margin-top:0">Company</label><input id="co" type="text" value="StackAI" />
-          <label class="f" for="dom">Website</label><input id="dom" type="text" value="stack-ai.com" />
-          <p class="hint" style="margin-top:12px">We'll research the company with Keenable to build prompts that match its work.</p>`,
-      2: `<div class="panel" style="padding:12px 14px;background:var(--soft);border:0"><div style="display:flex;align-items:center;gap:6px;font-weight:600">${fav("stack-ai.com", "S")} StackAI <span class="pill">Enterprise AI agent builder</span></div>
-            <p class="hint" style="margin:6px 0 0">Builds AI agents and workflows for enterprises; uses ${pv("exa")} today. <a href="#/new" onclick="toast('Profile editing opens here')">Edit</a></p></div>
-          <div class="seg" style="margin-top:16px"><a href="#/new" class="${gen ? "on" : ""}" onclick="state.source='generate'">Generate prompts</a><a href="#/new" class="${gen ? "" : "on"}" onclick="state.source='upload'">Upload your own</a></div>
-          ${gen ? `<p class="hint" style="margin:10px 0 0">${PROMPTS.length} prompts across ${TYPES.length} types, based on the profile. Edit or remove any.</p>
-            <div class="plist-mini">${PROMPTS.slice(0, 10).map((p) => `<div><span class="pill">${T[p.type].name}</span><span contenteditable="true">${esc(p.text)}</span><a class="x2" href="#/new" aria-label="Remove">×</a></div>`).join("")}<div class="hint">+ ${PROMPTS.length - 10} more · <a href="#/new">Add a prompt</a></div></div>`
-          : `<div class="drop" style="margin-top:12px;max-width:none">Drop a CSV or TXT, one prompt per line, or <a href="#/new">choose a file</a><br><span class="hint">Jev labels each prompt's type.</span></div>`}`,
-      3: `<p class="hint" style="margin:0 0 10px">Providers to compare</p>
-          <div class="provgrid">${PROVIDERS.map((p) => `<label><input type="checkbox" checked /> ${pv(p.id)}</label>`).join("")}</div>
-          <label class="f" for="em">Your email</label><input id="em" type="email" placeholder="you@company.com" />
-          <p class="hint" style="margin-top:8px">The audit takes about 40 minutes for ${PROMPTS.length} prompts. We'll email you the report link.</p>`,
-    }[st];
-    const title = { 1: "New audit", 2: "Prompts", 3: "Providers" }[st];
-    return `<div class="modal-bg" onclick="if(event.target===this)location.hash='#/'"><div class="modal" role="dialog" aria-modal="true" aria-label="${title}">
-      <header><h2>${title}</h2><span class="dots" aria-label="Step ${st} of 3">${[1, 2, 3].map((i) => `<i class="${i <= st ? "on" : ""}"></i>`).join("")}</span><a class="x" href="#/" aria-label="Close">×</a></header>
-      <div class="mb">${body}</div>
-      <footer>${st > 1 ? `<a class="btn ghost" href="#/new" onclick="state.step=${st - 1}">Back</a>` : ""}<span class="grow"></span>
-        ${st < 3 ? `<a class="btn" href="#/new" onclick="state.step=${st + 1}">${st === 1 ? "Research company" : "Continue"}</a>` : `<a class="btn" href="#/run/1b2d" onclick="state.step=1">Start audit</a>`}</footer>
-    </div></div>`;
-  },
-  run() {
-    const prog = { exa: 71, parallel: 66, keen: 74, select: 58, routed: 62 };
-    return `<h1>Auditing Acme Legal AI…</h1><p class="sub">About 40 minutes. The report link is permanent; we'll email you.</p>
-      <div class="panel" style="padding:14px 18px;max-width:720px">${PROVIDERS.map((p) => `<div style="display:grid;grid-template-columns:200px 1fr 60px;gap:12px;align-items:center;padding:7px 0">${pv(p.id)}<div class="scorebar"><i style="width:${prog[p.id]}%;background:${p.color}"></i></div><span class="num hint">${Math.round(prog[p.id] / 2)}/50</span></div>`).join("")}</div>`;
   },
 };
 
@@ -581,7 +524,6 @@ function tabJudge(m) {
 }
 
 // ============ Utilities ============
-function steps(on) { return `<div class="steps">${["Company", "Profile", "Prompts", "Providers & agent", "Review & run"].map((n, i) => `<span class="${i < on ? "done" : i === on ? "on" : ""}">${i + 1}. ${n}</span>`).join("")}</div>`; }
 function toast(t) { const d = document.createElement("div"); d.className = "toast"; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 1700); }
 function copyText(text, msg) { const fb = () => { const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); toast(msg); } catch (e) {} ta.remove(); }; if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(() => toast(msg), fb); else fb(); }
 function share() { const m = model(); copyText([`StackAI · Search Audit: ${headline(m, "StackAI")}`, ...m.byScore.map((id, i) => `${i + 1}. ${P[id].label}: score ${m.st[id].score.toFixed(0)} · ${m.st[id].k}/${m.n} correct · ${money(m.st[id].perQ)}/prompt · ${secs(m.st[id].t50)}`), location.href.split("#")[0] + "#/r/7f3c9a2e"].join("\n"), "Link and summary copied"); }
@@ -593,8 +535,6 @@ function render() {
   const qp = new URLSearchParams(h.split("?")[1] || "");
   let html, nav = "";
   if (!parts.length) { nav = "home"; html = views.home(); }
-  else if (parts[0] === "new") { nav = "home"; html = views.home() + views.modal(); }
-  else if (parts[0] === "run") html = views.run();
   else if (parts[0] === "r" && parts[2] === "pdf") html = views.pdf();
   else if (parts[0] === "r") { if (qp.get("tab")) state.tab = qp.get("tab"); if (qp.get("p")) { state.tab = "prompts"; state.filter = "all"; state.type = "all"; state.open = Number(qp.get("p")); } if (qp.get("ans")) state.ans[qp.get("p") + qp.get("ans")] = true; html = views.report(); }
   else if (parts[0] === "methodology") { nav = "methodology"; html = views.methodology(); }
@@ -602,22 +542,11 @@ function render() {
   document.getElementById("app").innerHTML = html;
   document.querySelectorAll("[data-nav]").forEach((a) => a.toggleAttribute("aria-current", a.dataset.nav === nav));
   const target = state.open && document.getElementById("p" + state.open);
-  if (parts[0] === "new") { const f = document.querySelector(".modal input"); if (f && !render.keep) f.focus(); }
   if (target && !render.keep) target.scrollIntoView({ block: "start" });
   else if (!render.keep) window.scrollTo(0, 0);
   render.keep = false;
 }
 window.addEventListener("hashchange", render);
-document.addEventListener("keydown", (e) => {
-  if (!location.hash.startsWith("#/new")) return;
-  if (e.key === "Escape") { state.step = 1; location.hash = "#/"; return; }
-  if (e.key === "Tab") { // keep focus inside the modal
-    const f = [...document.querySelectorAll(".modal a, .modal button, .modal input, .modal [contenteditable]")];
-    if (!f.length) return; const first = f[0], last = f[f.length - 1];
-    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-  }
-});
 document.addEventListener("click", (e) => { const a = e.target.closest("a[onclick]"); if (a) { e.preventDefault(); render.keep = !/state\.open=\d/.test(a.getAttribute("onclick")); setTimeout(render, 0); } });
 render();
 </script>

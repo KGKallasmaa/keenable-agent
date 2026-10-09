@@ -7,7 +7,7 @@ when it applies (e.g. the SELECT note only when SELECT ran).
 from searchaudit.config import AuditConfig, Settings
 from searchaudit.models import Judgment, ProviderId, Run
 
-SERVER_TOOL_PROVIDERS: dict[ProviderId, str] = {"exa": "Exa", "parallel": "Parallel"}
+SERVER_TOOL_PROVIDERS: dict[ProviderId, str] = {"exa": "Exa", "parallel": "Parallel", "grok": "Grok native"}
 KEENABLE_PROVIDERS: set[ProviderId] = {"keen", "select", "routed"}
 
 
@@ -16,14 +16,22 @@ def _providers_phrase(names: list[str]) -> str:
 
 
 def _trouble(runs: list[Run], provider: ProviderId) -> str:
-    """'3 of 60 runs errored and 5 hit the budget', or '' when neither happened."""
+    """'1 run errored, 3 returned no answer and 5 hit the budget, of 60', or '' when none of that happened."""
     mine = [r for r in runs if r.provider == provider]
     errors = sum(1 for r in mine if r.error)
-    budget = sum(1 for r in mine if r.budget_hit and not r.error)
-    parts = [f"{errors} errored"] if errors else []
+    empty = sum(1 for r in mine if not r.error and not r.answer.strip())
+    budget = sum(1 for r in mine if r.budget_hit)
+    parts = []
+    if errors:
+        parts.append(f"{errors} run{'s' if errors != 1 else ''} errored")
+    if empty:
+        parts.append(f"{empty} returned no answer")
     if budget:
         parts.append(f"{budget} hit the budget")
-    return f"{' and '.join(parts)} of {len(mine)} runs" if parts else ""
+    if not parts:
+        return ""
+    joined = parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + " and " + parts[-1]
+    return f"{joined}, of {len(mine)} runs"
 
 
 def method_notes(
@@ -53,20 +61,19 @@ def method_notes(
         )
     if ran & KEENABLE_PROVIDERS:
         notes.append(
-            f"Keenable search and fetch are priced at the list price of ${settings.keenable_usd_per_request:g} "
-            "per request (marked ~), not from an invoice."
+            f"{'Keenable search and SELECT are' if ran & {'select', 'routed'} else 'Keenable search is'} priced at the list price of ${settings.keenable_usd_per_request:g} "
+            "per request. That list price is the price in this report."
         )
     if "select" in ran:
         notes.append(
-            "Keenable SELECT is experimental: the agent writes one read-only SQL query (WEB_SEARCH / WEB_FETCH "
-            "plus LLM functions) per call. A failed query still counts toward the tool-call budget and is "
-            "priced at $0, since it is not known whether Keenable bills it."
+            "Keenable SELECT is experimental: the agent is given a research skill and writes DuckDB SQL "
+            "(WEB_SEARCH, SEM_EXTRACT) in the query argument. The other providers do not get that skill. "
+            "A failed query still counts toward the tool-call budget and is priced at $0, since it is not "
+            "known whether Keenable bills it."
         )
     if "routed" in ran:
         notes.append(
-            f"Keenable routed is a prototype: a router model ({config.router_model}) picks SELECT or Keenable "
-            "search for each search call, and when it picks SELECT the agent model writes the SQL. Router and "
-            "SQL-writing calls are counted in its search cost."
+            "Keenable router asks Jev one choice question, search or select, and returns the answer that arm already gave."
         )
     if "none" in ran:
         notes.append(
@@ -75,19 +82,29 @@ def method_notes(
             "against the reference without requiring sources. Search lift = prompts a provider got right that "
             "the baseline got wrong. It is never recommended in the headline or the implementation guide."
         )
-    for pid in sorted(ran):
-        trouble = _trouble(runs, pid)
-        if trouble:
-            notes.append(f"{pid}: {trouble}. Errored runs count as wrong.")
+    labels = {p.id: p.label for p in config.providers}
+    troubles = [(labels.get(pid, pid), _trouble(runs, pid)) for pid in sorted(ran)]
+    troubles = [(label, t) for label, t in troubles if t]
+    if troubles:
+        notes.append("; ".join(f"{label}: {t}" for label, t in troubles)
+                     + ". A run that errored or returned no answer counts as wrong; a run that hit the budget "
+                       "was made to answer and graded like any other.")
 
     judged = {(j.prompt_id, j.provider) for j in judgments}
     unjudged = sum(1 for r in runs if (r.prompt_id, r.provider) not in judged)
     if unjudged:
         notes.append(f"{unjudged} runs have no judgment yet and count as wrong in this report.")
     notes.append(f"Judge: {config.judge_model}, bundle {judge_bundle}, temperature 0, sees the reference answer.")
+    notes.append(
+        "One run per prompt is the scored trial. Rerun the audit before treating the ranking as current: "
+        "providers, models and the web change. About 100 prompts is the smallest set with a real chance of "
+        "detecting a 10-point accuracy gap. A tie on fewer prompts means the sample was too small to see "
+        "that gap, not that the providers are equal. The set is 100 prompts because each provider run "
+        "costs real money; a gap of a few points here is a lead to test at a larger size, not a verdict."
+    )
     if human_agreement is None:
         notes.append(
-            "The judge has not yet been calibrated against hand-graded answers, so treat small accuracy gaps "
+            "The judge was not calibrated against hand-graded answers in this audit, so treat small accuracy gaps "
             "between providers with care."
         )
     return notes

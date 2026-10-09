@@ -41,6 +41,13 @@ async def test_loop_runs_tools_then_answers():
     assert not run.budget_hit and not run.error
     assert run.model == "anthropic/claude-sonnet-5.5"
     assert result.evidence
+    assert len(result.archive["completions"]) == 3
+    assert result.archive["completions"][0]["request"]["model"] == "m/pinned"
+    assert result.archive["completions"][0]["response"]["choices"]
+    assert result.archive["tools"][0]["name"] == "search"
+    assert result.archive["tools"][0]["raw"]["results"]
+    assert result.archive["tools"][1]["name"] == "fetch"
+    assert result.archive["tools"][1]["raw"]["content"]
     # same model, temperature and tools for every request; tool results go back with their call id
     assert {r["model"] for r in fake.requests} == {"m/pinned"}
     assert fake.requests[1]["messages"][-1]["role"] == "tool"

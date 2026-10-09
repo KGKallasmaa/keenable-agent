@@ -6,6 +6,15 @@
 !audits/*/results.json
 !audits/*/report.pdf
 !audits/*/prompts.json
+# The SpaceX walkthrough (/r/spacex) also reads these at request time.
+!audits/*/audit.yaml
+!audits/*/cut-*.json
+!audits/*/prompts.batch55.json
 **/__pycache__
 # The synthetic fixture is for local dev and tests only; keep it out of the public site.
 audits/fixture
+# Last match wins, so a secret cannot ride in on an allow rule above.
+.env
+.env.*
+**/.env
+**/.env.*

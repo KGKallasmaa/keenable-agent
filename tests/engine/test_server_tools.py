@@ -27,6 +27,13 @@ def test_missing_counts_fall_back_to_estimate():
     assert usage.cost_usd == 0.005 and usage.cost_estimated
 
 
+def test_native_engine_has_no_separate_list_price():
+    usage = account_server_tools(fixture("openrouter_server_tools.json"), "native")
+    assert usage.searches == 3 and usage.cost_usd == 0
+    note = ServerToolProvider("grok", "native", "Grok native").price_note(None)
+    assert "No separate list price" in note
+
+
 def test_legacy_server_tool_use_key_is_read():
     response = fixture("openrouter_server_tools.json")
     response["usage"]["server_tool_use"] = response["usage"].pop("server_tool_use_details")

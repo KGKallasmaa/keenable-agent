@@ -1,0 +1,45 @@
+# prompts.json is the set. Ids 1-5 were checked against the orders. Do not rewrite them.
+# Ids 6 and up are further primary-source questions. prompts.next.json is the draft
+# those ids were copied from. Do not regenerate either file with querygen --force.
+# The walkthrough does not print a win until every cell in prompts.json is judged.
+# 2026-10-09 reset: the 45 prompts every provider answered correctly (all six graded "c") were
+# removed as non-discriminating; their ids are in cut-2026-10-09.json and they are not reused.
+# Ids 99 and up are prompts.batch55.json: cross-document wide tables, multihop chains and
+# deep reads of long orders, each verified against the primary documents in the reference.
+slug: spacex-jobs
+company: SpaceX
+category: "Compliance: licenses, spectrum, insurance, and non-English primary law"
+company_url: "https://www.spacex.com"
+focus: |
+  Five questions. The answer is the order, and a news story about the order is often wrong.
+  Amazon Gen1 milestone (DA-26-553). Gen2 and Polar dates in the same order. The French ISED E-band decision. Whether Part 25 ended on the Part 100 vote (FCC-26-47). Whether SpaceX holds the EchoStar licenses after DA-26-471.
+  No classified material, no export-controlled procedure, no operational how-to.
+use_case_hints:
+  - "DA-26-553: the 24-month extension was not granted. Grade the order, not the news story."
+  - "Gen2 and Polar milestone dates are not the Gen1 dates."
+  - "The ISED E-band decision is in French. Temporary, two sites, non-interference."
+  - "FCC-26-47: Part 25 sunsets when Part 100 becomes effective, not on the vote."
+  - "DA-26-471: two-step assignment. SpaceX is not the licensee on the order date. BEA 174 is out."
+model: x-ai/grok-4.7
+temperature: 0.2
+judge_model: anthropic/claude-sonnet-5.5
+router_model: typesafe/jev-router
+# SELECT retries SQL and a single call can take about 90s. 180s was dying after two calls.
+# Raised from 30 calls / 600s on 2026-10-09. Only runs that hit the old cap were re-run
+# (run --retry-budget-hits); every other run finished under 30 calls, so the cap never bound it.
+budget:
+  max_tool_calls: 100
+  max_seconds: 1800
+cost_cap_usd: 800
+# Four at a time, so a credit refusal stops the rest. Finished cells stay on disk.
+concurrency:
+  global: 8
+  default_per_provider: 2
+  per_provider: {select: 2, routed: 2, keen: 6}
+providers:
+  - {id: exa, label: Exa, short: Exa, domain: exa.ai, hex: "#c2410c"}
+  - {id: parallel, label: Parallel, short: Parallel, domain: parallel.ai, hex: "#475569"}
+  - {id: keen, label: Keenable search, short: Search, domain: keenable.ai, hex: "#2563eb"}
+  - {id: select, label: Keenable SELECT, short: SELECT, domain: keenable.ai, hex: "#dc2626"}
+  - {id: grok, label: Grok native, short: Grok, domain: x.ai, hex: "#111827"}
+  - {id: routed, label: Keenable router, short: Router, domain: keenable.ai, hex: "#7c3aed"}

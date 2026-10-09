@@ -261,7 +261,7 @@ Cherry-pick candidates, asked one at a time: E1 "$ at your volume" line; E2 thre
   - Companies: their domain favicon, with `onerror` falling back to a monogram. Fixes StackAI's blank icon.
   - Cited domains: the real domain favicon.
   - Production: favicons fetched and cached server-side, never hotlinked.
-- Homepage: hero line, "+ New audit", then the public reports list (favicon, company, computed verdict, meta) in one clean ruled list.
+- Homepage: hero line, then the public reports list (favicon, company, computed verdict, meta) in one clean ruled list. There is no control to start or schedule a new audit.
 
 
 ## Spec review 1 fixes (6/10). Clarifications inside approved scope
@@ -297,7 +297,7 @@ User: "Approve and continue (recommended)" (2026-10-07). The spec as of spec rev
 ```
 HOUR 1:   seeded per-question paired data (n=80, 5 providers); stats in-page: McNemar exact, Holm, Wilson CI, bootstrap
 HOUR 2-3: decision table → headline, recommendation, pilot; 11-part report; favicon helper with onerror → monogram
-HOUR 4:   homepage list (opt-in only + empty state), header + New audit, Copy summary; E1 example volumes
+HOUR 4:   homepage list (opt-in only + empty state), Copy summary; E1 example volumes
 HOUR 5+:  screenshots at 1280 and 500 px, a check of the copy against the honesty rules
 Surprise to plan for: with n=80 and close providers, most pairs will be "no clear difference". That is the honest
 headline, and the illustrative data must not be tuned to manufacture a win.

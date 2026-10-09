@@ -12,7 +12,7 @@
 <p>One agent runs every prompt once per provider: the same model (resolved once and pinned for the whole audit), the same instructions and the same budget of tool calls and seconds. Each provider exposes one search tool and one page-reading tool. A run that errors or hits its budget is kept and counts as not correct; runs are never dropped.</p>
 
 <h2 id="routed">Keenable routed</h2>
-<p>One search tool that asks Jev, a classification model, whether a request wants a list or table (Keenable SELECT) or a single answer (Keenable search). Its result on each prompt is the result of the tool Jev chose, so it is derived from those two rather than an independent run. The choice and its confidence are shown per prompt.</p>
+<p>Jev (<span class="mono">typesafe/jev-1.13</span>) answers one choice question about the query: search or select. Search is anything on one page, including a list. Select is a row that is not on that page, from a different primary document. Select is for work where latency is not mission critical: not a chat reply someone is waiting on, and fine for background work that can wait about 90 seconds. The agent then has only that tool. The run records the choice and its confidence.</p>
 
 <h2 id="grading">Grading</h2>
 <p>A judge model checks every answer against the reference on four criteria: answers the prompt, facts correct, sources support it, up to date. All four pass = ✓ correct; the first plus all but one = ◐ partly correct; otherwise ✗ wrong. The report lists any grade that does not match its own checks. Agreement with human graders is published once answers have been hand-graded; until then the report says "not measured yet".</p>

@@ -27,9 +27,10 @@ async def test_gives_up_after_two_retries():
         return httpx.Response(503, text="down")
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http:
-        with pytest.raises(OpenRouterError, match="503"):
+        with pytest.raises(OpenRouterError, match="503") as raised:
             await OpenRouterClient(http, "k", sleep=no_sleep).chat({"model": "m", "messages": []})
     assert len(calls) == 3
+    assert raised.value.body == "down"
 
 
 async def test_client_errors_are_not_retried():
@@ -40,6 +41,7 @@ async def test_client_errors_are_not_retried():
         return httpx.Response(400, json={"error": {"message": "bad model"}})
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http:
-        with pytest.raises(OpenRouterError, match="bad model"):
+        with pytest.raises(OpenRouterError, match="bad model") as raised:
             await OpenRouterClient(http, "k", sleep=no_sleep).chat({"model": "m", "messages": []})
     assert len(calls) == 1
+    assert raised.value.body["error"]["message"] == "bad model"

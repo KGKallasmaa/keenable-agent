@@ -18,6 +18,7 @@ from searchaudit.querygen import (
     OpenRouterLLM,
     QueryGen,
     Reply,
+    UseCase,
     bucket_searches,
     extract_json,
     judge_verification,
@@ -354,3 +355,16 @@ async def test_cli_querygen_requires_target(audit: Path, monkeypatch: pytest.Mon
 
 def test_budget_error_is_a_runtime_error():
     assert issubclass(BudgetExhausted, RuntimeError)
+
+
+def test_focus_is_required_in_use_case_and_task_prompts(tmp_path: Path):
+    audit = tmp_path / "audit.yaml"
+    audit.write_text(YAML.replace("use_case_hints:", "focus: Find the paper, not the regulator.\nuse_case_hints:"))
+    gen = QueryGen(load_config(audit), Fakes().deps(), target=5)
+    case = UseCase(id="u1", name="Workflow 1", persona="Analyst 1", workflow="does thing 1", web_need="papers")
+    task_prompt = gen._task_prompt(case, {"lookup": 1}, "2026-07-09")
+    assert "Find the paper, not the regulator." in task_prompt
+    assert "overrides the company category" in task_prompt
+    # The use-case prompt is built in use_cases(); the same block must be there.
+    assert gen._focus_block() in task_prompt
+    assert "Find the paper, not the regulator." in gen._focus_block()

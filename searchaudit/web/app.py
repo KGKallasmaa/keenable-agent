@@ -17,12 +17,13 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from markupsafe import Markup
 
 from searchaudit.report.format import FILTERS
+from searchaudit.report.pitch import build_pitch
 from searchaudit.web.store import Audit, AuditStore
 
 HERE = Path(__file__).resolve().parent
@@ -48,6 +49,15 @@ def _pdf_name(company: str) -> str:
     return re.sub(r"[^A-Za-z0-9]+", "_", company).strip("_") + "_search_audit.pdf"
 
 
+class _Static(StaticFiles):
+    """Revalidate CSS and JS on each load so a report refresh picks up a template change."""
+
+    async def get_response(self, path: str, scope):
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
 def create_app(audits_dir: Path | None = None, show_fixture: bool | None = None) -> FastAPI:
     root = audits_dir or Path(os.environ.get("AUDITS_DIR", "audits"))
     show = os.environ.get("SHOW_FIXTURE") == "1" if show_fixture is None else show_fixture
@@ -55,7 +65,7 @@ def create_app(audits_dir: Path | None = None, show_fixture: bool | None = None)
     templates = _templates()
     app = FastAPI(title="Search Audit", docs_url=None, redoc_url=None)
     app.add_middleware(GZipMiddleware, minimum_size=2048)
-    app.mount("/static", StaticFiles(directory=HERE / "static"), name="static")
+    app.mount("/static", _Static(directory=HERE / "static"), name="static")
 
     def audit_or_404(slug: str) -> Audit:
         audit = store.get(slug)
@@ -67,12 +77,20 @@ def create_app(audits_dir: Path | None = None, show_fixture: bool | None = None)
         return templates.TemplateResponse(request, name, ctx)
 
     def report_ctx(audit: Audit) -> dict[str, Any]:
+        pitch = build_pitch(root, audit.vm) if audit.slug == "spacex" else None
+        if pitch and pitch.get("prior"):
+            job_of = {pid: job["id"] for job in pitch["prior"]["jobs"] for pid in job["ids"]}
+            for row in audit.vm["client"]["prompts"]:
+                row["job"] = job_of.get(row["id"], "")
         return {
             "vm": audit.vm,
             "slug": audit.slug,
             "is_fixture": audit.is_fixture,
             "has_pdf": audit.pdf_path.is_file(),
             "pdf_name": _pdf_name(audit.results.meta.company),
+            "pitch": pitch,
+            "embedded": pitch is not None,
+            "solo": audit.slug == "spacex",
         }
 
     @app.get("/health")
@@ -87,9 +105,18 @@ def create_app(audits_dir: Path | None = None, show_fixture: bool | None = None)
     def methodology(request: Request) -> HTMLResponse:
         return page(request, "methodology.html", nav="methodology")
 
+    @app.get("/r/spacex-pitch", response_model=None)
+    def spacex_pitch(request: Request) -> HTMLResponse | RedirectResponse:
+        if store.get("spacex") is not None:
+            return RedirectResponse("/r/spacex", status_code=302)
+        return page(request, "pitch.html", pitch=build_pitch(root), nav="home", solo=True)
+
     # Declared before /r/{slug} so "<slug>.pdf" is not taken for a slug.
     @app.get("/r/{slug}.pdf")
     def report_pdf(slug: str) -> FileResponse:
+        pitch_pdf = root / "spacex" / "report.pdf"
+        if slug == "spacex" and store.get(slug) is None and pitch_pdf.is_file():
+            return FileResponse(pitch_pdf, media_type="application/pdf", filename=_pdf_name("SpaceX"))
         audit = audit_or_404(slug)
         if not audit.pdf_path.is_file():
             raise HTTPException(404, "The PDF for this report has not been generated yet")
@@ -99,10 +126,14 @@ def create_app(audits_dir: Path | None = None, show_fixture: bool | None = None)
 
     @app.get("/r/{slug}", response_class=HTMLResponse)
     def report(request: Request, slug: str) -> HTMLResponse:
+        if slug == "spacex" and store.get(slug) is None:
+            return page(request, "pitch.html", pitch=build_pitch(root), nav="home", solo=True)
         return page(request, "report.html", **report_ctx(audit_or_404(slug)))
 
     @app.get("/r/{slug}/print", response_class=HTMLResponse)
     def report_print(request: Request, slug: str) -> HTMLResponse:
+        if slug == "spacex" and store.get(slug) is None:
+            return page(request, "pitch.html", pitch=build_pitch(root), nav="home", solo=True, printing=True)
         return page(request, "print.html", **report_ctx(audit_or_404(slug)), printing=True)
 
     @app.get("/r/{slug}/q/{prompt_id}", response_class=HTMLResponse)

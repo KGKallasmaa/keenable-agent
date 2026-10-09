@@ -26,6 +26,14 @@ def test_mcnemar_exact_known_values():
     assert stats.mcnemar_exact(5, 5) == 1.0  # capped at 1
 
 
+def test_wilcoxon_signed_rank_direction_and_ties():
+    assert stats.wilcoxon([1, 2, 3], [1, 2, 3]) == 1.0
+    assert stats.wilcoxon([1, 2, 3, 4], [0, 1, 2, 3]) == 1.0  # fewer than 8 nonzero pairs
+    shifted = stats.wilcoxon(list(range(1, 21)), [0] * 20)
+    assert shifted < 0.001
+    assert stats.wilcoxon(list(range(1, 21)), [0] * 20) == stats.wilcoxon([0] * 20, list(range(1, 21)))
+
+
 def test_holm_adjustment_keeps_input_order_and_monotone():
     adj = stats.holm([0.01, 0.04, 0.03])
     assert adj == pytest.approx([0.03, 0.06, 0.06])

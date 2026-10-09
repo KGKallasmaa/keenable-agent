@@ -49,5 +49,5 @@ def test_notes_flag_trouble_and_unjudged(tmp_path: Path):
     text = " ".join(notes)
     assert "select: 1 errored and 1 hit the budget of 2 runs." in text
     assert "2 runs have no judgment yet" in text
-    assert "SELECT is experimental" in text and "routed is a prototype" in text
+    assert "SELECT is experimental" in text and "one choice question" in text
     assert "OpenRouter server tools" not in text and "calibrated" not in text

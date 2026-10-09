@@ -3,6 +3,7 @@ import json
 import pytest
 
 from searchaudit import stats
+from searchaudit.report.format import answer_html
 from searchaudit.report.model import build_view_model
 
 
@@ -35,6 +36,22 @@ def test_fixture_shape(vm, fixture_results):
         == 400
     )
     assert vm["meta"]["company"] == "StackAI" and vm["meta"]["notes"] == fixture_results.meta.notes
+
+
+def test_answer_html_renders_markdown_and_escapes_tags():
+    html = str(answer_html('**CIK:** 0000320193\n## Former\n<script>alert(1)</script> [EDGAR](https://www.sec.gov/a)'))
+    assert "<strong>CIK:</strong>" in html
+    assert "##" not in html
+    assert "<script>" not in html
+    assert 'href="https://www.sec.gov/a"' in html
+
+
+def test_a_statistical_tie_is_not_also_marked_worst(vm):
+    for pid in vm["tied"]:
+        assert vm["highlight"]["k"].get(pid) != "worst"
+    for tier in vm["tiers"]:
+        for pid in tier["tied"]:
+            assert tier["k_hl"].get(pid) != "worst"
 
 
 def test_headline_and_ties_follow_the_tests(vm):
@@ -92,6 +109,19 @@ def test_h2h_pairs(vm):
     pair = vm["h2h"]["|".join(vm["h2h_default"])]
     assert pair["both"] + len(pair["only_a_idx"]) + len(pair["only_b_idx"]) + pair["neither"] == 80
     assert vm["h2h_default"][1] == "exa"  # uses_today is the default comparison
+    by_type = pair["by_type"]
+    assert sum(t["n"] for t in by_type) == 80
+    assert sum(t["only_a"] for t in by_type) == len(pair["only_a_idx"])
+    assert sum(t["both"] for t in by_type) == pair["both"]
+
+
+def test_h2h_spotlight_is_a_keenable_arm_against_the_best_rival(results_factory):
+    vm = build_view_model(results_factory({"exa": "cccw", "parallel": "ccww", "keen": "cwcc", "select": "wwwc"}))
+    spot = vm["h2h_spotlight"]
+    if spot is not None:
+        assert spot[0] in {"keen", "select", "routed"} and spot[1] == "exa"
+        assert vm["h2h"]["|".join(spot)]["only_a_idx"]
+        assert set(spot) != set(vm["h2h_default"])
 
 
 def test_sole_leader_and_tradeoff_on_small_audits(results_factory):

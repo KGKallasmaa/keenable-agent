@@ -8,7 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-ProviderId = Literal["exa", "parallel", "keen", "select", "routed", "none"]  # "none" = no-search baseline
+ProviderId = Literal["exa", "parallel", "keen", "select", "grok", "routed", "none"]  # "none" = no-search baseline
 BASELINE: ProviderId = "none"  # same agent, zero tools: what the model knows from memory
 PromptType = Literal["lookup", "fresh", "multihop", "wide", "domain"]
 Grade = Literal["c", "p", "w"]  # correct, partly correct, wrong
@@ -44,7 +44,7 @@ class ProviderInfo(BaseModel):
     short: str  # "Exa", "Search", ...
     domain: str  # for the favicon, e.g. "exa.ai"
     hex: str  # brand colour, see design v4: keen blue, select red, routed purple, exa orange, parallel slate
-    uses_today: bool = False  # "StackAI uses today" tag (Exa for StackAI)
+    uses_today: bool = False  # "uses today" tag: the provider the audited company runs on now
     via: str = ""  # how it was called, e.g. "OpenRouter openrouter:web_search engine=exa"
     price_note: str = ""  # e.g. "$0.007 per search (OpenRouter list price)"
 
@@ -56,6 +56,7 @@ class Prompt(BaseModel):
     reference: str  # reference answer / grading notes the judge uses
     origin: Literal["generated", "uploaded", "hand"] = "generated"
     as_of: str = ""  # date the reference was checked, ISO
+    query_time: str = ""  # harness pin: keen and routed search read the index as of this instant
     tier: Literal["routine", "hard"] | None = None  # prompt-set slice shown as "routine vs hard" in the report
     use_case: str = ""  # querygen: the company workflow this task comes from
     expected_searches: int | None = None  # querygen: searches a good agent needs (1, 2-3 -> 2, 4+ -> 4)
@@ -107,11 +108,16 @@ class Judgment(BaseModel):
     failure_mode: FailureMode | None = None  # None when grade == "c"
     note: str = ""  # one or two sentences: why this grade
     judge_model: str = ""
+    # judge-v3: one verdict per checklist fact ({"id", "status": correct|missing|contradicted}) and per trap
+    # ({"id", "asserted"}). fact_score = correct facts / all facts. Empty on older bundles.
+    facts: list[dict] = Field(default_factory=list)
+    traps: list[dict] = Field(default_factory=list)
+    fact_score: float | None = None
 
 
 class AuditMeta(BaseModel):
-    slug: str  # "stackai"
-    company: str  # "StackAI"
+    slug: str  # "spacex-jobs"
+    company: str  # "SpaceX"
     category: str  # "Enterprise AI agent platform"
     created_at: str  # ISO
     agent_model: str  # pinned model id used for every provider

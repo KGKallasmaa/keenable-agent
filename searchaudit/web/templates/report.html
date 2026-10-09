@@ -1,25 +1,143 @@
 {% extends "base.html" %}
 {% from "macros.html" import fav, pv, hfav, gicon, icon %}
-{% from "_sections.html" import ranking, chart, facts, tiers, econ, measured, failures, h2h_pair, guide, judge %}
+{% from "_sections.html" import econ, measured, failures, h2h_pair, guide, judge %}
 {% from "_prompt.html" import prompt_table %}
 {% block title %}{{ vm.meta.company }} · Search Audit{% endblock %}
 {% block main %}
+{% if pitch %}
+{% include "_spacex_frame.html" %}
+{% else %}
 {% set m = vm.meta %}
 <div class="rhead">
   <span class="co">{{ fav(None, m.company) }}{{ m.company }}</span><span class="pill">{{ m.category }}</span>
-  <span class="meta">{{ vm.n }} prompts · {{ vm.ids | length }} providers · run {{ m.date }}</span>
+  <span class="meta">{{ vm.n }} prompts · {{ vm.shown | length }} providers · run {{ m.date }}</span>
   <span class="actions">
     <button class="btn ghost" type="button" id="share">{{ icon("share") }}Share</button>
     <button class="btn ghost" type="button" id="download" aria-haspopup="dialog" aria-controls="dl-modal">{{ icon("down") }}Download</button>
   </span>
 </div>
-<h1 id="headline" data-kind="{{ vm.headline.kind }}">{{ vm.headline.text }}</h1>
-{{ facts(vm) }}
-<div class="summary">
-  <div class="panel pad">{{ ranking(vm) }}</div>
-  <div class="panel pad">{{ chart(vm) }}</div>
+<h1 id="headline">Five ways to read the same {{ vm.n }} prompts</h1>
+
+<div class="read">
+<div class="views" role="tablist" aria-label="What to look at">
+  <button type="button" data-view="cost" aria-pressed="true">Cost</button>
+  <button type="button" data-view="time" aria-pressed="false">Time</button>
+  <button type="button" data-view="acc" aria-pressed="false">Accuracy</button>
+  <button type="button" data-view="fail" aria-pressed="false">Failures</button>
+  <button type="button" data-view="search" aria-pressed="false">Searches</button>
+  <button type="button" data-view="compare" aria-pressed="false">Compare</button>
 </div>
-{{ tiers(vm) }}
+{% if pitch and pitch.prior %}
+<div class="filters" id="graph-jobs" role="group" aria-label="Limit the dots to one job">
+  <button type="button" class="chip" data-graph-job="all" aria-pressed="true">All jobs</button>
+  {% for job in pitch.prior.jobs %}<button type="button" class="chip" data-graph-job="{{ job.id }}" aria-pressed="false">{{ job.title }} · {{ job.n }}</button>{% endfor %}
+</div>
+{% endif %}
+<div class="filters" id="graph-types" role="group" aria-label="Limit the dots to one prompt type">
+  <button type="button" class="chip" data-graph-type="all" aria-pressed="true">All types</button>
+  {% for t in vm.types %}<button type="button" class="chip" data-graph-type="{{ t.id }}" aria-pressed="false">{{ t.name }} · {{ t.n }}</button>{% endfor %}
+</div>
+<p class="hint" id="graph-note">One dot is one prompt. The tables under the charts stay the full run. Median averages the two middle times. p50, p90 and p99 are nearest-rank.</p>
+
+<section class="metric" data-panel="cost">
+  <h2>{{ vm.reads.cost.title }}</h2>
+  <p class="lead">{{ vm.reads.cost.body }}</p>
+  <div id="graph-cost"></div>
+  <div class="tablewrap"><table class="plainrank"><thead><tr>
+    <th>Provider</th><th class="r">$ / prompt</th><th class="r">Search</th><th class="r">Model</th><th class="r">Failed calls at $0</th><th class="r">Dearest prompt</th><th class="r">$ / correct</th>
+  </tr></thead><tbody>
+  {% for id in vm.shown %}{% set s = vm.summary[id] %}
+  <tr>
+    <td>{{ pv(vm.provider[id]) }}</td>
+    <td class="r num">{{ s.per_prompt | money(4, false) }}</td>
+    <td class="r num">{{ s.search_per_prompt | money(4, false) }}</td>
+    <td class="r num">{{ s.model_per_prompt | money(4, false) }}</td>
+    <td class="r num">{{ s.failed_calls }}</td>
+    <td class="r num">{{ s.cost_max | money(3, false) }}</td>
+    <td class="r num">{% if s.per_correct is not none %}{% if id in vm.leaders.per_correct %}<span class="best">{% endif %}{{ s.per_correct | money(4, false) }}{% if id in vm.leaders.per_correct %}</span>{% endif %}{% else %}—{% endif %}</td>
+  </tr>
+  {% endfor %}
+  </tbody></table></div>
+</section>
+
+<section class="metric" data-panel="time" hidden>
+  <h2>{{ vm.reads.time.title }}</h2>
+  <p class="lead">{{ vm.reads.time.body }}</p>
+  <div id="graph-time"></div>
+  <p class="hint">Every prompt, including a partial or a wrong answer. The last two columns drop those. Median averages the two middle times. p50, p90 and p99 are nearest-rank.</p>
+  <div class="tablewrap"><table class="plainrank"><thead><tr>
+    <th>Provider</th><th class="r">Mean</th><th class="r">Median</th><th class="r">p50</th><th class="r">p90</th><th class="r">p99</th>
+    <th class="r">Median, correct</th><th class="r">p99, correct</th>
+  </tr></thead><tbody>
+  {% for id in vm.shown %}{% set s = vm.summary[id] %}
+  <tr>
+    <td>{{ pv(vm.provider[id]) }}</td>
+    <td class="r num">{{ s.t_mean | secs }}</td>
+    <td class="r num">{{ s.t50 | secs }}</td>
+    <td class="r num">{{ s.p50 | secs }}</td>
+    <td class="r num">{{ s.t90 | secs }}</td>
+    <td class="r num">{{ s.p99 | secs }}</td>
+    <td class="r num">{% if s.t50_correct is not none %}{% if id in vm.leaders.speed %}<span class="best">{% endif %}{{ s.t50_correct | secs }}{% if id in vm.leaders.speed %}</span>{% endif %}{% else %}—{% endif %}</td>
+    <td class="r num">{% if s.p99_correct is not none %}{{ s.p99_correct | secs }}{% else %}—{% endif %}</td>
+  </tr>
+  {% endfor %}
+  </tbody></table></div>
+</section>
+
+<section class="metric" data-panel="acc" hidden>
+  <h2>{{ vm.reads.acc.title }}</h2>
+  <p class="lead">{{ vm.reads.acc.body }}</p>
+  <div id="graph-acc"></div>
+  <div class="tablewrap"><table class="plainrank"><thead><tr>
+    <th>Provider</th><th class="r">Correct</th><th class="r">Partial</th><th class="r">Wrong</th>
+  </tr></thead><tbody>
+  {% for id in vm.shown %}{% set s = vm.summary[id] %}
+  <tr>
+    <td>{{ pv(vm.provider[id]) }}</td>
+    <td class="r num">{% if id in vm.leaders.acc %}<span class="best">{% endif %}{{ s.k }}/{{ s.n }}{% if id in vm.leaders.acc %}</span>{% endif %}</td>
+    <td class="r num">{{ s.partial }}</td>
+    <td class="r num">{{ s.wrong }}</td>
+  </tr>
+  {% endfor %}
+  </tbody></table></div>
+</section>
+
+<section class="metric" data-panel="fail" hidden>
+  <h2>{{ vm.reads.fail.title }}</h2>
+  <p class="lead">{{ vm.reads.fail.body }}</p>
+  <div id="graph-fail"></div>
+</section>
+
+<section class="metric" data-panel="search" hidden>
+  <h2>{{ vm.reads.search.title }}</h2>
+  <p class="lead">{{ vm.reads.search.body }}</p>
+  <div id="graph-search"></div>
+  <div class="tablewrap"><table class="plainrank"><thead><tr>
+    <th>Provider</th><th class="r">Median searches</th><th class="r">Mean searches</th><th class="r">Mean fetches</th>
+  </tr></thead><tbody>
+  {% for id in vm.shown %}{% set s = vm.summary[id] %}
+  <tr>
+    <td>{{ pv(vm.provider[id]) }}</td>
+    <td class="r num">{{ s.searches_median | round(1) }}</td>
+    <td class="r num">{{ s.searches | round(2) }}</td>
+    <td class="r num">{{ s.fetches | round(2) }}</td>
+  </tr>
+  {% endfor %}
+  </tbody></table></div>
+</section>
+
+<section class="metric" data-panel="compare" hidden>
+  <h2>Cost and time</h2>
+  <p class="lead">One dot is one prompt. A hollow dot means the answer was wrong. It is not a third axis and it is not a time.</p>
+  <div id="scatter"></div>
+  <h2>Cost and accuracy</h2>
+  <p class="lead">The same prompts. Up is a better grade. A hollow dot is a wrong answer, which is why it sits on the bottom row.</p>
+  <div id="scatter-ca"></div>
+  <h2>Cost, time, and accuracy</h2>
+  <p class="lead">Drag to turn it. Cost runs to the right, time runs back, accuracy runs up.</p>
+  <canvas id="map-3d"></canvas>
+</section>
+</div>
 
 <div class="tabs" role="tablist" aria-label="Report sections">
 {% for id, label, count in [("prompts", "Prompts", vm.n), ("h2h", "Head-to-head", None), ("failures", "Failure modes", None), ("econ", "Cost & sources", None), ("guide", "Implementation guide", None), ("judge", "Judge", None), ("measured", "How we measured", None)] %}
@@ -33,20 +151,40 @@
     <button type="button" class="chip" data-filter="all" aria-pressed="false">All · {{ vm.counts.all }}</button>
     <button type="button" class="chip" data-filter="nobody" aria-pressed="false">Nobody correct · {{ vm.counts.nobody }}</button>
     <span class="gap"></span>
+    <label class="sortpick">Sort <select id="prompt-sort" aria-label="Sort prompts">
+      <option value="id">Number</option>
+      <option value="text">Prompt</option>
+      <option value="type">Type</option>
+      {% for p in vm.providers if p.id in vm.shown %}
+      <option value="g{{ p.id }}">{{ p.short }} grade</option>
+      <option value="c{{ p.id }}">{{ p.short }} cost</option>
+      <option value="s{{ p.id }}">{{ p.short }} time</option>
+      {% endfor %}
+    </select></label>
     <button type="button" class="chip" data-type="all" aria-pressed="true">All types</button>
     {% for t in vm.types %}<button type="button" class="chip" data-type="{{ t.id }}" aria-pressed="false">{{ t.name }}</button>{% endfor %}
   </div>
-  <div class="legend" style="margin-bottom:10px"><span>{{ gicon("c") }} correct</span><span>{{ gicon("p") }} partly</span><span>{{ gicon("w") }} wrong</span><span>Open a prompt to compare providers; click a provider row for its answer and trace.</span></div>
-  <div class="panel plist" style="--np:{{ vm.ids | length }}">
-    <div class="head"><span>#</span><span>Prompt</span><span>Type</span>{% for p in vm.providers %}<span class="c">{{ hfav(p) }}</span>{% endfor %}<span class="c">Best value</span><span></span></div>
+  <div class="legend" style="margin-bottom:10px"><span>{{ gicon("c") }} correct</span><span>{{ gicon("p") }} partly</span><span>{{ gicon("w") }} wrong</span><span>Each provider cell is the grade, the dollars, and the seconds for that prompt.</span></div>
+  <div class="panel plist" style="--np:{{ vm.shown | length }}">
+    <div class="head">
+      <button type="button" class="sort" data-sort="id">#</button>
+      <button type="button" class="sort" data-sort="text">Prompt</button>
+      <button type="button" class="sort" data-sort="type">Type</button>
+      {% for pr in vm.providers if pr.id in vm.shown %}
+      <span class="ph">{{ hfav(pr) }}<span class="phsort"><button type="button" class="sort" data-sort="g{{ pr.id }}">grade</button><button type="button" class="sort" data-sort="c{{ pr.id }}">$</button><button type="button" class="sort" data-sort="s{{ pr.id }}">time</button></span></span>
+      {% endfor %}
+      <span></span>
+    </div>
     {% for p in vm.prompts %}
-    <details id="p{{ p.id }}" data-type="{{ p.type }}" data-disagree="{{ 1 if p.disagree else 0 }}" data-nobody="{{ 1 if p.nobody else 0 }}"{% if not p.disagree %} hidden{% endif %}>
+    <details id="p{{ p.id }}" data-id="{{ p.id }}" data-text="{{ p.text }}" data-type="{{ p.type }}" data-disagree="{{ 1 if p.disagree else 0 }}" data-nobody="{{ 1 if p.nobody else 0 }}"{% for id in vm.shown %} data-g{{ id }}="{{ {'c': 2, 'p': 1, 'w': 0}[p.cells[id].grade] }}" data-c{{ id }}="{{ p.cells[id].cost }}" data-s{{ id }}="{{ p.cells[id].seconds }}"{% endfor %}{% if not p.disagree %} hidden{% endif %}>
       <summary><span class="num hint idx">{{ p.id }}</span><span class="pt">{{ p.text }}</span><span><span class="pill">{{ p.type_name }}</span></span>
-        <span class="grades" style="display:contents">{% for id in vm.ids %}<span class="cc">{{ gicon(p.cells[id].grade, vm.labels[id]) }}</span>{% endfor %}</span>
-        <span class="cc bv" data-best="{{ p.id }}" title="Highest value score on this prompt">{% if p.best_value %}{{ hfav(vm.provider[p.best_value]) }}{% else %}<span class="hint">—</span>{% endif %}</span><span class="car" aria-hidden="true">›</span></summary>
+        {% for id in vm.shown %}{% set c = p.cells[id] %}
+        <span class="pcell"><span class="pname">{{ vm.provider[id].short }}</span>{{ gicon(c.grade, vm.labels[id]) }}<span class="num">{{ c.cost | money(3, false) }}</span><span class="num hint">{{ c.seconds | secs }}</span></span>
+        {% endfor %}
+        <span class="car" aria-hidden="true">›</span></summary>
       <div class="pbody">
         {{ prompt_table(p, vm) }}
-        <p class="hint" style="margin:8px 0 0">Judge checks: {{ vm.rubric | join(" · ") }}. Score uses your weights. Sources ringed in a provider's colour were cited only by that provider.
+        <p class="hint" style="margin:8px 0 0">Judge checks: {{ vm.rubric | join(" · ") }}. Sources ringed in a provider's colour were cited only by that provider.
           <a class="btn ghost sm" style="margin-left:8px" href="/r/{{ slug }}/q/{{ p.id }}">Open prompt page</a>
           <button class="btn ghost sm" type="button" data-copy="/r/{{ slug }}/q/{{ p.id }}">Copy link</button></p>
       </div>
@@ -61,7 +199,7 @@
   <div class="row" style="margin:0 0 14px">
     {% for k in ["a", "b"] %}
     {% set chosen = vm.h2h_default[0 if k == "a" else 1] %}
-    <select class="inl" id="h2h-{{ k }}" aria-label="Provider {{ k | upper }}">{% for p in vm.providers %}<option value="{{ p.id }}"{% if p.id == chosen %} selected{% endif %}>{{ p.label }}</option>{% endfor %}</select>
+    <select class="inl" id="h2h-{{ k }}" aria-label="Provider {{ k | upper }}">{% for p in vm.providers if p.id in vm.shown %}<option value="{{ p.id }}"{% if p.id == chosen %} selected{% endif %}>{{ p.label }}</option>{% endfor %}</select>
     {% if k == "a" %}<span class="hint">vs</span>{% endif %}
     {% endfor %}
   </div>
@@ -89,8 +227,11 @@
     </div>
   </div>
 </div>
+{% endif %}
 {% endblock %}
 {% block scripts %}
+{% if not pitch %}
 <script type="application/json" id="report-data">{{ vm.client | json_script }}</script>
-<script src="/static/report.js" defer></script>
+<script src="/static/report.js?v=toc2" defer></script>
+{% endif %}
 {% endblock %}

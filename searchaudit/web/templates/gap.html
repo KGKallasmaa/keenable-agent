@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ gap.company }} gap report{% endblock %}
+{% block main %}
+<section class="hero">
+  <h1>{{ gap.company }}</h1>
+  <p class="lede">Keenable search is the parity arm: a lookup should come back as good as the Exa loop in the trace. When the task is long, the research skill writes one SELECT instead of that loop, so the agent searches far less often. Jev chooses search or SELECT once. The headline is how often the chosen arm is correct, and what a correct row cost.</p>
+  <div class="row"><a class="btn ghost" href="/r/{{ slug }}/loss.csv">Download the misses</a></div>
+</section>
+
+{% if gap.opened %}
+<h2>One task from the log</h2>
+<article class="panel" style="padding:16px 18px">
+  <p>{{ gap.opened.task }}</p>
+  <p class="m">{{ gap.opened.provider }} · ${{ '%.4f'|format(gap.opened.dollars) }} · {{ gap.opened.timestamp }}</p>
+  <p class="m">Queries the agent ran</p>
+  <ul>
+  {% for q in gap.opened.queries %}<li><code>{{ q }}</code></li>{% endfor %}
+  </ul>
+  {% if gap.opened.select_sql %}
+  <p class="m">SELECT the agent wrote</p>
+  <pre>{{ gap.opened.select_sql }}</pre>
+  {% else %}
+  <p class="m">SELECT has not been run on this task yet.</p>
+  {% endif %}
+</article>
+{% endif %}
+
+<h2>Match rate and dollars per correct row</h2>
+<table>
+  <thead><tr><th>Class</th><th>Tasks in the log</th><th>SELECT correct when the trace was</th><th>$ per correct row</th><th>Trace $ per correct row</th></tr></thead>
+  <tbody>
+  {% for c in gap.classes %}
+    <tr>
+      <td>{{ c.class }}</td>
+      <td>{{ c.n_log }}</td>
+      {% if c.rate_shown %}
+      <td>{{ '%.0f'|format(c.match_rate * 100) }}%</td>
+      <td>{% if c.usd_per_correct is not none %}${{ '%.4f'|format(c.usd_per_correct) }}{% else %}n/a{% endif %}</td>
+      <td>{% if c.exa_usd_per_correct is not none %}${{ '%.4f'|format(c.exa_usd_per_correct) }}{% else %}n/a{% endif %}</td>
+      {% else %}
+      <td colspan="3">No rate. This class has fewer than 10 tasks in the log, or SELECT has not been judged on it.</td>
+      {% endif %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="m">{{ gap.n_log }} tasks in the log. {{ gap.n_ran }} sampled tasks have a SELECT run. Class tags are rules; thirty of them are in the spot-check beside the log.</p>
+{% endblock %}

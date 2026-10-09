@@ -78,6 +78,9 @@ class ServerToolProvider(Provider):
         self.name = name
 
     def price_note(self, settings: Settings) -> str:
+        if self.engine == "native":
+            return ("Passed through inside the OpenRouter completion charge. "
+                    "No separate list price for native search.")
         return (f"${SEARCH_USD[self.engine]} per search, ${FETCH_USD[self.engine]} per fetched page "
                 f"(OpenRouter list price for {self.name})")
 

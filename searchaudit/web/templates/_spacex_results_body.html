@@ -1,0 +1,364 @@
+{% from "macros.html" import gicon %}
+{% macro frame(xlabel, ylabel) %}
+<svg class="chart frame" viewBox="0 0 320 200" width="100%" role="img" aria-label="{{ xlabel }} against {{ ylabel }}. Not run yet.">
+  <line class="axis" x1="28" y1="16" x2="28" y2="160"/>
+  <line class="axis" x1="28" y1="160" x2="308" y2="160"/>
+  <text x="168" y="186" text-anchor="middle">{{ xlabel }}</text>
+  <text class="muted" x="168" y="92" text-anchor="middle">Not run yet</text>
+</svg>
+{% endmacro %}
+{% macro chart(c) %}
+<svg class="chart" viewBox="0 0 {{ c.w }} {{ c.h }}" width="100%" role="img" aria-label="{{ c.xlabel }} against {{ c.ylabel }}. One point is one provider.">
+  {% for tick in c.yticks %}
+  <line class="axis" x1="{{ c.left }}" y1="{{ tick.y }}" x2="{{ c.w - 12 }}" y2="{{ tick.y }}"/>
+  <text x="{{ c.left - 6 }}" y="{{ tick.y + 3 }}" text-anchor="end">{{ tick.label }}</text>
+  {% endfor %}
+  {% for tick in c.xticks %}
+  <text x="{{ tick.x }}" y="{{ c.base + 16 }}" text-anchor="middle">{{ tick.label }}</text>
+  {% endfor %}
+  <text x="{{ (c.left + c.w) / 2 }}" y="{{ c.h - 4 }}" text-anchor="middle">{{ c.xlabel }}</text>
+  {% for dot in c.dots %}
+  <g class="series" data-pid="{{ dot.id }}">
+    {% for pip in dot.pips %}
+    <circle class="pip {{ dot.cls }}" cx="{{ pip.cx }}" cy="{{ pip.cy }}" r="2.5"><title>{{ pip.title }}</title></circle>
+    {% endfor %}
+    <circle class="mark {{ dot.cls }}" cx="{{ dot.cx }}" cy="{{ dot.cy }}" r="6"><title>{{ dot.title }}</title></circle>
+  </g>
+  {% endfor %}
+</svg>
+{% endmacro %}
+  <div class="views" role="tablist" aria-label="Results">
+    <button type="button" data-pitch="accuracy" aria-pressed="true">Accuracy</button>
+    <button type="button" data-pitch="cost" aria-pressed="false">Cost</button>
+    <button type="button" data-pitch="speed" aria-pressed="false">Speed</button>
+  </div>
+
+  <section id="accuracy" data-pitch-panel="accuracy">
+    <h3>Accuracy</h3>
+    <p>A partial is not counted as correct. "Out of budget" is how many runs used up the tool-call or time budget and were made to answer.</p>
+    <div class="tablewrap"><table class="plainrank">
+    <thead><tr><th>Provider</th><th class="r">Correct</th><th class="r">95% interval</th><th class="r">Partial</th><th class="r">Wrong</th><th class="r">Out of budget</th></tr></thead>
+    <tbody>
+    {% if study %}
+      {% for row in study.rows %}
+      <tr>
+        <td>{{ row.label }}</td>
+        <td class="r num">{{ row.correct }}/{{ row.n }}</td>
+        <td class="r num">{{ row.ci_low | round(0) | int }}–{{ row.ci_high | round(0) | int }}%</td>
+        <td class="r num">{{ row.partial }}</td>
+        <td class="r num">{{ row.wrong }}</td>
+        <td class="r num">{{ row.budget_hit }}</td>
+      </tr>
+      {% endfor %}
+    {% else %}
+      {% for col in pitch.columns %}
+      <tr><td>{{ col.label }}</td><td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td></tr>
+      {% endfor %}
+    {% endif %}
+    </tbody>
+  </table></div>
+
+  </section>
+
+  <section id="cost" data-pitch-panel="cost">
+    <h3>Cost</h3>
+    <p>Search $ is what the searches cost. Model $ is the agent's tokens. $ / correct is the mean cost of the prompts that provider answered correctly, not total spend divided by correct answers. Searches is the median per prompt.</p>
+    <div class="tablewrap"><table class="plainrank">
+      <thead><tr>
+        <th>Provider</th><th class="r">$ / prompt</th><th class="r">$ / correct</th>
+        <th class="r">Search $</th><th class="r">Model $</th>
+        <th class="r">Searches</th>
+      </tr></thead>
+      <tbody>
+      {% if study %}
+        {% for row in study.rows %}
+        <tr>
+          <td>{{ row.label }}</td>
+          <td class="r num">{{ row.per_prompt | money(4, false) }}</td>
+          <td class="r num">{% if row.per_correct is not none %}{{ row.per_correct | money(4, false) }}{% else %}—{% endif %}</td>
+          <td class="r num">{{ row.search_per_prompt | money(4, false) }}</td>
+          <td class="r num">{{ row.model_per_prompt | money(4, false) }}</td>
+          <td class="r num">{{ row.searches_median | round(0) | int }}</td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        {% for col in pitch.columns %}
+        <tr><td>{{ col.label }}</td><td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td></tr>
+        {% endfor %}
+      {% endif %}
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="speed" data-pitch-panel="speed">
+    <h3>Speed</h3>
+    <p>Wall-clock seconds per prompt, wrong answers included.</p>
+    <div class="tablewrap"><table class="plainrank">
+      <thead><tr>
+        <th>Provider</th><th class="r">Median time</th><th class="r">Mean time</th>
+        <th class="r">Fastest prompt</th><th class="r">Slowest prompt</th>
+      </tr></thead>
+      <tbody>
+      {% if study %}
+        {% for row in study.rows %}
+        <tr>
+          <td>{{ row.label }}</td>
+          <td class="r num">{{ row.t50 | secs }}</td>
+          <td class="r num">{{ row.t_mean | secs }}</td>
+          <td class="r num">{{ row.t_min | secs }}</td>
+          <td class="r num">{{ row.t_max | secs }}</td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        {% for col in pitch.columns %}
+        <tr><td>{{ col.label }}</td><td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td></tr>
+        {% endfor %}
+      {% endif %}
+      </tbody>
+    </table></div>
+    <p class="hint">Median seconds by grade. A dash means that provider had none.</p>
+    <div class="tablewrap"><table class="plainrank">
+      <thead><tr>
+        <th>Provider</th><th class="r">When correct</th><th class="r">When partial</th><th class="r">When wrong</th>
+      </tr></thead>
+      <tbody>
+      {% if study %}
+        {% for row in study.rows %}
+        <tr>
+          <td>{{ row.label }}</td>
+          <td class="r num">{% if row.t50_correct is not none %}{{ row.t50_correct | secs }}{% else %}—{% endif %}</td>
+          <td class="r num">{% if row.t50_partial is not none %}{{ row.t50_partial | secs }}{% else %}—{% endif %}</td>
+          <td class="r num">{% if row.t50_wrong is not none %}{{ row.t50_wrong | secs }}{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        {% for col in pitch.columns %}
+        <tr><td>{{ col.label }}</td><td class="r">—</td><td class="r">—</td><td class="r">—</td></tr>
+        {% endfor %}
+      {% endif %}
+      </tbody>
+    </table></div>
+  </section>
+
+  {% if study and study.tests %}
+  <h3 id="significance">Is the difference real?</h3>
+  <p>Each Keenable column against each rival, on the same 100 prompts. Accuracy uses an exact McNemar test on the prompts where only one of the two was right; the interval is a paired bootstrap. Seconds and dollars use a Wilcoxon signed-rank test on the per-prompt pairs. Every p-value is Holm-corrected for the {{ study.tests | length }} pairs. A negative gap means Keenable is behind, faster, or cheaper.</p>
+  <div class="tablewrap"><table class="plainrank">
+    <thead><tr>
+      <th>Keenable</th><th>Rival</th><th class="r">Correct gap</th><th class="r">95% interval</th>
+      <th class="r">Only Keenable / only rival right</th><th class="r">p</th><th>Accuracy</th>
+      <th class="r">Seconds gap</th><th class="r">p</th><th class="r">Dollars gap</th><th class="r">p</th>
+    </tr></thead>
+    <tbody>
+    {% for t in study.tests %}
+      <tr>
+        <td>{{ t.arm }}</td><td>{{ t.rival }}</td>
+        <td class="r num">{{ "%+d"|format(t.diff | round(0) | int) }}</td>
+        <td class="r num">{{ t.low | round(0) | int }} to {{ t.high | round(0) | int }}</td>
+        <td class="r num">{{ t.only_arm }} / {{ t.only_rival }}</td>
+        <td class="r num">{{ "%.3f"|format(t.p_acc_holm) }}</td>
+        <td>{% if t.verdict == "No clear difference" %}{{ t.verdict }}{% else %}<strong>{{ t.verdict }}</strong>{% endif %}</td>
+        <td class="r num">{{ "%+.1f"|format(t.d_secs) }}s</td>
+        <td class="r num">{{ "%.3f"|format(t.p_secs_holm) }}</td>
+        <td class="r num">{{ "%+.3f"|format(t.d_usd) }}</td>
+        <td class="r num">{{ "%.3f"|format(t.p_usd_holm) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  <p class="hint">The correct gap is in percentage points. The seconds and dollars gaps are the median per-prompt difference. With 100 prompts, an accuracy gap under about 10 points is usually not distinguishable.</p>
+  {% endif %}
+
+  {% if study %}
+  <p class="legend">
+    {% for row in study.rows %}<span data-pid="{{ row.id }}"><i class="swatch {{ row.cls }}"></i>{{ row.label }}</span>{% endfor %}
+  </p>
+  <div class="chartgrid">
+    <figure class="plot" id="cost-speed">
+      <h3>Dollars and time</h3>
+      {{ chart(study.charts.speed_cost) }}
+      <figcaption>Across: dollars per prompt. Up: median seconds, including the wrong answers. <span class="weblink">Hover a provider to see each prompt.</span> A prompt past the scale sits on the frame.</figcaption>
+    </figure>
+    <figure class="plot" id="cost-accuracy">
+      <h3>Dollars and correct answers</h3>
+      {{ chart(study.charts.cost_acc) }}
+      <figcaption>Across: dollars per prompt. Up: percent correct. <span class="weblink">Hover a provider to see each prompt.</span> A prompt past the scale sits on the frame.</figcaption>
+    </figure>
+  </div>
+  {% else %}
+  <p class="legend">
+    <span><i class="swatch dot-exa"></i>Exa</span>
+    <span><i class="swatch dot-parallel"></i>Parallel</span>
+    <span><i class="swatch dot-grok"></i>Grok native</span>
+    <span><i class="swatch dot-keen"></i>Keenable search</span>
+    <span><i class="swatch dot-select"></i>Keenable SELECT</span>
+    <span><i class="swatch dot-routed"></i>Keenable router</span>
+  </p>
+  <div class="chartgrid">
+    <figure class="plot" id="cost-speed">
+      <h3>Dollars and time</h3>
+      {{ frame("Dollars per prompt", "Median seconds") }}
+      <figcaption>Across: dollars per prompt. Up: median seconds, including the wrong answers.</figcaption>
+    </figure>
+    <figure class="plot" id="cost-accuracy">
+      <h3>Dollars and correct answers</h3>
+      {{ frame("Dollars per prompt", "Correct (%)") }}
+      <figcaption>Across: dollars per prompt. Up: percent correct.</figcaption>
+    </figure>
+  </div>
+  {% endif %}
+
+  <h2 id="by-prompt">By prompt</h2>
+  <p>Every prompt and every provider: the grade, seconds, dollars, and searches. Green is correct, amber is partial, grey is wrong; a dash with no time is a prompt that column never ran. The notes are the judge model's own words: "DATA" is the material the agent retrieved, and "fact n" or "trap n" point at items on that prompt's checklist.{% if not printing %} Open Answer to read what the agent wrote.{% endif %}</p>
+  {% if study %}
+  <details class="fold" id="by-prompt-table" open>
+  <summary>Show all {{ study["items"] | length }} prompts</summary>
+  <div class="tablewrap"><table class="plainrank prompts">
+    <thead><tr>
+      <th>Question</th>
+      {% for row in study.rows %}<th>{{ row.label }}</th>{% endfor %}
+    </tr></thead>
+    <tbody>
+    {% for item in study["items"] %}
+      <tr id="p-{{ item.id }}">
+        <td><span class="num">{{ item.id }}</span> {{ item.class_title }}</td>
+        {% for cell in item.cells %}
+        <td class="cell-{{ cell.grade }}">
+          <div>{{ gicon(cell.grade) }} {{ cell.grade_word }}</div>
+          <div class="num">{{ "%.1f"|format(cell.seconds) }}s · {{ cell.cost | money(4, false) }}</div>
+          <div class="hint">{{ cell.searches }} search{{ "es" if cell.searches != 1 else "" }}</div>
+          {% if cell.budget_hit %}<div class="hint">Out of budget</div>{% endif %}
+          {% if cell.grade != "c" and cell.failure_name %}<div class="hint">{{ cell.failure_name }}</div>{% endif %}
+          {% if cell.answer %}<details><summary>Answer</summary><div class="answer">{{ cell.answer }}</div>{% if cell.note and cell.grade != "c" %}<div class="hint">{{ cell.note }}</div>{% endif %}</details>{% endif %}
+        </td>
+        {% endfor %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  </details>
+  {% else %}
+  <p>Not run yet. When it has been run, each question is a row and each provider is a column.</p>
+  {% endif %}
+
+  <h2 id="thoughts">Final thoughts</h2>
+  <p>Some limits hold whatever the grades say. SELECT takes minutes, which is fine for a memo and too slow for chat. SELECT is the only column with a usage note, so its result is the tool plus the note. Jev can send a table prompt to search, or a one-page prompt to SELECT; that is a routing miss, not a search miss.</p>
+  {% if study %}
+  {% set g = {} %}{% for item in study["items"] if item.id in (8, 19) %}{% for c in item.cells %}{% set _ = g.update({(item.id, c.id): c.grade}) %}{% endfor %}{% endfor %}
+  {% set w19 = g.get((19, "select")) == "p" %}
+  {% set w8 = g.get((8, "select")) == "c" and g.get((8, "exa")) != "c" %}
+  {% if w19 or w8 %}
+  <p>SELECT returns the filing as a table of fields, often up to the 12,000-character cap this audit puts on one SELECT result. That helps only when the model trusts the table.{% if w19 %} On the <a href="#p-19">Australian W-band prompt</a> the table already said no interference protection and a one-year, non-renewable term; the answer still called those the consultation's words and was graded partial.{% endif %}{% if w8 %} On the <a href="#p-8">Big LEO prompt (8, the January grant read with the April order)</a> a row said the request was dismissed with prejudice, the answer used it, and SELECT was right where Exa was not.{% endif %}</p>
+  {% endif %}
+  {% endif %}
+  {% if study %}
+    {% if study.misses %}
+    <h3>Why Keenable missed</h3>
+    <p>Keenable answers graded partial or wrong, by the cause the judge named. The explanations are the judge model's own notes; "fact n" and "trap n" refer to items on the prompt's checklist and "DATA" to the pages the agent retrieved.</p>
+    <div class="tablewrap"><table class="plainrank">
+      <thead><tr><th>Provider</th><th>Cause</th><th class="r">Prompts</th><th>What that means</th></tr></thead>
+      <tbody>
+      {% for miss in study.misses %}
+        <tr>
+          <td>{{ miss.label }}</td>
+          <td>{{ miss.name }}</td>
+          <td class="r num">{{ miss.n }}</td>
+          <td>{{ miss.why }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    <details class="fold"{% if printing %} open{% endif %}>
+    <summary>The prompts behind each cause</summary>
+    {% for miss in study.misses %}
+    <h4>{{ miss.label }}: {{ miss.name }}</h4>
+    <ul class="joblist">
+      {% for prompt in miss.prompts %}
+      <li><a href="#p-{{ prompt.id }}">{{ prompt.id }}</a> {{ prompt.text }}{% if prompt.note %} {{ prompt.note }}{% endif %}</li>
+      {% endfor %}
+    </ul>
+    {% endfor %}
+    </details>
+    {% else %}
+    <p>On this run, Keenable search, SELECT, and the router have no partial or wrong answer.</p>
+    {% endif %}
+    {% if study.gaps %}
+    <h3 id="gaps">Where a rival was right and Keenable was not</h3>
+    <p>Exa, Parallel, or Grok native got these right. Keenable search, SELECT, and the router all missed.</p>
+    <div class="tablewrap"><table class="plainrank">
+      <thead><tr><th>Prompt</th><th>Right</th></tr></thead>
+      <tbody>
+      {% for gap in study.gaps %}
+        <tr>
+          <td><a href="#p-{{ gap.id }}"><span class="num">{{ gap.id }}</span> {{ gap.class_title }}</a></td>
+          <td>{{ gap.rivals }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% else %}
+    <p>No prompt in this run has a rival correct and every Keenable column wrong.</p>
+    {% endif %}
+  {% else %}
+  <p>I don't have grades yet, so I can't point at a question Keenable lost, or at a cause. When the grades are in, this section lists the partial and wrong Keenable answers with the cause the judge named, and the questions where Exa, Parallel, or Grok was right and all three Keenable columns were wrong.</p>
+  {% endif %}
+
+  <h2 id="summary">Summary</h2>
+  {% if study %}
+  <p>{{ study.closing }} {% if pitch.jobs.hypothesis %}{{ pitch.jobs.hypothesis }}{% endif %}</p>
+  {% else %}
+  <p>The summary is who was correct, what it cost, how long it took, and which questions Keenable lost. It stays blank until every question has a grade for every provider.</p>
+  {% endif %}
+{% if not printing %}
+<script>
+(function () {
+  var buttons = document.querySelectorAll("[data-pitch]");
+  var panels = document.querySelectorAll("[data-pitch-panel]");
+  function show(name) {
+    buttons.forEach(function (b) {
+      b.setAttribute("aria-pressed", b.getAttribute("data-pitch") === name ? "true" : "false");
+    });
+    panels.forEach(function (p) {
+      p.hidden = p.getAttribute("data-pitch-panel") !== name;
+    });
+  }
+  buttons.forEach(function (b) {
+    b.addEventListener("click", function () {
+      var name = b.getAttribute("data-pitch");
+      show(name);
+      history.replaceState(null, "", "#" + name);
+    });
+  });
+  function openPrompt(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var fold = el.closest("details");
+    if (fold) fold.open = true;
+    el.open = true;
+    el.scrollIntoView({block: "start"});
+  }
+  function fromHash() {
+    var id = location.hash.slice(1);
+    if (id === "accuracy" || id === "cost" || id === "speed") {
+      show(id);
+      var panel = document.getElementById(id);
+      if (panel) panel.scrollIntoView({block: "start"});
+    }
+    if (id.indexOf("p-") === 0) openPrompt(id);
+  }
+  window.addEventListener("hashchange", fromHash);
+  fromHash();
+  if (location.hash.slice(1) !== "cost" && location.hash.slice(1) !== "speed") show("accuracy");
+  document.querySelectorAll(".pitch .legend span[data-pid]").forEach(function (el) {
+    var id = el.getAttribute("data-pid");
+    function mark(on) {
+      document.querySelectorAll('.chart .series[data-pid="' + id + '"]').forEach(function (series) {
+        series.classList.toggle("on", on);
+      });
+    }
+    el.addEventListener("mouseenter", function () { mark(true); });
+    el.addEventListener("mouseleave", function () { mark(false); });
+  });
+})();
+</script>
+{% endif %}

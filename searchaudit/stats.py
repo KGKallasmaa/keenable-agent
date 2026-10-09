@@ -23,6 +23,10 @@ GRADE_CREDIT: dict[str, float] = {"c": 1.0, "p": 0.5, "w": 0.0}
 ALPHA = 0.05
 MIN_PROMPTS_OVERALL = 30  # below this the headline says "not enough evidence yet"
 MIN_PROMPTS_PER_TYPE = 10  # below this a prompt type gets no route decision
+# New audits target 100 prompts. At 80% power and alpha 0.05, McNemar needs about that many
+# paired prompts to detect a 10-point accuracy gap when providers get most of the same prompts
+# right. A 5-point gap needs about 300. Thirty or sixty can still show a large gap (search vs
+# no search) and will call a smaller gap a tie, which means the sample was too small.
 MAX_FAILED_SHARE = 0.5  # a provider failing more runs than this makes the comparison unfair
 EXAMPLE_VOLUMES: tuple[int, ...] = (100_000, 1_000_000, 10_000_000)
 
@@ -301,6 +305,40 @@ def cost_at_volume(
 # ---------------------------------------------------------------- small helpers
 
 
+def wilcoxon(a: Sequence[float], b: Sequence[float]) -> float:
+    """Two-sided p for a paired difference, Wilcoxon signed-rank, normal approximation.
+
+    Zeros are dropped. Fewer than 8 remaining pairs returns 1. Ties share a rank, and the
+    variance is reduced for those ties. Continuity correction is applied.
+    """
+    diffs = [x - y for x, y in zip(a, b, strict=True) if x != y]
+    n = len(diffs)
+    if n < 8:
+        return 1.0
+    order = sorted(range(n), key=lambda i: abs(diffs[i]))
+    ranks = [0.0] * n
+    var_tie = 0.0
+    i = 0
+    while i < n:
+        j = i
+        while j + 1 < n and abs(diffs[order[j + 1]]) == abs(diffs[order[i]]):
+            j += 1
+        avg = (i + j + 2) / 2
+        for k in range(i, j + 1):
+            ranks[order[k]] = avg
+        t = j - i + 1
+        if t > 1:
+            var_tie += t * t * t - t
+        i = j + 1
+    positive = sum(ranks[i] for i in range(n) if diffs[i] > 0)
+    mean = n * (n + 1) / 4
+    var = n * (n + 1) * (2 * n + 1) / 24 - var_tie / 48
+    if var <= 0:
+        return 1.0
+    z = (abs(positive - mean) - 0.5) / math.sqrt(var)
+    return min(1.0, math.erfc(z / math.sqrt(2)))
+
+
 def median(xs: Sequence[float]) -> float:
     s = sorted(xs)
     if not s:
@@ -314,3 +352,16 @@ def percentile(xs: Sequence[float], q: float) -> float:
     if not s:
         return 0.0
     return s[math.floor(q * (len(s) - 1))]
+
+
+def time_spread(xs: Sequence[float]) -> dict[str, float | None]:
+    """Mean, median, and nearest-rank p50, p90, p99. Empty input leaves every value unset."""
+    if not xs:
+        return {"mean": None, "median": None, "p50": None, "p90": None, "p99": None}
+    return {
+        "mean": sum(xs) / len(xs),
+        "median": median(xs),
+        "p50": percentile(xs, 0.5),
+        "p90": percentile(xs, 0.9),
+        "p99": percentile(xs, 0.99),
+    }

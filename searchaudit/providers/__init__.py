@@ -35,6 +35,7 @@ def default_registry() -> Registry:
     registry.register(ServerToolProvider("parallel", "parallel", "Parallel"))
     registry.register(KeenableSearchProvider())
     registry.register(SelectProvider())
+    registry.register(ServerToolProvider("grok", "native", "Grok native"))
     registry.register(RoutedProvider())
     registry.register(NoSearchProvider())
     return registry

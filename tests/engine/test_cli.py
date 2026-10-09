@@ -8,6 +8,7 @@ import pytest
 
 from searchaudit.agent import Job, run_jobs
 from searchaudit.cli import main_async, parse_args, pending_pairs, read_jsonl
+from searchaudit.config import DEFAULT_AGENT_MODEL, AuditConfig
 from searchaudit.cost import CostCap
 from searchaudit.models import AuditResults, Prompt
 from searchaudit.providers.keenable import KeenableSearchProvider
@@ -34,7 +35,25 @@ PROMPTS = [
 JUDGE_REPLY = '{"grade": "c", "checks": [true, true, true, true], "failure_mode": null, "note": "Right."}'
 
 
+def test_default_agent_model_is_gemini_pro_latest():
+    assert DEFAULT_AGENT_MODEL == "~google/gemini-pro-latest"
+    assert AuditConfig.model_validate({
+        "slug": "t", "company": "c", "category": "c",
+        "providers": [{"id": "none"}],
+    }).model == "~google/gemini-pro-latest"
+
+
+CHECKLIST_REPLY = json.dumps({"facts": [{"fact": "StackAI uses Exa", "level": "core"}], "traps": []})
+VERDICT_REPLY = json.dumps({"facts": [{"id": 1, "status": "correct"}], "traps": [], "sources_support": True,
+                            "failure_mode": None, "note": "Matches the checklist."})
+
+
 def agent_script(body: dict) -> dict:
+    name = (body.get("response_format") or {}).get("json_schema", {}).get("name")
+    if name == "checklist":
+        return completion(CHECKLIST_REPLY, cost=0.001)
+    if name == "verdict":
+        return completion(VERDICT_REPLY, cost=0.002)
     if body.get("response_format"):
         return completion(JUDGE_REPLY, cost=0.002)
     if body["model"] == "openrouter/auto":
@@ -63,6 +82,14 @@ def test_pending_pairs_is_query_major_and_skips_done():
     pairs = pending_pairs([1, 2], ["exa", "keen"], existing, retry_errors=False)
     assert pairs == [(1, "keen"), (2, "exa")]
     assert (2, "keen") in pending_pairs([1, 2], ["exa", "keen"], existing, retry_errors=True)
+    failed = [{"prompt_id": 1, "provider": "exa", "error": "", "tool_calls": [{"ok": False}]}]
+    assert pending_pairs([1], ["exa"], failed, retry_errors=False) == []
+    assert pending_pairs([1], ["exa"], failed, retry_errors=False, retry_tool_failures=True) == [(1, "exa")]
+    unpaid = [{"prompt_id": 1, "provider": "exa", "error": "HTTP 402: Insufficient credits"}]
+    assert pending_pairs([1], ["exa"], unpaid, retry_errors=False) == [(1, "exa")]
+    capped = [{"prompt_id": 1, "provider": "keen", "budget_hit": True}]
+    assert pending_pairs([1], ["keen"], capped, retry_errors=False) == []
+    assert pending_pairs([1], ["keen"], capped, retry_errors=False, retry_budget_hits=True) == [(1, "keen")]
 
 
 async def test_run_resumes_judges_and_assembles(audit: Path):
@@ -81,10 +108,13 @@ async def test_run_resumes_judges_and_assembles(audit: Path):
     assert len(rows) == 6
     assert {(r["prompt_id"], r["provider"]) for r in rows[4:]} == {(3, "exa"), (3, "keen")}
     assert all(r["model"] == "anthropic/claude-sonnet-5.5" for r in rows)
+    assert all(r["archive"]["completions"] for r in rows)
     assert all(req["model"] != "openrouter/auto" for req in fake.requests[before:])  # pinned, not re-resolved
 
     assert await cli(["judge", str(audit)], fake) == 0
-    assert len(read_jsonl(audit.parent / "judgments.jsonl")) == 6
+    judgments = read_jsonl(audit.parent / "judgments.jsonl")
+    assert len(judgments) == 6
+    assert all(j["response"]["choices"] for j in judgments)
     judged = len(fake.requests)
     assert await cli(["judge", str(audit)], fake) == 0
     assert len(fake.requests) == judged  # already judged runs are skipped
@@ -117,3 +147,21 @@ async def test_cost_cap_stops_launching_runs():
         )
     # each run costs $2.004; the third run pushes spend past $5, so runs 4 and 5 never start
     assert done == 3 and len(saved) == 3
+
+
+async def test_credit_refusal_is_not_saved_and_stops_the_queue():
+    prompts = [Prompt(id=i, text="q", type="lookup", reference="r") for i in range(1, 4)]
+    fake = FakeOpenRouter(lambda body: {"error": {"message": "Insufficient credits"}})
+    saved = []
+
+    async def save(result):
+        saved.append(result.run)
+
+    async with httpx.AsyncClient(transport=transport(fake)) as http:
+        from searchaudit.agent import AgentSettings
+
+        done = await run_jobs(
+            [Job(p, KeenableSearchProvider()) for p in prompts], context(http), AgentSettings(model="m"),
+            global_limit=1, per_provider=lambda _: 1, cap=CostCap(50.0), on_result=save,
+        )
+    assert done == 0 and saved == [] and len(fake.requests) == 1

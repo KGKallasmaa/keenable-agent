@@ -75,6 +75,7 @@ class Reply:
     searches: int = 0
     model: str = ""
     urls: list[str] = field(default_factory=list)
+    response: dict | None = None  # the OpenRouter body, kept so a later read does not repeat the call
 
 
 class LLM(Protocol):
@@ -102,6 +103,7 @@ class OpenRouterLLM:
             searches=int(tool_use.get("web_search_requests") or 0),
             model=response.get("model") or self.model,
             urls=[c["url"] for c in url_citations(message)],
+            response=response,
         )
 
 
@@ -250,6 +252,11 @@ class QueryGen:
             self._check_budget()
             reply = await self.deps.llm(messages, search=search)
         self._charge(reply.cost)
+        if reply.response is not None:
+            append_jsonl(self.dir / "calls.jsonl", {
+                "request": {"messages": messages, "search": search},
+                "response": reply.response,
+            })
         return reply
 
     async def _each(self, items: Iterable[Any], work: Callable[[Any], Awaitable[None]]) -> int:
@@ -290,6 +297,7 @@ who runs it (role and industry), what the agent does step by step, and what it m
 Prefer workflows you found evidence for (cite the URL); do not invent generic ones.
 Use cases the company asked us to make sure are covered:
 {hints}
+{self._focus_block()}
 
 Reply with JSON only:
 {{"use_cases": [{{"name": str, "persona": str, "workflow": str, "web_need": str, "sources": [url, ...]}}]}}"""
@@ -368,6 +376,15 @@ Reply with JSON only:
         self.funnel.add("tasks", asked + len(existing), len(out), dropped, note=note)
         return out
 
+    def _focus_block(self) -> str:
+        focus = self.config.focus.strip()
+        if not focus:
+            return ""
+        return (
+            "\nFocus, which overrides the company category and the task-type examples. "
+            "Drop any use case or task outside it:\n" + focus + "\n"
+        )
+
     def _task_prompt(self, case: UseCase, plan: Counter, since: str) -> str:
         c = self.config
         wanted = "\n".join(
@@ -378,7 +395,7 @@ Reply with JSON only:
         return f"""Today is {self.today}. You write benchmark tasks for AI agents built on {c.company} \
 ({c.category}). The benchmark compares web-search providers, so every task must be one an agent can only \
 answer well by searching the web NOW. A strong LLM answering from memory must fail or be out of date.
-
+{self._focus_block()}
 Use case: {case.name}
 Persona: {case.persona}
 Workflow: {case.workflow}
