@@ -754,9 +754,10 @@ def _p(p: float) -> str:
 
 
 def _volume_rows(ids, summary, mix: tuple[float, bool] | None) -> list[VM]:
-    rows = [{"id": i, "per_prompt": summary[i]["per_prompt"], "est": summary[i]["est"]} for i in ids]
+    # Volumes multiply the per-prompt figure as the ranking prints it (3 decimals), so the two tables agree.
+    rows = [{"id": i, "per_prompt": round(summary[i]["per_prompt"], 3), "est": summary[i]["est"]} for i in ids]
     if mix:
-        rows.append({"id": "router", "per_prompt": mix[0], "est": mix[1]})
+        rows.append({"id": "router", "per_prompt": round(mix[0], 3), "est": mix[1]})
     hl = _extremes({r["id"]: round(r["per_prompt"], 4) for r in rows}, lower_is_better=True)
     for r in rows:
         r["cells"] = [

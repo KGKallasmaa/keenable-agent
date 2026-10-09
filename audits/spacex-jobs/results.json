@@ -3,7 +3,7 @@
     "slug": "spacex-jobs",
     "company": "SpaceX",
     "category": "Compliance: licenses, spectrum, insurance, and non-English primary law",
-    "created_at": "2026-10-09T22:33:18+00:00",
+    "created_at": "2026-10-09T22:36:52+00:00",
     "agent_model": "x-ai/grok-4.7",
     "agent_model_note": "pinned in the audit config",
     "judge_model": "anthropic/claude-sonnet-5.5",
@@ -293423,7 +293423,7 @@
         true
       ],
       "failure_mode": "incomplete",
-      "note": "Fact 15 (footnote 5, that satellites may keep operating in the old 525/530/535 km shells while lowering) is only implied by the heading 'continued operation only while satellites are lowered', so I marked it missing. The rest is correct, and no trap was asserted.",
+      "note": "Fact 15 (footnote 5, that satellites may keep operating in the old 525/530/535 km shells while lowering) is only implied by the heading 'continued operation only while satellites are lowered', so the judge marked it missing. The rest is correct, and no trap was asserted.",
       "judge_model": "anthropic/claude-sonnet-5.5",
       "facts": [
         {
@@ -302611,7 +302611,7 @@
         true
       ],
       "failure_mode": null,
-      "note": "The answer reaches the right conclusion. It does not mention the 25.146(a) vs 25.146(c) citation difference or that it is not a second waiver (facts 7-8), and fact 9 is not addressed. It never mentions Article 22 or ordering clause 141 by name, and it describes the combined-filings condition without framing it as a report; I graded those facts correct on substance.",
+      "note": "The answer reaches the right conclusion. It does not mention the 25.146(a) vs 25.146(c) citation difference or that it is not a second waiver (facts 7-8), and fact 9 is not addressed. It never mentions Article 22 or ordering clause 141 by name, and it describes the combined-filings condition without framing it as a report; the judge graded those facts correct on substance.",
       "judge_model": "anthropic/claude-sonnet-5.5",
       "facts": [
         {
@@ -312727,7 +312727,7 @@
         true
       ],
       "failure_mode": "incomplete",
-      "note": "The answer gets the core points right: daytime-only pad landings, night landings offshore only, and the 25 launch and 50 landing cadence. It omits the explicit statement that this is not the modified license, the VOL 23-129 distinction, the no-action alternative, the static-fire caps and the notification requirements. It says the document was issued in May 2025 where the checklist says April, which I treated as a minor date slip.",
+      "note": "The answer gets the core points right: daytime-only pad landings, night landings offshore only, and the 25 launch and 50 landing cadence. It omits the explicit statement that this is not the modified license, the VOL 23-129 distinction, the no-action alternative, the static-fire caps and the notification requirements. It says the document was issued in May 2025 where the checklist says April, which the judge treated as a minor date slip.",
       "judge_model": "anthropic/claude-sonnet-5.5",
       "facts": [
         {
@@ -316146,7 +316146,7 @@
         true
       ],
       "failure_mode": null,
-      "note": "The answer reaches the right conclusion. It does not mention the 25.146(a) vs 25.146(c) citation difference or that it is not a second waiver (facts 7-8), and fact 9 is not addressed. It never mentions Article 22 or ordering clause 141 by name, and it describes the combined-filings condition without framing it as a report; I graded those facts correct on substance.",
+      "note": "The answer reaches the right conclusion. It does not mention the 25.146(a) vs 25.146(c) citation difference or that it is not a second waiver (facts 7-8), and fact 9 is not addressed. It never mentions Article 22 or ordering clause 141 by name, and it describes the combined-filings condition without framing it as a report; the judge graded those facts correct on substance.",
       "judge_model": "anthropic/claude-sonnet-5.5",
       "facts": [
         {
@@ -317192,7 +317192,7 @@
         true
       ],
       "failure_mode": "incomplete",
-      "note": "The answer gets the core points right: daytime-only pad landings, night landings offshore only, and the 25 launch and 50 landing cadence. It omits the explicit statement that this is not the modified license, the VOL 23-129 distinction, the no-action alternative, the static-fire caps and the notification requirements. It says the document was issued in May 2025 where the checklist says April, which I treated as a minor date slip.",
+      "note": "The answer gets the core points right: daytime-only pad landings, night landings offshore only, and the 25 launch and 50 landing cadence. It omits the explicit statement that this is not the modified license, the VOL 23-129 distinction, the no-action alternative, the static-fire caps and the notification requirements. It says the document was issued in May 2025 where the checklist says April, which the judge treated as a minor date slip.",
       "judge_model": "anthropic/claude-sonnet-5.5",
       "facts": [
         {
@@ -327283,7 +327283,7 @@
         true
       ],
       "failure_mode": "unsupported",
-      "note": "The answer says the Gen1 minimum-elevation STA was granted in full on 12 May 2026, which contradicts the on-notice status (fact 10), and nothing in the DATA supports that grant. It also omits several facts: the Gen2 report number SAT-02034 and its date, the 100,000-satellite report SAT-02038, the Row 3 waivers, the Row 4 inclinations, the Viasat ruling, the EchoStar condition, and the filing dates and pleading cycle. For fact 1 I marked the file number correct, because the DA 26-113 text shows call sign S00798 despite the checklist saying none appears in the notice.",
+      "note": "The answer says the Gen1 minimum-elevation STA was granted in full on 12 May 2026, which contradicts the on-notice status (fact 10), and nothing in the DATA supports that grant. It also omits several facts: the Gen2 report number SAT-02034 and its date, the 100,000-satellite report SAT-02038, the Row 3 waivers, the Row 4 inclinations, the Viasat ruling, the EchoStar condition, and the filing dates and pleading cycle. For fact 1 the judge marked the file number correct, because the DA 26-113 text shows call sign S00798 despite the checklist saying none appears in the notice.",
       "judge_model": "anthropic/claude-sonnet-5.5",
       "facts": [
         {
