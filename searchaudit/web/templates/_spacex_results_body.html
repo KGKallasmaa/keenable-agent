@@ -62,7 +62,7 @@
 
   <section id="cost" data-pitch-panel="cost">
     <h3>Cost</h3>
-    <p>Search $ is what the searches cost. Model $ is the agent's tokens. $ / correct is the mean cost of the prompts that provider answered correctly, not total spend divided by correct answers. Searches is the median per prompt.</p>
+    <p>Search $ is what the searches cost. Model $ is the agent's tokens.{% if pitch.jobs.missing %} Per-prompt figures divide by all {{ pitch.plan_n }} prompts, as in the report; the {{ pitch.jobs.missing | length }} router prompts that never ran enter at $0.{% endif %} $ / correct is the mean cost of the prompts that provider answered correctly, not total spend divided by correct answers. Searches is the median per prompt.</p>
     <div class="tablewrap"><table class="plainrank">
       <thead><tr>
         <th>Provider</th><th class="r">$ / prompt</th><th class="r">$ / correct</th>
@@ -92,7 +92,7 @@
 
   <section id="speed" data-pitch-panel="speed">
     <h3>Speed</h3>
-    <p>Wall-clock seconds per prompt, wrong answers included.</p>
+    <p>Wall-clock seconds per prompt, wrong answers included.{% if pitch.jobs.missing %} Means are per prompt over all {{ pitch.plan_n }}, as in the report; the {{ pitch.jobs.missing | length }} router prompts that never ran enter as 0 s.{% endif %}</p>
     <div class="tablewrap"><table class="plainrank">
       <thead><tr>
         <th>Provider</th><th class="r">Median time</th><th class="r">Mean time</th>
@@ -254,7 +254,7 @@
   {% if study %}
     {% if study.misses %}
     <h3>Why Keenable missed</h3>
-    <p>Keenable answers graded partial or wrong, by the cause the judge named. The explanations are the judge model's own notes; "fact n" and "trap n" refer to items on the prompt's checklist and "DATA" to the pages the agent retrieved.</p>
+    <p>Keenable answers graded partial or wrong, or never run, by the cause the judge named. The explanations are the judge model's own notes (or the harness's, for a run that failed or never happened); "fact n" and "trap n" refer to items on the prompt's checklist and "DATA" to the pages the agent retrieved.</p>
     <div class="tablewrap"><table class="plainrank">
       <thead><tr><th>Provider</th><th>Cause</th><th class="r">Prompts</th><th>What that means</th></tr></thead>
       <tbody>

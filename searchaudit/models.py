@@ -34,7 +34,7 @@ FAILURE_MODES: dict[str, tuple[str, str]] = {
     "unsupported": ("Claim not in sources", "Stated something the cited pages don't say."),
     "wrong_tool": ("Wrong tool for the job", "Built a table for a single-fact prompt."),
     "over_search": ("Over-searching", "Used more than 10 searches before answering."),
-    "error": ("Tool error / timeout", "The provider errored or the agent hit its time limit."),
+    "error": ("Tool error / timeout", "The provider errored, the agent hit its time limit, or no usable answer came back."),
 }
 
 

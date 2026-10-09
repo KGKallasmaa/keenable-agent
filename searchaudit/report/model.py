@@ -853,10 +853,12 @@ def _failures(rows: Sequence[VM], ids) -> VM:
                 "count": {i: len(v) for i, v in counts.items()},
                 "example": {i: (v[0] if v else None) for i, v in counts.items()},
                 "hl": _extremes({i: len(v) for i, v in counts.items()}, lower_is_better=True),
+                "total": sum(len(v) for v in counts.values()),
             }
         )
     totals = {i: sum(1 for r in rows if r["cells"][i]["failure"]) for i in ids}
-    return {"matrix": matrix, "totals": totals}
+    return {"matrix": matrix, "totals": totals,
+            "unused": [r["name"] for r in matrix if not r["total"]]}
 
 
 def _judge(results: AuditResults, rows: Sequence[VM], ids, labels: Mapping[str, str] | None = None) -> VM:
@@ -1107,7 +1109,9 @@ def _sources_view(prompts, ids, cells) -> VM:
             "unique": len(unique),
             "unique_examples": unique[:5],
             "per_answer": sum(len(x["sources"]) for x in xs) / len(xs) if xs else 0,
-            "uncited": sum(1 for x in xs if not x["sources"] and not x["missing"]),
+            # "Answered" = a run that produced an answer (no run, or a run that errored or returned nothing, is excluded).
+            "answered": sum(1 for x in xs if not x["missing"] and x["failure"] != "error"),
+            "uncited": sum(1 for x in xs if not x["sources"] and not x["missing"] and x["failure"] != "error"),
             "wrong_uncited": sum(1 for x in wrong if not x["sources"]),
             "wrong": len(wrong),
             "n": len(xs),

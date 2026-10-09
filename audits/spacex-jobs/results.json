@@ -3,7 +3,7 @@
     "slug": "spacex-jobs",
     "company": "SpaceX",
     "category": "Compliance: licenses, spectrum, insurance, and non-English primary law",
-    "created_at": "2026-10-09T22:55:20+00:00",
+    "created_at": "2026-10-09T22:58:27+00:00",
     "agent_model": "x-ai/grok-4.7",
     "agent_model_note": "pinned in the audit config",
     "judge_model": "anthropic/claude-sonnet-5.5",

@@ -122,14 +122,14 @@
 {% endif %}
 <div class="panel pad" style="margin-top:18px">
 <p class="ptitle">Sources each provider's answers cite</p>
-<p class="hint" style="margin:0 0 10px">Domains cited in final answers. "Only here" = domains no other provider cited anywhere in this audit, a rough measure of index coverage. "Wrong, uncited" = wrong answers with no source at all (often answered from memory after search failed).</p>
+<p class="hint" style="margin:0 0 10px">Domains cited in final answers. "Only here" = domains no other provider cited anywhere in this audit, a rough measure of index coverage. "Uncited answers" = answers with no source, out of the runs that produced an answer (runs with no run, no answer, or a tool-error tag are excluded). "Wrong, uncited" = wrong answers with no source at all (often answered from memory after search failed).</p>
 <div class="tablewrap"><table><thead><tr><th>Provider</th><th class="r">Sources / answer</th><th class="r">Distinct domains</th><th class="r">Only here</th><th class="r">Uncited answers</th><th class="r">Wrong, uncited</th><th>Most cited</th></tr></thead><tbody>
 {% for id in vm.ids if id in vm.shown %}{% set s = vm.sources_view[id] %}
 <tr><td>{{ pv(vm.provider[id]) }}</td>
 <td class="r num">{{ "%.1f" | format(s.per_answer) }}</td>
 <td class="r num">{{ s.distinct }}</td>
 <td class="r num" title="{{ s.unique_examples | join(', ') }}">{{ s.unique }}</td>
-<td class="r num">{{ s.uncited }}/{{ s.n }}</td>
+<td class="r num">{{ s.uncited }}/{{ s.answered }}</td>
 <td class="r num">{{ s.wrong_uncited }}/{{ s.wrong }}</td>
 <td class="small">{% for d, c in s.top %}<span class="src-chip">{{ d }} <span class="hint">{{ c }}</span></span>{% endfor %}</td></tr>
 {% endfor %}
@@ -169,7 +169,7 @@
 {% macro failures(vm) -%}
 <p class="sub" style="margin-top:18px">How each provider's answers went wrong across all {{ vm.n }} prompts (the judge's main reason per answer).<span class="weblink"> Click a number to open an example.</span></p>
 <div class="panel tablewrap"><table><thead><tr><th>Failure mode</th>{% for p in vm.providers if p.id in vm.shown %}<th class="r">{{ pv(p, True) }}</th>{% endfor %}</tr></thead><tbody>
-{% for row in vm.failures.matrix %}
+{% for row in vm.failures.matrix if row.total %}
 <tr><td><span style="font-weight:500">{{ row.name }}</span><div class="hint">{{ row.definition }}</div></td>
 {% for id in vm.ids if id in vm.shown %}{% set n = row.count[id] %}
   <td class="r num">{% if n %}<a href="#p{{ row.example[id] }}" data-open="{{ row.example[id] }}" data-ans="{{ id }}" title="Open an example">{{ hl(row.hl[id], n) }}</a>{% else %}{{ hl(row.hl[id], 0) }}{% endif %}</td>
@@ -177,6 +177,7 @@
 {% endfor %}
 <tr><td><b>All failures</b></td>{% for id in vm.ids if id in vm.shown %}<td class="r num"><b>{{ vm.failures.totals[id] }}</b></td>{% endfor %}</tr>
 </tbody></table></div>
+{% if vm.failures.unused %}<p class="hint">Not tagged on any answer in this audit, so not shown: {{ vm.failures.unused | join(", ") }}.</p>{% endif %}
 {% if vm.judge.missing_cells %}<p class="hint">{% for c in vm.judge.missing_cells %}Prompt {{ c.prompt }} ({{ c.label }}){{ ", " if not loop.last }}{% endfor %} had no run at all: counted as wrong in the ranking, but in no failure mode, so that column's failures total {{ vm.judge.missing }} fewer than its misses.</p>{% endif %}
 <h2>Failures by prompt type</h2>
 <p class="sub">Prompts each provider did not get fully right, per type. Lower is better.</p>
@@ -272,7 +273,7 @@
 {% for c in r.cells %}<td class="r num">{{ hl(r.hl, c.usd | big_money(c.est)) }}</td>{% endfor %}</tr>
 {% endfor %}
 </tbody></table></div>
-{% if not g.to_select %}<p class="hint">The router line equals Keenable search here, because every prompt type routes to search under this rule.</p>{% endif %}
+{% if not g.to_select %}<p class="hint">The "this setup" line equals Keenable search, because every prompt type routes to search under this rule.</p>{% endif %}
 <h2>Rollout</h2>
 <div class="panel" style="padding:4px 18px">
 {% set fb = vm.labels[g.fallback] if g.fallback else "the current provider" %}

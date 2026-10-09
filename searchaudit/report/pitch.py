@@ -1445,8 +1445,8 @@ def _findings(rows, split, wins, gaps, foreign, items, tests=(), reset_ids: froz
                 line += f" Not a clear difference on this many prompts ({_p(head['p_acc_holm'])})."
         short.append(line)
     if gaps:
-        short.append(f"On {len(gaps)} prompt{'s' if len(gaps) != 1 else ''} a rival was right and none of the three "
-                     "Keenable columns was correct. They are listed under Final thoughts.")
+        short.append(f"The {len(gaps)} prompt{'s' if len(gaps) != 1 else ''} where a rival was right and no Keenable column "
+                     "was correct are listed under Final thoughts.")
     if keen and keen["budget_hit"]:
         line = (f"Keenable search ran out of its budget on {keen['budget_hit']} of {n} prompts "
                 f"(Exa on {exa['budget_hit']}).")
