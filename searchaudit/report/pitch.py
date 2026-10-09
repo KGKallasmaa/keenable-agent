@@ -1376,11 +1376,11 @@ def _reset_lines(items: list[dict], rows: list[dict], reset_ids: frozenset[int])
     order = sorted(correct, key=lambda pid: -correct[pid])
     listing = ", ".join(f"{LABELS[pid]} {correct[pid]}" for pid in order)
     return [(f"On the {len(added)} cross-document prompts added in the reset: {listing} correct. "
-             "That is the slice the reset was built to test, and the one place a Keenable column is ahead of Exa.")]
+             "That is the slice the reset was built to test, and the one place Keenable pulls ahead of Exa.")]
 
 
 def _p(value: float) -> str:
-    return "p < 0.001" if value < 0.001 else f"p = {value:.3f}" if value < 0.01 else f"p = {value:.2f}"
+    return "p < 0.001" if value < 0.001 else f"p = {value:.3f}"
 
 
 def _findings(rows, split, wins, gaps, foreign, items, tests=(), reset_ids: frozenset[int] = frozenset()) -> dict[str, list[str]]:
@@ -1445,8 +1445,8 @@ def _findings(rows, split, wins, gaps, foreign, items, tests=(), reset_ids: froz
                 line += f" Not a clear difference on this many prompts ({_p(head['p_acc_holm'])})."
         short.append(line)
     if gaps:
-        short.append(f"On {len(gaps)} prompt{'s' if len(gaps) != 1 else ''} a rival was right and all three "
-                     "Keenable columns were wrong. They are listed under Final thoughts.")
+        short.append(f"On {len(gaps)} prompt{'s' if len(gaps) != 1 else ''} a rival was right and none of the three "
+                     "Keenable columns was correct. They are listed under Final thoughts.")
     if keen and keen["budget_hit"]:
         line = (f"Keenable search ran out of its budget on {keen['budget_hit']} of {n} prompts "
                 f"(Exa on {exa['budget_hit']}).")
@@ -1638,7 +1638,7 @@ def _study_read(rows: list[dict], gaps: list[dict], items: list[dict]) -> str:
         lead += f" The router sent {vias['keen']} of {n} to search"
         lead += ", so it scored like search." if abs(routed["correct"] - keen["correct"]) <= 2 else "."
     if gaps:
-        lead += f" On {len(gaps)} prompts a rival was right and all three Keenable columns were wrong."
+        lead += f" On {len(gaps)} prompts a rival was right and none of the three Keenable columns was correct."
     return lead
 
 

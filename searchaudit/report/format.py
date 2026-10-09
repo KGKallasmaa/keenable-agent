@@ -22,7 +22,7 @@ def big_money(x: float, estimated: bool = False) -> str:
     """$1.2M / $34k / $950, with "~" when any input was estimated."""
     tilde = "~" if estimated else ""
     if x >= 1e6:
-        return f"{tilde}${x / 1e6:.1f}M"
+        return f"{tilde}${int(x / 1e5 + 0.5) / 10:.1f}M"  # half-up, like the k and $ branches
     if x >= 1e3:
         return f"{tilde}${int(x / 1e3 + 0.5)}k"
     return f"{tilde}${int(x + 0.5)}"

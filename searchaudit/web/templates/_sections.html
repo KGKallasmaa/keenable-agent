@@ -177,6 +177,7 @@
 {% endfor %}
 <tr><td><b>All failures</b></td>{% for id in vm.ids if id in vm.shown %}<td class="r num"><b>{{ vm.failures.totals[id] }}</b></td>{% endfor %}</tr>
 </tbody></table></div>
+{% if vm.judge.missing_cells %}<p class="hint">{% for c in vm.judge.missing_cells %}Prompt {{ c.prompt }} ({{ c.label }}){{ ", " if not loop.last }}{% endfor %} had no run at all: counted as wrong in the ranking, but in no failure mode, so that column's failures total {{ vm.judge.missing }} fewer than its misses.</p>{% endif %}
 <h2>Failures by prompt type</h2>
 <p class="sub">Prompts each provider did not get fully right, per type. Lower is better.</p>
 <div class="panel tablewrap"><table><thead><tr><th>Type</th><th class="r">Prompts</th>{% for p in vm.providers if p.id in vm.shown %}<th class="r">{{ pv(p, True) }}</th>{% endfor %}</tr></thead><tbody>

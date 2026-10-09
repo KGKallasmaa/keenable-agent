@@ -55,7 +55,7 @@
   {{ h2h_pair(vm, pair, vm.prompts) }}
 </section>
 {% if vm.h2h_spotlight %}{% set spot = vm.h2h[vm.h2h_spotlight | join("|")] %}
-<section class="psec"><h2>Where {{ vm.labels[spot.a] }} differs: vs {{ vm.labels[spot.b] }}</h2>
+<section class="psec"><h2>{{ vm.labels[spot.a] }} vs {{ vm.labels[spot.b] }}: where it differs</h2>
   <p class="sub">The Keenable arm with the most prompts that only it got right, against {% if vm.provider[spot.b].uses_today %}what {{ m.company }} uses today{% else %}{{ vm.labels[spot.b] }}{% endif %}, by prompt type. The prompts only it got right are listed below.</p>
   {{ h2h_pair(vm, spot, vm.prompts) }}
 </section>
