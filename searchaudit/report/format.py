@@ -47,7 +47,7 @@ def pvalue(p: float) -> str:
 _LINK = re.compile(r"\[([^\]]+)\]\((https?://[^\s)]+)\)")
 _BOLD = re.compile(r"\*\*(.+?)\*\*")
 _CODE = re.compile(r"`([^`]+)`")
-_HEAD = re.compile(r"^#{1,6} +", re.M)
+_HEAD = re.compile(r"^#{1,6} +", re.MULTILINE)
 
 
 def answer_html(text: str) -> Markup:

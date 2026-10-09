@@ -105,10 +105,10 @@ def test_report_page(client):
     assert html.count('role="tab"') == 7
     assert 'role="button"' in html and 'aria-expanded="false"' in html
     assert 'aria-modal="true"' in html
-    assert "Not measured yet" in html  # human_agreement is null
+    assert "Not measured. No answers in this audit were hand-graded." in html  # human_agreement is null
     assert "Illustrative fixture" in html
     assert "icons.duckduckgo.com/ip3/exa.ai.ico" in html
-    assert "Recommended router" in html
+    assert "Keenable router, this setup" in html
     assert "Exa MCP" in html  # provider "via" in How we measured
 
 

@@ -9,6 +9,7 @@ from searchaudit.providers.keenable import (
     parse_fetch,
     parse_search,
 )
+
 from .fakes import fixture, transport
 
 

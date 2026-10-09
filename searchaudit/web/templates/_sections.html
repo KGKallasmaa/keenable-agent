@@ -226,7 +226,7 @@
     {% for r in g.routes %}
     <div class="route"><span>{{ r.name }} <span class="hint num">· {{ r.n }}</span></span><span class="hint">→</span><span>{{ pv(vm.provider[r.choice]) }}
       {% if r.status == "clear" %}<span class="pill ok" title="Search {{ r.search_only }} vs SELECT {{ r.select_only }} prompts only one got right; p {{ r.p | pvalue }}">clear</span>
-      {% elif r.status == "lean" %}<span class="pill" title="The search vs SELECT difference on this type could be chance (search {{ r.search_only }}, SELECT {{ r.select_only }}, p {{ r.p | pvalue }}). Defaulting to search.">search by default</span>
+      {% elif r.status == "lean" %}<span class="pill" title="The search vs SELECT difference on this type could be chance (search {{ r.search_only }}, SELECT {{ r.select_only }}, p {{ r.p | pvalue }}). Defaulting to search.">default, no clear SELECT win</span>
       {% else %}<span class="pill" title="Fewer than 10 prompts of this type: no routing decision.">too few prompts</span>{% endif %}</span></div>
     {% endfor %}
     {% for r in g.routes if r.alt %}

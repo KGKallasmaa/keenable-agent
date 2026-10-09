@@ -171,7 +171,7 @@ def row_from_turn(turn: dict, thread: dict | None) -> dict | None:
 
 
 _FOLLOWUP = re.compile(
-    r"^(too long|correct it|answer to this|make it|shorter|it'?s too)\b", re.I
+    r"^(too long|correct it|answer to this|make it|shorter|it'?s too)\b", re.IGNORECASE
 )
 
 

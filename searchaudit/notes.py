@@ -19,8 +19,8 @@ def _trouble(runs: list[Run], provider: ProviderId) -> str:
     """'1 run errored, 3 returned no answer and 5 hit the budget, of 60', or '' when none of that happened."""
     mine = [r for r in runs if r.provider == provider]
     errors = sum(1 for r in mine if r.error)
-    empty = sum(1 for r in mine if not r.error and not r.answer.strip())
     budget = sum(1 for r in mine if r.budget_hit)
+    empty = sum(1 for r in mine if not r.error and not r.budget_hit and not r.answer.strip())
     parts = []
     if errors:
         parts.append(f"{errors} run{'s' if errors != 1 else ''} errored")
@@ -31,7 +31,7 @@ def _trouble(runs: list[Run], provider: ProviderId) -> str:
     if not parts:
         return ""
     joined = parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + " and " + parts[-1]
-    return f"{joined}, of {len(mine)} runs"
+    return f"{joined}, of {len(mine)} run{'s' if len(mine) != 1 else ''}"
 
 
 def method_notes(

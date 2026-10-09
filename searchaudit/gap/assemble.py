@@ -10,7 +10,7 @@ from searchaudit.gap.log import CLASSES, coherent, read_jsonl, require_columns
 from searchaudit.gap.loss import miss_rows, render_csv
 from searchaudit.gap.sample import headline_inputs, spotcheck, stratified
 
-SQL_MARK = re.compile(r"WEB_SEARCH|SEM_EXTRACT", re.I)
+SQL_MARK = re.compile(r"WEB_SEARCH|SEM_EXTRACT", re.IGNORECASE)
 PARSE_ERROR = "SQL parse error"
 
 

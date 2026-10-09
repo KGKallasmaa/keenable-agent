@@ -20,7 +20,7 @@ async def test_assembled_results_render_in_report(audit: Path):  # noqa: F811
     results = AuditResults.model_validate_json((audit.parent / "results.json").read_text())
     notes = " ".join(results.meta.notes)
     assert "OpenRouter server tools" in notes and "list price of $0.004" in notes
-    assert "not yet been calibrated" in notes
+    assert "was not calibrated against hand-graded answers" in notes
     assert "SELECT" not in notes  # SELECT did not run (no Keenable key)
 
     client = TestClient(create_app(audits_dir=audit.parent.parent))
@@ -47,7 +47,7 @@ def test_notes_flag_trouble_and_unjudged(tmp_path: Path):
     judgments = [Judgment(prompt_id=1, provider="routed", grade="c", checks=[True] * 4)]
     notes = method_notes(config, Settings(), runs, judgments, "judge-v1", human_agreement=0.9)
     text = " ".join(notes)
-    assert "select: 1 errored and 1 hit the budget of 2 runs." in text
+    assert "S: 1 run errored and 1 hit the budget, of 2 runs" in text
     assert "2 runs have no judgment yet" in text
     assert "SELECT is experimental" in text and "one choice question" in text
     assert "OpenRouter server tools" not in text and "calibrated" not in text

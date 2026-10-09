@@ -414,6 +414,7 @@ def _block(directory: Path, hypothesis: bool = False) -> dict:
     if hypothesis:
         block["hypothesis"] = _hypothesis(results, grades, required)
         block["study"] = _study(results, grades, required, _reset_ids(directory))
+        block["study"]["second"] = results.meta.second_judge or None
     return block
 
 
@@ -1260,9 +1261,10 @@ def _provider_rows(items: list[dict], providers: list[str]) -> list[dict]:
             for item, cell in zip(items, cells, strict=True)
         ]
         correct = [cell for cell in cells if cell["grade"] == "c"]
-        costs = [cell["cost"] for cell in cells]
-        times = [cell["seconds"] for cell in cells]
-        searches = [cell["searches"] for cell in cells]
+        ran = [cell for cell in cells if not cell.get("missing")]  # a prompt with no run has no time or cost
+        costs = [cell["cost"] for cell in ran]
+        times = [cell["seconds"] for cell in ran]
+        searches = [cell["searches"] for cell in ran]
         rows.append({
             "id": pid,
             "label": LABELS[pid],
@@ -1360,8 +1362,8 @@ def _versus_exa(items: list[dict], arms: list[dict]) -> list[str]:
     exa_only = sum(1 for it in items if _grade_of(it, "exa") == "c" and _grade_of(it, best["id"]) != "c")
     by_type = Counter(it["type"] for it in best_only)
     split = ", ".join(f"{PROMPT_TYPE_NAMES.get(t, t).lower()} {n}" for t, n in by_type.most_common())
-    return [f"Against Exa alone, {best['label']} got {len(best_only)} prompts right that Exa missed ({split}); "
-            f"Exa got {exa_only} that {best['label']} missed."]
+    return [(f"Against Exa alone, {best['label']} got {len(best_only)} prompts right that Exa missed ({split}); "
+             f"Exa got {exa_only} that {best['label']} missed.")]
 
 
 def _reset_lines(items: list[dict], rows: list[dict], reset_ids: frozenset[int]) -> list[str]:
@@ -1374,8 +1376,8 @@ def _reset_lines(items: list[dict], rows: list[dict], reset_ids: frozenset[int])
         return []
     order = sorted(correct, key=lambda pid: -correct[pid])
     listing = ", ".join(f"{LABELS[pid]} {correct[pid]}" for pid in order)
-    return [f"On the {len(added)} cross-document prompts added in the reset: {listing} correct. "
-            "That is the slice the reset was built to test, and the one place a Keenable column is ahead of Exa."]
+    return [(f"On the {len(added)} cross-document prompts added in the reset: {listing} correct. "
+             "That is the slice the reset was built to test, and the one place a Keenable column is ahead of Exa.")]
 
 
 def _p(value: float) -> str:
