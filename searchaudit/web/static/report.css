@@ -289,12 +289,7 @@ tr.link:hover td { background: var(--soft); }
 .fullnote { margin: 0 0 14px; font-size: 13px; line-height: 1.55; }
 .fullnote p { margin: 0 0 8px; max-width: 70ch; }
 .fullnote .ptitle { margin-top: 10px; }
-.tocleg { font-size: 10.5px; margin: 0 0 8px; } .tocleg span { margin-right: 10px; white-space: nowrap; }
-.toclist { list-style: none; padding: 0; margin: 0; font-size: 10.5px; }
-.toclist li { break-inside: avoid; border-bottom: 1px solid var(--line); }
-.toclist a { display: grid; grid-template-columns: 26px 1fr auto; gap: 6px; padding: 3px 0; color: var(--ink); align-items: baseline; }
-.toclist .tg { white-space: nowrap; }
-.toclist .g { width: 12px; height: 12px; font-size: 7px; }
+.qlink { color: var(--ink); }
 .fullq { break-before: page; }
 .fullq .eyebrow { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 4px; }
 .fullq .qtext { font: 600 15px/1.4 var(--serif); letter-spacing: 0; text-transform: none; color: var(--ink); margin: 0 0 12px; break-after: avoid; }

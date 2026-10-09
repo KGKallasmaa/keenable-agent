@@ -1,4 +1,4 @@
-{# Full print edition (/r/<slug>/print/full): cover note, contents, and every prompt with every answer. #}
+{# Full print edition (/r/<slug>/print/full): cover note and every prompt with every answer. #}
 {% from "macros.html" import pv, gicon, checks %}
 
 {% macro cover_note(vm) -%}
@@ -22,22 +22,8 @@
   <p>{% for id in keen_out %}{{ vm.labels[id] }} ({{ s[id].k }}/{{ vm.n }}){{ " and " if not loop.last }}{% endfor %} {{ "is" if keen_out | length == 1 else "are" }} not in that tie on {{ "its" if keen_out | length == 1 else "their" }} own{% if "routed" in keen_tied %}; {{ vm.labels["routed"] }} gets there by picking between them question by question{% endif %}.</p>
   {% endif %}
   <p class="ptitle">How to read it</p>
-  <p>The first part summarises the result: ranking, cost, sources and method. The second half prints every one of the {{ vm.n }} prompts in full: the question, the reference answer the judge graded against, and each provider's complete answer with its grade, the judge's note and the sources it cited. ✓ correct · ◐ partly correct · ✗ wrong. The contents list links to each prompt.</p>
+  <p>The first part summarises the result: ranking, cost, sources and method. The second half prints every one of the {{ vm.n }} prompts in full: the question, the reference answer the judge graded against, and each provider's complete answer with its grade, the judge's note and the sources it cited. ✓ correct · ◐ partly correct · ✗ wrong. Each prompt in the Prompts table links to its full page.</p>
 </div>
-{%- endmacro %}
-
-{% macro contents(vm) -%}
-<section class="psec toc">
-  <h2>Contents</h2>
-  <p class="sub">Summary, cost, method, failure modes, head-to-head, implementation guide and judge come first; then every prompt in full. Click a prompt to jump to it.</p>
-  <p class="tocleg hint">Grade icons, left to right: {% for id in vm.ids %}<span>{{ loop.index }}. {{ vm.labels[id] }}</span>{% endfor %}</p>
-  <ol class="toclist">
-  {% for p in vm.prompts %}
-    <li><a href="#q-{{ p.id }}"><span class="num hint">{{ p.id }}</span> <span class="tt">{{ p.text | truncate(110) }}</span>
-      <span class="tg">{% for id in vm.ids %}{{ gicon(p.cells[id].grade, vm.labels[id]) }}{% endfor %}</span></a></li>
-  {% endfor %}
-  </ol>
-</section>
 {%- endmacro %}
 
 {% macro every_prompt(vm) -%}
