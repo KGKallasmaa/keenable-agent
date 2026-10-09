@@ -32,7 +32,7 @@
 
 <section class="psec">
   <h2>Where providers disagree <span class="hint num">{{ vm.counts.disagree }}</span></h2>
-  <p class="sub">One row per provider: result, the four judge checks ({{ vm.rubric | join(" · ") }}), failure mode, value score, time, cost and searches. The judge's note is shown under every answer that was not fully correct. Full answers and tool traces are in the online report, one page per prompt.</p>
+  <p class="sub">One row per provider: result, the four judge checks ({{ vm.rubric | join(" · ") }}), failure mode, value score, time, cost and searches. The judge's note is shown under every answer that was not fully correct, in the judge model's own words: "DATA" means the pages the agent retrieved, and "fact n" or "trap n" point at items on that prompt's checklist. Full answers and tool traces are in the online report, one page per prompt.</p>
   {% for p in vm.prompts if p.disagree %}
   <div class="qblock" id="p{{ p.id }}">
     <p class="qh"><span class="num hint">{{ p.id }}</span><span>{{ p.text }}</span><span class="pill">{{ p.type_name }}</span></p>

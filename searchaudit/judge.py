@@ -311,7 +311,7 @@ def grade_from(checklist: dict, facts: list[dict], traps: list[dict]) -> tuple[s
 def harness_note(run: Run) -> str:
     """The note on a run the harness grades wrong without a judge call: no answer, or a failed run."""
     if run.error and run.error.startswith("TimeoutError"):
-        return "The run hit the time limit with no answer. Graded wrong by the harness rule, not by the judge model."
+        return "The run failed with a timeout error and no answer. Graded wrong by the harness rule, not by the judge model."
     if run.error:
         return (f"The run failed ({run.error[:160].rstrip(': ')}). "
                 "Graded wrong by the harness rule, not by the judge model.")

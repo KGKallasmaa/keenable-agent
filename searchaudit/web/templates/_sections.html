@@ -235,7 +235,7 @@
   </div>
   <div class="panel pad"><p class="ptitle">Router config</p>
 <pre>{{ g.config }}</pre>
-    <p class="hint">{% if g.to_select %}Routes {{ g.to_select | join(", ") }} prompts to SELECT.{% else %}No prompt type routes to SELECT on this data.{% endif %} Drop-in search tool for any agent framework.</p>
+    <p class="hint">{% if g.to_select %}Routes {{ g.to_select | join(", ") }} prompts to SELECT.{% else %}No prompt type routes to SELECT on this data.{% endif %}</p>
     {% if g.per_prompt_note %}<p class="hint">{{ g.per_prompt_note }}</p>{% endif %}
   </div>
 </div>
@@ -243,7 +243,7 @@
 <p class="note">Routing needs both Keenable search and Keenable SELECT in the audit, so no router is recommended here.</p>
 {% endif %}
 <h2>Where one call is the table</h2>
-<p class="sub">Two prompts from this set and four of the same shape for any customer. Exa and Parallel return ranked links. They find a page. A table whose rows live on different pages is the SELECT job: one SQL call, not a loop of three searches.</p>
+<p class="sub">Two prompts from this set, two generic examples, and two in a customer's shape. Exa and Parallel return ranked links. They find a page. A table whose rows live on different pages is the SELECT job: one SQL call, not a loop of three searches.</p>
 <div class="panel tablewrap"><table>
 <thead><tr><th>From</th><th>The question</th><th>Why a short search loop stops</th></tr></thead>
 <tbody>
@@ -267,7 +267,7 @@
 <p class="sub">Search + agent model per prompt, from this audit, times prompts per month. ~ = at least one input priced from a list price.</p>
 <div class="panel tablewrap"><table><thead><tr><th>Setup</th>{% for c in g.volumes[0].cells %}<th class="r">{{ c.volume | volume }} prompts / mo</th>{% endfor %}</tr></thead><tbody>
 {% for r in g.volumes %}
-<tr><td>{% if r.id == "router" %}<span class="pv"><span class="sw" style="background:{{ vm.provider.routed.hex if 'routed' in vm.provider else 'var(--ink)' }}"></span>Keenable router, this setup</span>{% else %}{{ pv(vm.provider[r.id]) }}{{ today(vm.provider[r.id]) }}{% endif %}</td>
+<tr><td>{% if r.id == "router" %}<span class="pv"><span class="sw" style="background:{{ vm.provider.routed.hex if 'routed' in vm.provider else 'var(--ink)' }}"></span>Keenable router, this setup{% if not g.to_select %} (equals Keenable search: every type routes to search){% endif %}</span>{% else %}{{ pv(vm.provider[r.id]) }}{{ today(vm.provider[r.id]) }}{% endif %}</td>
 {% for c in r.cells %}<td class="r num">{{ hl(r.hl, c.usd | big_money(c.est)) }}</td>{% endfor %}</tr>
 {% endfor %}
 </tbody></table></div>
@@ -291,7 +291,7 @@
   <tr><td>Judge model</td><td class="num">{{ j.model }}{% if j.models | length > 1 %} <span class="hint">(mixed: {% for k, v in j.models.items() %}{{ k }} × {{ v }}{{ ", " if not loop.last }}{% endfor %})</span>{% endif %}</td></tr>
   <tr><td>Agreement with human graders</td><td>{% if j.human_agreement is none %}<span class="hint">Not measured. No answers in this audit were hand-graded.</span>{% else %}<span class="num">{{ j.human_agreement | pct }}</span> of {{ j.human_labels_n }} hand-graded answers{% endif %}</td></tr>
   <tr><td>Agreement with a second judge</td><td>{% if not j.second or not j.second.n %}<span class="hint">Not run.</span>{% else %}{% set s2 = j.second %}<span class="num">{{ s2.correct_agreement | pct }}</span> agree on correct vs not, <span class="num">{{ s2.exact_agreement | pct }}</span> on the exact grade (Cohen's κ {{ "%.2f" | format(s2.kappa) }}), over {{ s2.n }} answers re-graded by <span class="num">{{ s2.model }}</span>. <span class="hint">Scope: {{ s2.scope }}.</span>{% endif %}</td></tr>
-  <tr><td>Grades that break the rubric rule</td><td class="num">{% if j.checklist and not j.inconsistent %}<span class="hint">Not applicable: each grade follows from its prompt's checklist.</span>{% else %}{{ j.inconsistent | length }}{% if not j.inconsistent %} <span class="hint">every grade matches its four checks</span>{% endif %}{% endif %}</td></tr>
+  {% if not (j.checklist and not j.inconsistent) %}<tr><td>Grades that break the rubric rule</td><td class="num">{% if j.checklist and not j.inconsistent %}<span class="hint">Not applicable: each grade follows from its prompt's checklist.</span>{% else %}{{ j.inconsistent | length }}{% if not j.inconsistent %} <span class="hint">every grade matches its four checks</span>{% endif %}{% endif %}</td></tr>{% endif %}
   {% if j.missing %}<tr><td>Missing runs or judgments</td><td class="num">{{ j.missing }} <span class="hint">(counted as wrong)</span></td></tr>{% endif %}
 </tbody></table></div>
 <div class="two" style="margin-top:8px">

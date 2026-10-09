@@ -116,7 +116,7 @@
       {% endif %}
       </tbody>
     </table></div>
-    <p class="hint">Median seconds by grade. A dash means that provider had none.</p>
+    <p class="hint">Median seconds by grade. A dash means that provider had no answers of that grade.</p>
     <div class="tablewrap"><table class="plainrank">
       <thead><tr>
         <th>Provider</th><th class="r">When correct</th><th class="r">When partial</th><th class="r">When wrong</th>
@@ -177,12 +177,12 @@
     <figure class="plot" id="cost-speed">
       <h3>Dollars and time</h3>
       {{ chart(study.charts.speed_cost) }}
-      <figcaption>Across: dollars per prompt. Up: median seconds, including the wrong answers. <span class="weblink">Hover a provider to see each prompt.</span> A prompt past the scale sits on the frame.</figcaption>
+      <figcaption>Across: dollars per prompt. Up: median seconds, including the wrong answers. <span class="weblink">Hover a provider to see each prompt.</span> A provider past the scale sits on the frame.</figcaption>
     </figure>
     <figure class="plot" id="cost-accuracy">
       <h3>Dollars and correct answers</h3>
       {{ chart(study.charts.cost_acc) }}
-      <figcaption>Across: dollars per prompt. Up: percent correct. <span class="weblink">Hover a provider to see each prompt.</span> A prompt past the scale sits on the frame.</figcaption>
+      <figcaption>Across: dollars per prompt. Up: percent correct. <span class="weblink">Hover a provider to see each prompt.</span> A provider past the scale sits on the frame.</figcaption>
     </figure>
   </div>
   {% else %}
@@ -225,7 +225,7 @@
         {% for cell in item.cells %}
         <td class="cell-{{ cell.grade }}">
           <div>{{ gicon(cell.grade) }} {{ cell.grade_word }}</div>
-          <div class="num">{{ "%.1f"|format(cell.seconds) }}s · {{ cell.cost | money(4, false) }}</div>
+          <div class="num">{% if cell.missing %}no run{% else %}{{ "%.1f"|format(cell.seconds) }}s · {{ cell.cost | money(4, false) }}{% endif %}</div>
           <div class="hint">{{ cell.searches }} search{{ "es" if cell.searches != 1 else "" }}</div>
           {% if cell.budget_hit %}<div class="hint">Out of budget</div>{% endif %}
           {% if cell.grade != "c" and cell.failure_name %}<div class="hint">{{ cell.failure_name }}</div>{% endif %}

@@ -178,9 +178,11 @@ def _expected_grade(checks: Sequence[bool]) -> str:
 def _cell(run: Run | None, j: Judgment | None) -> VM:
     missing = run is None or j is None
     grade = "w" if missing else j.grade
-    failure = "error" if missing else j.failure_mode
+    # A prompt with no run is not a tool error: it is not counted under any failure mode.
+    failure = "" if run is None else ("error" if j is None else j.failure_mode)
     if run is None:
-        note = "No run was recorded for this provider on this prompt; counted as wrong."
+        note = ("No run on this prompt: one Keenable arm failed and the router replay needs a finished answer "
+                "from both arms. Counted as wrong, in no failure mode.")
     elif j is None:
         note = "This answer was not judged; counted as wrong."
     else:
@@ -206,7 +208,7 @@ def _cell(run: Run | None, j: Judgment | None) -> VM:
         "expected": grade if (j is not None and j.facts) else _expected_grade(checks),
         "checklist": bool(j is not None and j.facts),
         "failure": failure,
-        "failure_name": FAILURE_MODES[failure][0] if failure else "",
+        "failure_name": FAILURE_MODES[failure][0] if failure else ("No run" if run is None else ""),
         "failure_def": FAILURE_MODES[failure][1] if failure else "",
         "note": note,
         "cost": round(cost, 6),

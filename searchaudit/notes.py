@@ -4,6 +4,7 @@ Notes are built from the audit config and the runs that actually happened, so a 
 when it applies (e.g. the SELECT note only when SELECT ran).
 """
 
+import json
 from searchaudit.config import AuditConfig, Settings
 from searchaudit.models import Judgment, ProviderId, Run
 
@@ -56,13 +57,13 @@ def method_notes(
         notes.append(
             f"{_providers_phrase(server)} ran as OpenRouter server tools (openrouter:web_search and web_fetch), "
             "so OpenRouter's own loop decides how often they search inside one model call. Keenable ran as "
-            "function tools in our own agent loop. Their search cost is what OpenRouter billed, split from the "
+            "function tools in our own agent loop. The server-tool providers' search cost is what OpenRouter billed, split from the "
             "model cost when OpenRouter reported the split, otherwise estimated from list prices (marked ~)."
         )
     if ran & KEENABLE_PROVIDERS:
         notes.append(
             f"{'Keenable search and SELECT are' if ran & {'select', 'routed'} else 'Keenable search is'} priced at the list price of ${settings.keenable_usd_per_request:g} "
-            "per request. That list price is the price in this report."
+            "per request. Requests that failed are priced at $0, so an effective rate can sit below list."
         )
     if "select" in ran:
         notes.append(
@@ -73,7 +74,9 @@ def method_notes(
         )
     if "routed" in ran:
         notes.append(
-            "Keenable router asks Jev one choice question, search or select, and returns the answer that arm already gave."
+            "Keenable router asks Jev (typesafe/jev-1.13, a small decision model served through OpenRouter) one "
+            "choice question, search or select, and returns the answer that arm already gave, plus the cost and "
+            "time of the Jev call. A prompt where either arm failed has no router run and counts as wrong."
         )
     if "none" in ran:
         notes.append(
@@ -81,6 +84,13 @@ def method_notes(
             "budget with zero tools, told to say when it cannot know something. The judge grades its claims "
             "against the reference without requiring sources. Search lift = prompts a provider got right that "
             "the baseline got wrong. It is never recommended in the headline or the implementation guide."
+        )
+    cut = config.base_dir / "cut-2026-10-09.json"
+    if cut.is_file():
+        notes.append(
+            f"Prompt ids run past 100 with gaps: on 2026-10-09 the {len(json.loads(cut.read_text()))} prompts that "
+            "every provider had answered correctly were removed, since they could not separate anyone, and the "
+            "same number of harder cross-document prompts were added. Ids are never reused."
         )
     labels = {p.id: p.label for p in config.providers}
     troubles = [(labels.get(pid, pid), _trouble(runs, pid)) for pid in sorted(ran)]

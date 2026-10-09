@@ -226,7 +226,7 @@ def _citations(answer: str, trace: _Trace) -> list[Citation]:
 async def resolve_model(client: OpenRouterClient, requested: str) -> tuple[str, str]:
     """Pin `openrouter/auto` to a concrete model with one tiny calibration call."""
     if requested != "openrouter/auto":
-        return requested, f"{requested}, pinned in the audit config"
+        return requested, "pinned in the audit config"
     response = await client.chat({
         "model": requested, "max_tokens": 5,
         "messages": [{"role": "user", "content": "Reply with OK."}],

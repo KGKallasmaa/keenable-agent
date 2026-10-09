@@ -1595,8 +1595,8 @@ def _cell(run: Run | None, grade: str, judgment=None) -> dict:
         note = judgment.note or ""
     if run is None:
         failure = "error"
-        note = ("No run: both Keenable arms timed out on this prompt, so the router had nothing to copy. "
-                "Counted as wrong.")
+        note = ("No run: one Keenable arm failed on this prompt, and the router replay needs a finished "
+                "answer from both arms before Jev picks one. Counted as wrong.")
     return {
         "missing": run is None,
         "grade": grade,
