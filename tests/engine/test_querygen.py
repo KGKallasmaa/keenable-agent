@@ -11,6 +11,7 @@ import pytest
 from searchaudit.cli import main_async, parse_args
 from searchaudit.config import load_config
 from searchaudit.models import Judgment, Prompt, Run
+from searchaudit.providers.openrouter import OpenRouterError
 from searchaudit.querygen import (
     BudgetExhausted,
     Candidate,
@@ -234,6 +235,64 @@ async def test_pilot_drops_reference_problems_and_keeps_real_failures(audit: Pat
     reviews = [json.loads(x) for x in (audit.parent / "querygen" / "pilot_review.jsonl").read_text().splitlines()]
     # task 6.0 / 6.1: every provider wrong, but the reference is fine -> real failures, kept for selection
     assert sorted(r["reference_problem"] for r in reviews) == [False, False, True]
+
+
+# ---------------------------------------------------------------- pilot review failure must degrade
+
+
+class NonJsonReviewFakes(Fakes):
+    """The review LLM returns prose instead of JSON for _review prompts."""
+
+    async def llm(self, messages, *, search):
+        text = messages[-1]["content"]
+        if "Every search provider was graded wrong" in text:
+            return Reply(text="I'm sorry, I can't help with that.", cost=0.01, searches=2,
+                         model="anthropic/claude-sonnet-5.5")
+        return Reply(text=world(text), cost=0.01, searches=2, model="anthropic/claude-sonnet-5.5")
+
+
+class ApiFailureReviewFakes(Fakes):
+    """The review LLM call raises OpenRouterError for _review prompts."""
+
+    async def llm(self, messages, *, search):
+        text = messages[-1]["content"]
+        if "Every search provider was graded wrong" in text:
+            raise OpenRouterError("HTTP 503: upstream overloaded", body={"error": "503"})
+        return Reply(text=world(text), cost=0.01, searches=2, model="anthropic/claude-sonnet-5.5")
+
+
+async def test_pilot_review_non_json_reply_keeps_prompt_and_continues(audit: Path, caplog):
+    caplog.set_level(logging.ERROR)
+    fakes = NonJsonReviewFakes()
+    gen = QueryGen(load_config(audit), fakes.deps(pilot=True), target=5, pilot=["exa", "keen"])
+    final = await gen.run()
+
+    # The pipeline must not crash on a non-JSON review reply; 5 prompts are produced.
+    assert len(final) == 5
+    # No review was persisted (extract_json raised before append_jsonl).
+    assert not (audit.parent / "querygen" / "pilot_review.jsonl").exists()
+    # The error is logged so the operator can see it was a degraded review.
+    assert caplog.text.count("review") >= 2 and "failed" in caplog.text
+    # No prompt was dropped via "reference problem" since every review failed.
+    funnel = {s["stage"]: s for s in json.loads(
+        (audit.parent / "querygen" / "funnel.json").read_text())["stages"]}
+    assert "every provider wrong: reference problem" not in funnel["pilot"]["dropped"]
+    assert funnel["pilot"]["out"] == 9  # all prompts kept (degraded)
+
+
+async def test_pilot_review_openrouter_error_keeps_prompt_and_continues(audit: Path, caplog):
+    caplog.set_level(logging.ERROR)
+    fakes = ApiFailureReviewFakes()
+    gen = QueryGen(load_config(audit), fakes.deps(pilot=True), target=5, pilot=["exa", "keen"])
+    final = await gen.run()
+
+    assert len(final) == 5
+    assert not (audit.parent / "querygen" / "pilot_review.jsonl").exists()
+    assert caplog.text.count("review") >= 2 and "failed" in caplog.text
+    funnel = {s["stage"]: s for s in json.loads(
+        (audit.parent / "querygen" / "funnel.json").read_text())["stages"]}
+    assert "every provider wrong: reference problem" not in funnel["pilot"]["dropped"]
+    assert funnel["pilot"]["out"] == 9  # all prompts kept (degraded)
 
 
 # ---------------------------------------------------------------- guards

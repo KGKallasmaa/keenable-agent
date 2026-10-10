@@ -598,6 +598,10 @@ Reply with JSON only:
                     except BudgetExhausted:
                         kept.append(prompt)
                         continue
+                    except (OpenRouterError, ValueError, KeyError, TypeError) as exc:
+                        log.error("querygen: review %s failed: %s", cid, exc)
+                        kept.append(prompt)
+                        continue
                     append_jsonl(review_path, review)
                     reviews[cid] = review
                 if review["reference_problem"]:
