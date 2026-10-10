@@ -125,6 +125,10 @@ def _record_unavailable(
         if cfg.id in running:
             continue
         reasons[cfg.id] = registry.get(cfg.id).unavailable_reason(ctx) or "unavailable"
+    scoped = config.providers if only is None else [p for p in config.providers if p.id in only]
+    for cfg in scoped:
+        if not cfg.enabled and cfg.id not in running:
+            reasons[cfg.id] = "disabled in config"
     if reasons:
         path.write_text(json.dumps(reasons, indent=2))
     elif path.exists():
