@@ -149,6 +149,32 @@ async def test_cost_cap_stops_launching_runs():
     assert done == 3 and len(saved) == 3
 
 
+def test_assemble_rejects_degenerate_empty_providers(tmp_path: Path):
+    """assemble() filters providers to those that actually ran; with no runs it would emit
+    providers=[]. The schema now rejects that, so cmd_assemble raises before writing a
+    results.json that would later 500 the web app (cli.py:339-343 -> cli.py:372)."""
+    from pydantic import ValidationError
+
+    from searchaudit.cli import assemble
+    from searchaudit.config import Settings, load_config
+    from searchaudit.providers import default_registry
+
+    (tmp_path / "prompts.json").write_text(json.dumps([
+        {"id": 1, "text": "q", "type": "lookup", "reference": "r", "as_of": "2026-10-01"}
+    ]))
+    (tmp_path / "runs.jsonl").write_text("")        # no runs -> ran = set() -> providers = []
+    (tmp_path / "judgments.jsonl").write_text("")
+    (tmp_path / "audit.yaml").write_text(
+        "slug: t\ncompany: C\ncategory: X\nproviders:\n"
+        "  - {id: exa, label: Exa, short: Exa, domain: exa.ai, hex: '#c2410c', uses_today: true}\n"
+        "  - {id: keen, label: Keenable search, short: Search, domain: keenable.ai, hex: '#2563eb'}\n"
+    )
+    config = load_config(tmp_path / "audit.yaml")
+    with pytest.raises(ValidationError):
+        assemble(config, Settings(), default_registry())
+    assert not (tmp_path / "results.json").exists()  # raised before cmd_assemble's write
+
+
 async def test_credit_refusal_is_not_saved_and_stops_the_queue():
     prompts = [Prompt(id=i, text="q", type="lookup", reference="r") for i in range(1, 4)]
     fake = FakeOpenRouter(lambda body: {"error": {"message": "Insufficient credits"}})

@@ -133,7 +133,10 @@ class AuditMeta(BaseModel):
 
 class AuditResults(BaseModel):
     meta: AuditMeta
-    providers: list[ProviderInfo]
-    prompts: list[Prompt]
+    # build_view_model assumes at least one provider and one prompt; empty lists crash it
+    # (IndexError / ZeroDivisionError / StopIteration), so they are rejected up front as a
+    # ValidationError (a ValueError subclass) that the store's graceful-skip guard already catches.
+    providers: list[ProviderInfo] = Field(min_length=1)
+    prompts: list[Prompt] = Field(min_length=1)
     runs: list[Run]
     judgments: list[Judgment]
