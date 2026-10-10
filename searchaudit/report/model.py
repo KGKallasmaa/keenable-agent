@@ -1023,13 +1023,17 @@ def _lift(prompts, sids, base, correct, labels, leader, n) -> VM:
     if p < stats.ALPHA and gained > lost:
         detail = (f"{labels[b]} got {k_base} of {n} right from memory. Search is significantly better "
                   f"(McNemar p {_p(p)}).")
+    elif p < stats.ALPHA and gained < lost:
+        detail = (f"{labels[b]} got {k_base} of {n} right from memory. Search is significantly worse "
+                  f"(McNemar p {_p(p)}): on this prompt set search hurt what the model already knows.")
     else:
         detail = (f"{labels[b]} got {k_base} of {n} right from memory, within chance of {labels[leader]} "
                   f"({k_lead}): on this prompt set search added little over what the model already knows.")
     fact = {"key": "Search added", "ids": [leader],
             "value": f"{labels[leader]}: +{gained} prompts over no search", "detail": detail}
     return {"available": True, "id": b, "k": k_base, "n": n, "rows": rows, "tiers": tiers,
-            "within_chance": not (p < stats.ALPHA and gained > lost), "p": p, "facts": [fact]}
+            "within_chance": not (p < stats.ALPHA), "significantly_worse": p < stats.ALPHA and gained < lost,
+            "p": p, "facts": [fact]}
 
 
 # ---------------------------------------------------------------- cost break-even and sources
