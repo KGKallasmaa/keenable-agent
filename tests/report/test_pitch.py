@@ -1,5 +1,6 @@
 """The SpaceX walkthrough stays empty until every required cell is judged."""
 
+import json
 from pathlib import Path
 
 from searchaudit.config import load_config, load_prompts
@@ -129,6 +130,50 @@ def test_hypothesis_stays_quiet_on_a_tie():
     grades = {(j.prompt_id, j.provider): j.grade for j in results.judgments}
     text = _hypothesis(results, grades, ["keen", "select", "routed", "exa", "grok"])
     assert text.startswith("This run does not show")
+
+
+def test_hypothesis_does_not_name_unavailable_rival():
+    results = _results({"keen": "c", "select": "c", "routed": "c", "parallel": "w", "grok": "w"},
+                       ["lookup", "wide"])
+    grades = {(j.prompt_id, j.provider): j.grade for j in results.judgments}
+    text = _hypothesis(results, grades, ["keen", "select", "routed", "parallel", "grok"])
+    assert "Exa" not in text
+    assert "more correct answers than Parallel and Grok native." in text
+
+
+def test_hypothesis_does_not_name_unavailable_parallel():
+    results = _results({"keen": "c", "select": "c", "routed": "c", "exa": "w", "grok": "w"},
+                       ["lookup", "wide"])
+    grades = {(j.prompt_id, j.provider): j.grade for j in results.judgments}
+    text = _hypothesis(results, grades, ["keen", "select", "routed", "exa", "grok"])
+    assert "Parallel" not in text
+    assert "more correct answers than Exa and Grok native." in text
+
+
+def test_hypothesis_names_all_three_when_every_rival_is_compared():
+    results = _results({"keen": "c", "select": "c", "routed": "c", "exa": "w", "parallel": "w", "grok": "w"},
+                       ["lookup", "wide"])
+    grades = {(j.prompt_id, j.provider): j.grade for j in results.judgments}
+    text = _hypothesis(results, grades, ["keen", "select", "routed", "exa", "parallel", "grok"])
+    assert text == ("On this run, Keenable search, SELECT, and the router each have more correct answers "
+                    "than Exa, Parallel, and Grok native.")
+
+
+def test_hypothesis_with_unavailable_exa_end_to_end(tmp_path):
+    providers = ["exa", "parallel", "keen", "select", "grok", "routed"]
+    grades = {pid: "c" if pid in {"keen", "select", "routed"} else "w" for pid in providers}
+    results = _results(grades, ["lookup", "wide"])
+    directory = tmp_path / "spacex-jobs"
+    directory.mkdir()
+    (directory / "results.json").write_text(results.model_dump_json())
+    (directory / "unavailable.json").write_text(json.dumps({"exa": "Exa API down for maintenance"}))
+    pitch = build_pitch(tmp_path)
+    block = pitch["jobs"]
+    assert block["status"] == "complete"
+    assert [row["id"] for row in block["unavailable"]] == ["exa"]
+    assert [row["id"] for row in block["counts"]] == ["parallel", "keen", "select", "grok", "routed"]
+    assert "Exa" not in block["hypothesis"]
+    assert "more correct answers than Parallel and Grok native." in block["hypothesis"]
 
 
 def test_median_seconds_axis_stays_in_seconds():
