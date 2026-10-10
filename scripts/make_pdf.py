@@ -3,6 +3,7 @@
     uv run python scripts/make_pdf.py fixture                      # starts the app on a free port
     uv run python scripts/make_pdf.py spacex-jobs --url http://127.0.0.1:8000
     uv run python scripts/make_pdf.py fixture --screenshots out/   # also PNGs of /r/<slug> and the print view
+    uv run python scripts/make_pdf.py spacex-jobs --full           # /r/<slug>/print/full -> report-full.pdf
 
 Needs Chromium once: `uv run playwright install chromium`.
 """
@@ -10,6 +11,7 @@ Needs Chromium once: `uv run playwright install chromium`.
 from __future__ import annotations
 
 import argparse
+import os
 import socket
 import threading
 import time
@@ -64,12 +66,18 @@ def _load(page: Page, url: str) -> None:
     page.evaluate("document.fonts.ready")
 
 
-def render(base: str, slug: str, out: Path, screenshots: Path | None = None) -> None:
+def _launch_args() -> dict[str, str]:
+    """Prefer a preinstalled full Chromium (cloud containers ship one without the headless shell)."""
+    exe = Path(os.environ.get("PLAYWRIGHT_BROWSERS_PATH", "")) / "chromium"
+    return {"executable_path": str(exe)} if os.environ.get("PLAYWRIGHT_BROWSERS_PATH") and exe.exists() else {}
+
+
+def render(base: str, slug: str, out: Path, screenshots: Path | None = None, full: bool = False) -> None:
     with sync_playwright() as pw:
-        browser = pw.chromium.launch()
+        browser = pw.chromium.launch(**_launch_args())
         try:
             page = browser.new_page(viewport={"width": 1280, "height": 900})
-            _load(page, f"{base}/r/{slug}/print")
+            _load(page, f"{base}/r/{slug}/print" + ("/full" if full else ""))
             out.parent.mkdir(parents=True, exist_ok=True)
             page.pdf(
                 path=str(out),
@@ -79,6 +87,8 @@ def render(base: str, slug: str, out: Path, screenshots: Path | None = None) -> 
                 display_header_footer=True,
                 header_template="<span></span>",
                 footer_template=FOOTER,
+                outline=True,
+                tagged=True,
             )
             if screenshots:
                 screenshots.mkdir(parents=True, exist_ok=True)
@@ -98,13 +108,14 @@ def main() -> None:
     ap.add_argument("--audits-dir", type=Path, default=ROOT / "audits")
     ap.add_argument("--out", type=Path, help="default: <audits-dir>/<slug>/report.pdf")
     ap.add_argument("--screenshots", type=Path, help="also save PNG screenshots into this directory")
+    ap.add_argument("--full", action="store_true", help="every prompt with every full answer -> report-full.pdf")
     args = ap.parse_args()
-    out = args.out or args.audits_dir / args.slug / "report.pdf"
+    out = args.out or args.audits_dir / args.slug / ("report-full.pdf" if args.full else "report.pdf")
     if args.url:
-        render(args.url.rstrip("/"), args.slug, out, args.screenshots)
+        render(args.url.rstrip("/"), args.slug, out, args.screenshots, args.full)
     else:
         with serve(args.audits_dir) as base:
-            render(base, args.slug, out, args.screenshots)
+            render(base, args.slug, out, args.screenshots, args.full)
     print(f"wrote {out}")
 
 

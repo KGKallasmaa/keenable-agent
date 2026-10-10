@@ -209,7 +209,7 @@
   {% endif %}
 
   <h2 id="by-prompt">By prompt</h2>
-  <p>Every prompt and every provider: the grade, seconds, dollars, and searches. Green is correct, amber is partial, grey is wrong; a dash with no time is a prompt that column never ran. The notes are the judge model's own words: "DATA" is the material the agent retrieved, and "fact n" or "trap n" point at items on that prompt's checklist.{% if not printing %} Open Answer to read what the agent wrote.{% endif %}</p>
+  <p>Every prompt and every provider: the grade, seconds, dollars, and searches. Green is correct, amber is partial, grey is wrong.{% if pitch.jobs.missing %} A dash with no time is a prompt that column never ran.{% endif %} The notes are the judge model's own words: "DATA" is the material the agent retrieved, and "fact n" or "trap n" point at items on that prompt's checklist.{% if not printing %} Open Answer to read what the agent wrote.{% endif %}</p>
   {% if study %}
   <details class="fold" id="by-prompt-table" open>
   <summary>Show all {{ study["items"] | length }} prompts</summary>
@@ -254,7 +254,7 @@
   {% if study %}
     {% if study.misses %}
     <h3>Why Keenable missed</h3>
-    <p>Keenable answers graded partial or wrong, or never run, by the cause the judge named. The explanations are the judge model's own notes (or the harness's, for a run that failed or never happened); "fact n" and "trap n" refer to items on the prompt's checklist and "DATA" to the pages the agent retrieved.</p>
+    <p>Keenable answers graded partial or wrong{% if pitch.jobs.missing %}, or never run{% endif %}, by the cause the judge named. The explanations are the judge model's own notes{% if pitch.jobs.missing %} (or the harness's, for a run that failed or never happened){% endif %}; "fact n" and "trap n" refer to items on the prompt's checklist and "DATA" to the pages the agent retrieved.</p>
     <div class="tablewrap"><table class="plainrank">
       <thead><tr><th>Provider</th><th>Cause</th><th class="r">Prompts</th><th>What that means</th></tr></thead>
       <tbody>

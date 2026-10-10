@@ -76,8 +76,12 @@ def method_notes(
         notes.append(
             "Keenable router asks Jev (typesafe/jev-1.13, a small decision model served through OpenRouter) one "
             "choice question, search or select, and returns the answer that arm already gave, plus the cost and "
-            "time of the Jev call. A prompt where either arm failed has no router run and counts as wrong."
+            "time of the Jev call."
         )
+        prompt_ids = {r.prompt_id for r in runs}
+        routed_ids = {r.prompt_id for r in runs if r.provider == "routed" and not r.error}
+        if prompt_ids - routed_ids:
+            notes.append("A prompt where either Keenable arm failed has no router run and counts as wrong.")
     if "none" in ran:
         notes.append(
             "No search (model memory) is a baseline, not a provider: the same agent, model, system prompt and "

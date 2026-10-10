@@ -61,6 +61,8 @@ class _Static(StaticFiles):
 def create_app(audits_dir: Path | None = None, show_fixture: bool | None = None) -> FastAPI:
     root = audits_dir or Path(os.environ.get("AUDITS_DIR", "audits"))
     show = os.environ.get("SHOW_FIXTURE") == "1" if show_fixture is None else show_fixture
+    # Public address of this site, printed in the PDF where it points at the online report.
+    site_url = os.environ.get("SITE_URL", "https://search-audit-production.up.railway.app").rstrip("/")
     store = AuditStore(root, show)
     templates = _templates()
     app = FastAPI(title="Search Audit", docs_url=None, redoc_url=None)
@@ -74,7 +76,7 @@ def create_app(audits_dir: Path | None = None, show_fixture: bool | None = None)
         return audit
 
     def page(request: Request, name: str, **ctx: Any) -> HTMLResponse:
-        return templates.TemplateResponse(request, name, ctx)
+        return templates.TemplateResponse(request, name, {"site_url": site_url, **ctx})
 
     def report_ctx(audit: Audit) -> dict[str, Any]:
         pitch = build_pitch(root, audit.vm) if audit.slug == "spacex" else None
@@ -135,6 +137,11 @@ def create_app(audits_dir: Path | None = None, show_fixture: bool | None = None)
         if slug == "spacex" and store.get(slug) is None:
             return page(request, "pitch.html", pitch=build_pitch(root), nav="home", solo=True, printing=True)
         return page(request, "print.html", **report_ctx(audit_or_404(slug)), printing=True)
+
+    @app.get("/r/{slug}/print/full", response_class=HTMLResponse)
+    def report_print_full(request: Request, slug: str) -> HTMLResponse:
+        """The print view plus every prompt with its reference and every provider's full answer."""
+        return page(request, "print.html", **report_ctx(audit_or_404(slug)), printing=True, full=True)
 
     @app.get("/r/{slug}/q/{prompt_id}", response_class=HTMLResponse)
     def prompt_page(request: Request, slug: str, prompt_id: int) -> HTMLResponse:

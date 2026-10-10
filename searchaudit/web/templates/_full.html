@@ -1,0 +1,70 @@
+{# Full print edition (/r/<slug>/print/full): cover note and every prompt with every answer. #}
+{% from "macros.html" import pv, gicon, checks %}
+
+{% macro cover_note(vm) -%}
+{% set m = vm.meta %}{% set s = vm.summary %}
+{% set lead = vm.leader %}
+{% set keen_ids = [] %}{% for id in vm.shown if id in ("keen", "select", "routed") %}{% set _ = keen_ids.append(id) %}{% endfor %}
+{% set keen_tied = [] %}{% for id in keen_ids if id in vm.tied %}{% set _ = keen_tied.append(id) %}{% endfor %}
+{% set keen_out = [] %}{% for id in keen_ids if id not in vm.tied %}{% set _ = keen_out.append(id) %}{% endfor %}
+<div class="panel pad fullnote">
+  <p class="ptitle">What this is</p>
+  <p>{{ vm.n }} hard {{ m.company }} questions ({{ m.category }}), each run through {{ vm.shown | length }} web-search setups with the same agent model ({{ m.agent_model }}), the same system prompt and the same budget. A judge model ({{ m.judge_model }}) graded every answer against a written reference answer.</p>
+  {% if keen_tied %}
+  <p class="ptitle">The result</p>
+  <p><b>{% for id in keen_tied %}{{ vm.labels[id] }}{{ " and " if not loop.last }}{% endfor %} {{ "is" if keen_tied | length == 1 else "are" }} statistically tied with the most accurate provider.</b>
+    {{ vm.labels[lead] }} answered {{ s[lead].k }} of {{ vm.n }} fully correct;
+    {% for id in keen_tied %}{{ vm.labels[id] }} answered {{ s[id].k }}{{ ", " if not loop.last }}{% endfor %}.
+    With {{ vm.n }} prompts that gap is within chance (paired McNemar test, Holm-corrected). The providers in the tie are
+    {% for id in vm.tied %}{{ vm.labels[id] }} ({{ s[id].k }}/{{ vm.n }}, {{ s[id].per_prompt | money(3, s[id].est) }} per prompt){{ ", " if not loop.last else "." }}{% endfor %}</p>
+  {% endif %}
+  {% if keen_out %}
+  <p>{% for id in keen_out %}{{ vm.labels[id] }} ({{ s[id].k }}/{{ vm.n }}){{ " and " if not loop.last }}{% endfor %} {{ "is" if keen_out | length == 1 else "are" }} not in that tie on {{ "its" if keen_out | length == 1 else "their" }} own{% if "routed" in keen_tied %}; {{ vm.labels["routed"] }} gets there by picking between them question by question{% endif %}.</p>
+  {% endif %}
+  <p class="ptitle">How to read it</p>
+  <p>The first part summarises the result: ranking, cost, sources and method. The second half prints every one of the {{ vm.n }} prompts in full: the question, the reference answer the judge graded against, and each provider's complete answer with its grade, the judge's note and the sources it cited. ✓ correct · ◐ partly correct · ✗ wrong. Each prompt in the Prompts table links to its full page.</p>
+</div>
+{%- endmacro %}
+
+{% macro every_prompt(vm) -%}
+<section class="psec">
+  <h2>Every prompt in full</h2>
+  <p class="sub">One prompt per page group. Providers appear in the same order on every prompt. The four judge checks are {{ vm.rubric | join(" · ") }}. In the judge's notes, "DATA" means the pages the agent retrieved, and "fact n" or "trap n" point at items on that prompt's checklist.</p>
+</section>
+{% for p in vm.prompts %}
+<article class="fullq" id="q-{{ p.id }}">
+  <p class="eyebrow">Prompt {{ p.id }} · {{ p.type_name }}{% if p.as_of %} · facts as of {{ p.as_of }}{% endif %}</p>
+  <h3 class="qtext">{{ p.text }}</h3>
+  <div class="ref">
+    <p class="lab">Reference answer (what the judge graded against)</p>
+    <div class="body">{{ p.reference | answer_html }}</div>
+  </div>
+  {% for id in vm.ids %}{% set c = p.cells[id] %}{% set pr = vm.provider[id] %}
+  {% if c.missing %}
+  <div class="ans g-w">
+    <div class="ahead">{{ pv(pr) }}<span class="grade">{{ gicon("w") }} No run</span></div>
+    <p class="jnote">This provider never ran on this prompt. It counts as wrong in the ranking (see Judge).</p>
+  </div>
+  {% else %}
+  <div class="ans g-{{ c.grade }}">
+    <div class="ahead">
+      {{ pv(pr) }}{% if c.via %} <span class="hint small">→ {{ vm.provider[c.via].short }}</span>{% endif %}
+      <span class="grade">{{ gicon(c.grade) }} {{ {"c": "Correct", "p": "Partly correct", "w": "Wrong"}[c.grade] }}</span>
+      {{ checks(c, vm.rubric) }}
+      {% if c.failure %}<span class="fm">{{ c.failure_name }}</span>{% endif %}
+      <span class="stats num">{{ c.seconds | secs }} · {{ c.cost | money(3, c.est) }} · {{ c.searches }} searches · {{ c.fetches }} fetches</span>
+    </div>
+    <p class="jnote"><b>Judge:</b> {{ c.note }}</p>
+    {% if c.error %}<p class="hint">Run error: {{ c.error }}</p>{% endif %}
+    {% if c.budget_hit %}<p class="hint">Hit its tool-call or time budget and was forced to answer.</p>{% endif %}
+    <div class="body">{{ (c.answer or "(no answer)") | collapse_repeats | answer_html }}</div>
+    {% if c.sources %}
+    <p class="cites"><b>Cited:</b>
+      {% for s in c.sources | unique(attribute="url") %}<a href="{{ s.url }}">{{ loop.index }}. {{ s.domain }}</a>{{ " · " if not loop.last }}{% endfor %}</p>
+    {% else %}<p class="cites">No sources cited.</p>{% endif %}
+  </div>
+  {% endif %}
+  {% endfor %}
+</article>
+{% endfor %}
+{%- endmacro %}

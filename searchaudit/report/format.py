@@ -48,12 +48,47 @@ _LINK = re.compile(r"\[([^\]]+)\]\((https?://[^\s)]+)\)")
 _BOLD = re.compile(r"\*\*(.+?)\*\*")
 _CODE = re.compile(r"`([^`]+)`")
 _HEAD = re.compile(r"^#{1,6} +", re.MULTILINE)
+_TABLE = re.compile(r"(?:^[ \t]*\|.*\|[ \t]*(?:\n|$))+", re.MULTILINE)
+_RULE = re.compile(r"^\|?[\s:|-]*-[\s:|-]*$")
+
+
+def _cells(line: str) -> list[str]:
+    return [c.strip() for c in line.strip().strip("|").split("|")]
+
+
+def _table(m: re.Match[str]) -> str:
+    """A pipe table with a |---| rule under its header -> <table>; anything else is left as text."""
+    lines = m.group(0).rstrip("\n").split("\n")
+    if len(lines) < 2 or not _RULE.match(lines[1].strip()):
+        return m.group(0)
+    head = "".join(f"<th>{c}</th>" for c in _cells(lines[0]))
+    body = "".join("<tr>" + "".join(f"<td>{c}</td>" for c in _cells(r)) + "</tr>" for r in lines[2:])
+    return f'<table class="mdt"><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>'
+
+
+def collapse_repeats(text: str, keep: int = 3) -> str:
+    """Fold a run of more than `keep` identical lines (degenerate model output) into a counted note."""
+    out: list[str] = []
+    lines = (text or "").split("\n")
+    i = 0
+    while i < len(lines):
+        j = i
+        while j < len(lines) and lines[j] == lines[i]:
+            j += 1
+        run = j - i
+        if run > keep and lines[i].strip():
+            out += lines[i:i + keep] + [f"[the line above repeats {run - keep} more times]"]
+        else:
+            out += lines[i:j]
+        i = j
+    return "\n".join(out)
 
 
 def answer_html(text: str) -> Markup:
     """Escape an answer, then render the small markdown subset models actually emit."""
     safe = html.escape(text or "")
     safe = _HEAD.sub("", safe)
+    safe = _TABLE.sub(_table, safe)
     safe = _LINK.sub(r'<a href="\2" rel="noopener nofollow" target="_blank">\1</a>', safe)
     safe = _BOLD.sub(r"<strong>\1</strong>", safe)
     safe = _CODE.sub(r"<code>\1</code>", safe)
@@ -68,4 +103,5 @@ FILTERS = {
     "volume": volume,
     "pvalue": pvalue,
     "answer_html": answer_html,
+    "collapse_repeats": collapse_repeats,
 }
