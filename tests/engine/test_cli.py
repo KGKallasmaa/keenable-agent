@@ -1,6 +1,7 @@
 """run -> judge -> assemble end to end with fakes: resume skipping, cost cap, model pinning."""
 
 import json
+import logging
 from pathlib import Path
 
 import httpx
@@ -8,7 +9,7 @@ import pytest
 
 from searchaudit.agent import Job, run_jobs
 from searchaudit.cli import main_async, parse_args, pending_pairs, read_jsonl
-from searchaudit.config import DEFAULT_AGENT_MODEL, AuditConfig
+from searchaudit.config import DEFAULT_AGENT_MODEL, AuditConfig, load_config
 from searchaudit.cost import CostCap
 from searchaudit.models import AuditResults, Prompt
 from searchaudit.providers.keenable import KeenableSearchProvider
@@ -165,3 +166,83 @@ async def test_credit_refusal_is_not_saved_and_stops_the_queue():
             global_limit=1, per_provider=lambda _: 1, cap=CostCap(50.0), on_result=save,
         )
     assert done == 0 and saved == [] and len(fake.requests) == 1
+
+
+YAML_DISABLED = """
+slug: test
+company: StackAI
+category: Enterprise AI agent platform
+model: openrouter/auto
+judge_model: anthropic/claude-sonnet-5.5
+router_model: typesafe/jev-router
+cost_cap_usd: 40
+providers:
+  - {id: exa, label: Exa, short: Exa, domain: exa.ai, hex: "#c2410c", uses_today: true}
+  - {id: keen, label: Keenable search, short: Search, domain: keenable.ai, hex: "#2563eb"}
+  - {id: select, label: Keenable SELECT, short: SELECT, domain: keenable.ai, hex: "#dc2626", enabled: false}
+"""
+
+
+@pytest.fixture
+def audit_disabled(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test")
+    monkeypatch.delenv("KEENABLE_API_KEY", raising=False)
+    (tmp_path / "prompts.json").write_text(json.dumps(PROMPTS))
+    path = tmp_path / "audit.yaml"
+    path.write_text(YAML_DISABLED)
+    return path
+
+
+def _config(path: Path) -> AuditConfig:
+    return load_config(path)
+
+
+def test_enabled_providers_warns_on_disabled_provider(tmp_path: Path, caplog: pytest.LogCaptureFixture):
+    (tmp_path / "audit.yaml").write_text(YAML_DISABLED)
+    config = _config(tmp_path / "audit.yaml")
+    with caplog.at_level(logging.WARNING, logger="searchaudit.config"):
+        assert config.enabled_providers(["exa", "select"]) == [
+            config.providers[0]
+        ]
+    assert "disabled in config" in caplog.text and "select" in caplog.text
+
+
+def test_enabled_providers_still_raises_on_unknown(tmp_path: Path):
+    (tmp_path / "audit.yaml").write_text(YAML_DISABLED)
+    config = _config(tmp_path / "audit.yaml")
+    with pytest.raises(ValueError, match="unknown provider"):
+        config.enabled_providers(["nonexistent"])
+
+
+def test_enabled_providers_returns_only_enabled_without_only(tmp_path: Path, caplog: pytest.LogCaptureFixture):
+    (tmp_path / "audit.yaml").write_text(YAML_DISABLED)
+    config = _config(tmp_path / "audit.yaml")
+    with caplog.at_level(logging.WARNING, logger="searchaudit.config"):
+        result = config.enabled_providers()
+    assert [p.id for p in result] == ["exa", "keen"]
+    assert "disabled" not in caplog.text
+
+
+async def test_run_records_config_disabled_provider_in_unavailable_json(
+    audit_disabled: Path, caplog: pytest.LogCaptureFixture
+):
+    caplog.set_level(logging.WARNING)
+    fake = FakeOpenRouter(agent_script)
+    assert await cli(["run", str(audit_disabled), "--providers", "exa,select", "--limit", "2"], fake) == 0
+    unavailable = json.loads((audit_disabled.parent / "unavailable.json").read_text())
+    assert unavailable["select"] == "disabled in config"
+    runs = read_jsonl(audit_disabled.parent / "runs.jsonl")
+    assert {r["provider"] for r in runs} == {"exa"}
+    assert "disabled in config" in caplog.text and "select" in caplog.text
+
+
+async def test_run_default_records_config_disabled_in_unavailable(
+    audit_disabled: Path, caplog: pytest.LogCaptureFixture
+):
+    caplog.set_level(logging.WARNING)
+    fake = FakeOpenRouter(agent_script)
+    assert await cli(["run", str(audit_disabled), "--limit", "1"], fake) == 0
+    unavailable = json.loads((audit_disabled.parent / "unavailable.json").read_text())
+    assert unavailable["select"] == "disabled in config"
+    runs = read_jsonl(audit_disabled.parent / "runs.jsonl")
+    assert {r["provider"] for r in runs} == {"exa", "keen"}

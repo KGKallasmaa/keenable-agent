@@ -1,5 +1,6 @@
 """The SpaceX walkthrough stays empty until every required cell is judged."""
 
+import json
 from pathlib import Path
 
 from searchaudit.config import load_config, load_prompts
@@ -254,3 +255,25 @@ def test_pair_tests_are_paired_and_holm_corrected(tmp_path):
     assert first["verdict"] == "Exa ahead"
     exa = next(row for row in study["rows"] if row["id"] == "exa")
     assert exa["ci_low"] < 100 and round(exa["ci_high"]) == 100
+
+
+def test_disabled_provider_in_unavailable_avoids_empty_report(tmp_path):
+    """A config-disabled provider recorded in unavailable.json is excluded from required,
+    so the audit shows 'complete' instead of 'empty'."""
+    directory = tmp_path / "spacex-grok"
+    directory.mkdir()
+    results = _results({"exa": "c", "parallel": "c", "keen": "c", "grok": "c"}, ["lookup", "wide"])
+    (directory / "results.json").write_text(results.model_dump_json())
+
+    # Without unavailable.json: select and routed are in COLUMNS but have no judgments;
+    # 2 prompts × 2 missing providers = 4 missing cells > MAX_MISSING(3) → empty.
+    assert build_pitch(tmp_path)["parity"]["status"] == "empty"
+
+    # With unavailable.json: select and routed are excluded from required → complete.
+    (directory / "unavailable.json").write_text(
+        json.dumps({"select": "disabled in config", "routed": "disabled in config"}))
+    block = build_pitch(tmp_path)["parity"]
+    assert block["status"] == "complete"
+    assert {u["id"] for u in block["unavailable"]} == {"select", "routed"}
+    assert "select" not in {c["id"] for c in block["counts"]}
+    assert "routed" not in {c["id"] for c in block["counts"]}
