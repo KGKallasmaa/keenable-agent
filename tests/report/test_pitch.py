@@ -124,6 +124,89 @@ def test_complete_block_counts_and_hypothesis(tmp_path):
     assert study["judge"] == "j"
 
 
+def test_complete_block_with_missing_cells_sums_to_n(tmp_path):
+    """A complete study block with 1-3 missing cells must still sum to n.
+
+    A missing cell (no run, no judgment) is stored with grade="" but a note that
+    says "Counted as wrong." The accuracy table has no Missing column, so missing
+    cells must roll into `wrong` for each row to reconcile to n.
+    """
+    providers_list = ["exa", "parallel", "keen", "select", "grok", "routed"]
+    providers = [ProviderInfo(id=pid, label=pid, short=pid, domain="example.com", hex="#111")
+                 for pid in providers_list]
+    prompts, runs, judgments = [], [], []
+    for i in range(1, 11):
+        prompts.append(Prompt(id=i, text=f"q{i}", type="lookup", reference="ref"))
+        for pid in providers_list:
+            if pid == "routed" and i in (8, 9):
+                continue  # missing cell: no run, no judgment
+            grade = "c" if pid in ("keen", "select", "routed") else "w"
+            runs.append(Run(prompt_id=i, provider=pid, answer="a",
+                            citations=[Citation(url="https://ref.example/a")],
+                            tool_calls=[], fetches=1))
+            judgments.append(Judgment(prompt_id=i, provider=pid, grade=grade,
+                                      checks=[True, True], note="n"))
+    results = AuditResults(
+        meta=AuditMeta(slug="t", company="SpaceX", category="c",
+                       created_at="2026-10-08T00:00:00Z",
+                       agent_model="x-ai/grok-4.7", judge_model="j"),
+        providers=providers, prompts=prompts, runs=runs, judgments=judgments)
+    directory = tmp_path / "spacex-jobs"
+    directory.mkdir()
+    (directory / "results.json").write_text(results.model_dump_json())
+    block = build_pitch(tmp_path)["jobs"]
+    assert block["status"] == "complete"
+    for row in block["study"]["rows"]:
+        assert row["correct"] + row["partial"] + row["wrong"] == row["n"]
+    routed = next(row for row in block["study"]["rows"] if row["id"] == "routed")
+    assert routed["wrong"] == 2  # the two missing cells counted as wrong
+
+
+def test_missing_cell_keeps_grid_distinction_and_excludes_from_timing(tmp_path):
+    """The fix counts missing cells into `wrong` without erasing their grid distinction.
+
+    Missing cells keep grade="" / grade_word="—" / failure="error" / missing=True (so the
+    per-prompt grid still shows them differently), and cost/speed/t50_wrong metrics still
+    exclude them (a missing cell has seconds=0.0; including it would skew the median).
+    """
+    providers_list = ["exa", "parallel", "keen", "select", "grok", "routed"]
+    providers = [ProviderInfo(id=pid, label=pid, short=pid, domain="example.com", hex="#111")
+                 for pid in providers_list]
+    prompts, runs, judgments = [], [], []
+    for i in range(1, 11):
+        prompts.append(Prompt(id=i, text=f"q{i}", type="lookup", reference="ref"))
+        for pid in providers_list:
+            if pid == "routed" and i in (8, 9):
+                continue
+            grade = "c" if pid in ("keen", "select", "routed") else "w"
+            runs.append(Run(prompt_id=i, provider=pid, answer="a",
+                            citations=[Citation(url="https://ref.example/a")],
+                            tool_calls=[], fetches=1, latency_ms=3000, cost_usd=0.01))
+            judgments.append(Judgment(prompt_id=i, provider=pid, grade=grade,
+                                      checks=[True, True], note="n"))
+    results = AuditResults(
+        meta=AuditMeta(slug="t", company="SpaceX", category="c",
+                       created_at="2026-10-08T00:00:00Z",
+                       agent_model="x-ai/grok-4.7", judge_model="j"),
+        providers=providers, prompts=prompts, runs=runs, judgments=judgments)
+    directory = tmp_path / "spacex-jobs"
+    directory.mkdir()
+    (directory / "results.json").write_text(results.model_dump_json())
+    study = build_pitch(tmp_path)["jobs"]["study"]
+    routed_item = next(item for item in study["items"] if item["id"] == 8)
+    routed_cell = next(cell for cell in routed_item["cells"] if cell["id"] == "routed")
+    assert routed_cell["missing"] is True
+    assert routed_cell["grade"] == ""
+    assert routed_cell["grade_word"] == "—"
+    assert routed_cell["failure"] == "error"
+    assert "Counted as wrong" in routed_cell["note"]
+    routed = next(row for row in study["rows"] if row["id"] == "routed")
+    assert routed["t_min"] == 3.0
+    assert routed["t_max"] == 3.0
+    assert routed["cost_min"] == 0.01
+    assert routed["t50_wrong"] is None
+
+
 def test_hypothesis_stays_quiet_on_a_tie():
     results = _results({"keen": "c", "select": "c", "routed": "c", "exa": "c", "grok": "w"}, ["lookup", "wide"])
     grades = {(j.prompt_id, j.provider): j.grade for j in results.judgments}

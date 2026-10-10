@@ -1270,7 +1270,7 @@ def _provider_rows(items: list[dict], providers: list[str]) -> list[dict]:
             "cls": f"dot-{pid}",
             "correct": len(correct),
             "partial": sum(1 for cell in cells if cell["grade"] == "p"),
-            "wrong": sum(1 for cell in cells if cell["grade"] == "w"),
+            "wrong": sum(1 for cell in cells if cell["grade"] == "w" or cell.get("missing")),
             "budget_hit": sum(1 for cell in cells if cell["budget_hit"]),
             "n": n,
             "accuracy": (100 * len(correct) / n) if n else 0.0,
