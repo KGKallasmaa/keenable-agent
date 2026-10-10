@@ -1,9 +1,13 @@
+import json
+
 import httpx
+import pytest
 
 from searchaudit.judge import (
     INJECTION_WARNING,
     JudgeBundle,
     apply_rules,
+    build_checklist,
     judge_messages,
     judge_run,
     parse_judgment,
@@ -74,3 +78,34 @@ async def test_judge_run_calls_model_at_temperature_zero_and_skips_failed_runs()
     assert fake.requests[0]["response_format"]["type"] == "json_schema"
     assert failed.grade == "w" and failed.failure_mode == "error" and free == 0.0
     assert len(fake.requests) == 1
+
+
+@pytest.mark.parametrize("content", [None, "", "I cannot help with that request.", "{not valid json"])
+async def test_build_checklist_degrades_on_unparseable_content(content):
+    # A model refusal (content=null), empty content, prose, or truncated JSON must not abort the run.
+    prompt = Prompt(id=3, text="List StackAI's SOC 2 status", type="domain", reference="SOC 2 Type II")
+    fake = FakeOpenRouter([completion(content=content, cost=0.0)])
+    async with httpx.AsyncClient(transport=transport(fake)) as http:
+        client = context(http).openrouter
+        checklist, cost = await build_checklist(client, "anthropic/claude-sonnet-5.5", prompt)
+    assert checklist["prompt_id"] == 3
+    assert checklist["reference"]
+    assert checklist["facts"] == [] and checklist["traps"] == []
+    assert cost == 0.0
+    assert fake.requests[0]["response_format"]["json_schema"]["name"] == "checklist"
+
+
+async def test_build_checklist_builds_from_valid_response():
+    prompt = Prompt(id=3, text="List StackAI's SOC 2 status", type="domain", reference="SOC 2 Type II")
+    reply = json.dumps({"facts": [{"fact": "SOC 2 Type II", "level": "required"},
+                                  {"fact": "Audited 2026", "level": "context"}],
+                        "traps": ["SOC 1 only"]})
+    fake = FakeOpenRouter([completion(content=reply, cost=0.001)])
+    async with httpx.AsyncClient(transport=transport(fake)) as http:
+        client = context(http).openrouter
+        checklist, cost = await build_checklist(client, "anthropic/claude-sonnet-5.5", prompt)
+    assert [f["id"] for f in checklist["facts"]] == [1, 2]
+    assert checklist["facts"][0]["level"] == "core"  # no core given → first fact promoted to core
+    assert checklist["facts"][1]["level"] == "context"
+    assert checklist["traps"] == [{"id": 1, "claim": "SOC 1 only"}]
+    assert cost == 0.001

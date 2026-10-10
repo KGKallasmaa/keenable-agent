@@ -165,3 +165,39 @@ async def test_credit_refusal_is_not_saved_and_stops_the_queue():
             global_limit=1, per_provider=lambda _: 1, cap=CostCap(50.0), on_result=save,
         )
     assert done == 0 and saved == [] and len(fake.requests) == 1
+
+
+async def test_judge_continues_when_checklist_response_is_refusal(audit: Path):
+    # Prompt 1's checklist comes back as a refusal (content=null); prompts 2 and 3 return valid JSON.
+    # Before the fix this raised AttributeError and aborted the entire judge run for every prompt.
+    def refusal_script(body: dict) -> dict:
+        name = (body.get("response_format") or {}).get("json_schema", {}).get("name")
+        if name == "checklist":
+            if "Question 1?" in body["messages"][-1]["content"]:
+                return completion(content=None, cost=0.0)  # model refusal: choices[0].message.content = null
+            return completion(CHECKLIST_REPLY, cost=0.001)
+        if name == "verdict":
+            return completion(VERDICT_REPLY, cost=0.002)
+        if body.get("response_format"):
+            return completion(JUDGE_REPLY, cost=0.002)
+        if body["model"] == "openrouter/auto":
+            return completion("OK", model="anthropic/claude-sonnet-5.5", cost=0.0)
+        return completion("Answer, see https://www.stackai.com/", cost=0.001)
+
+    fake = FakeOpenRouter(refusal_script)
+    assert await cli(["run", str(audit), "--providers", "exa,keen"], fake) == 0
+    assert len(read_jsonl(audit.parent / "runs.jsonl")) == 6  # 3 prompts x 2 providers
+
+    assert await cli(["judge", str(audit)], fake) == 0  # does not crash with AttributeError
+    judgments = read_jsonl(audit.parent / "judgments.jsonl")
+    assert len(judgments) == 6  # every run judged despite prompt 1's checklist refusal
+
+    # The cache is persisted even though one checklist was unparseable; the degraded entry is present.
+    checklists = {c["prompt_id"]: c for c in json.loads((audit.parent / "checklists.json").read_text())}
+    assert checklists[1]["facts"] == [] and checklists[1]["traps"] == []
+    assert checklists[2]["facts"]  # other prompts still got real checklists
+
+    # Re-running judge rebuilds nothing: the degraded checklist is cached like any other.
+    before = len(fake.requests)
+    assert await cli(["judge", str(audit)], fake) == 0
+    assert len(fake.requests) == before

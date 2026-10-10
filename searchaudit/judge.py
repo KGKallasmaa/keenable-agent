@@ -1,12 +1,15 @@
 """The judge: a pinned rubric bundle graded by one model at temperature 0, plus deterministic overrides."""
 
 import json
+import logging
 import re
 from dataclasses import dataclass
 
 from searchaudit.cost import ModelPricing, model_cost
 from searchaudit.models import BASELINE, FAILURE_MODES, RUBRIC, Judgment, Prompt, Run
 from searchaudit.providers.openrouter import OpenRouterClient
+
+log = logging.getLogger("searchaudit")
 
 # v2: cited pages first in the evidence window.
 # v3: one checklist per prompt, shared by every provider; facts graded one by one; the grade follows a rule.
@@ -278,12 +281,19 @@ async def build_checklist(client: OpenRouterClient, model: str, prompt: Prompt) 
                      {"role": "user", "content": f"QUESTION:\n{prompt.text}\n\nREFERENCE:\n{prompt.reference}"}],
     }
     response = await client.chat(payload, timeout=120.0)
-    data = json.loads(re.search(r"\{.*\}", response["choices"][0]["message"].get("content") or "", re.DOTALL).group(0))
-    facts = [{"id": i + 1, "fact": f["fact"], "level": f["level"]} for i, f in enumerate(data["facts"])]
-    if facts and not any(f["level"] == "core" for f in facts):
-        facts[0]["level"] = "core"
-    traps = [{"id": i + 1, "claim": t} for i, t in enumerate(data["traps"])]
+    content = response["choices"][0]["message"].get("content") or ""
     usage = response.get("usage") or {}
+    try:
+        data = json.loads(re.search(r"\{.*\}", content, re.DOTALL).group(0))
+        facts = [{"id": i + 1, "fact": f["fact"], "level": f["level"]}
+                 for i, f in enumerate(data.get("facts") or [])]
+        if facts and not any(f["level"] == "core" for f in facts):
+            facts[0]["level"] = "core"
+        traps = [{"id": i + 1, "claim": t} for i, t in enumerate(data.get("traps") or [])]
+    except (AttributeError, json.JSONDecodeError) as exc:
+        log.warning("checklist build failed for prompt %s: %s", prompt.id, exc)
+        return {"prompt_id": prompt.id, "reference": reference_key(prompt), "model": model,
+                "facts": [], "traps": []}, float(usage.get("cost") or 0.0)
     return {"prompt_id": prompt.id, "reference": reference_key(prompt), "model": model,
             "facts": facts, "traps": traps}, float(usage.get("cost") or 0.0)
 
