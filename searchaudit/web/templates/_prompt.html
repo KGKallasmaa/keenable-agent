@@ -90,7 +90,7 @@
   <td class="fm">{{ c.failure_name or "" }}{% if not c.failure %}<span class="hint">—</span>{% endif %}</td>
   <td class="r num" data-score="{{ id }}">{{ hl(p.highlight.score[id], (c.score * 100) | round | int) }}</td>
   <td class="r num">{{ hl(p.highlight.seconds[id], c.seconds | secs) }}</td>
-  <td class="r num">{{ hl(p.highlight.cost[id], c.cost | money(3, false)) }}</td>
+  <td class="r num">{{ hl(p.highlight.cost[id], c.cost | money(3, c.est)) }}</td>
   <td class="r num">{{ hl(p.highlight.searches[id], c.searches) }}</td>
   <td>{{ sources(c, pr) }}</td>
 </tr>
