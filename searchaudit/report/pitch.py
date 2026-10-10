@@ -1148,8 +1148,10 @@ def _hypothesis(results: AuditResults, grades: dict, available: list[str]) -> st
             return ("This run does not show Keenable ahead overall. To ask for a place inside Grok or Cursor, "
                     "search, SELECT, and the router would each need more correct answers than Exa, "
                     "Parallel, and Grok native.")
-    return ("On this run, Keenable search, SELECT, and the router each have more correct answers than "
-            "Exa, Parallel, and Grok native.")
+    named = [LABELS[r] for r in rivals]
+    names = " and ".join(named) if len(named) <= 2 else f"{', '.join(named[:-1])}, and {named[-1]}"
+    return (f"On this run, Keenable search, SELECT, and the router each have more correct answers than "
+            f"{names}.")
 
 
 def _study(results: AuditResults, grades: dict, providers: list[str], reset_ids: frozenset[int] = frozenset()) -> dict:
