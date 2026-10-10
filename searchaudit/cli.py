@@ -206,7 +206,7 @@ async def cmd_run(config: AuditConfig, settings: Settings, args: argparse.Namesp
         cap=cap, on_result=save,
     )
     replayed = 0
-    if "routed" in providers:
+    if "routed" in providers and not cap.halted:
         replayed = await replay_routed(config, ctx, by_id, cap, reroute=args.reroute)
     log.info("finished %d runs, %d routed lookups; audit run spend $%.2f of $%.2f cap",
              done, replayed, cap.spent_usd, cap.cap_usd)
@@ -237,6 +237,8 @@ async def replay_routed(config: AuditConfig, ctx: ProviderContext, by_id: dict, 
             source_now = select if already.get("via") == "select" else keen
             if already.get("answer", "") == source_now.get("answer", ""):
                 continue
+        if cap.exceeded():
+            break
         started = time.monotonic()
         arm, confidence, call, decision = await classify(ctx, prompt.text)
         jev_ms = int((time.monotonic() - started) * 1000)
@@ -251,6 +253,7 @@ async def replay_routed(config: AuditConfig, ctx: ProviderContext, by_id: dict, 
             continue
         source = select if arm == "select" else keen
         row = copied_answer(source, arm, confidence, call, jev_ms, decision)
+        cap.add(row.get("cost_usd", 0.0))
         append_jsonl(config.runs_path, row)
         prior = judged.get((prompt.id, arm))
         # Copy the grade only if it is for this exact source run; otherwise judge grades the routed row.
