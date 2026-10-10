@@ -3,7 +3,14 @@ import json
 import pytest
 
 from searchaudit.gap.assemble import assemble, sql_ok
-from searchaudit.gap.log import micro_cents_to_usd, require_columns, row_from_turn, tag_class
+from searchaudit.gap.log import (
+    _assistant_for,
+    micro_cents_to_usd,
+    require_columns,
+    row_from_turn,
+    tag_class,
+    write_jsonl,
+)
 from searchaudit.gap.loss import label_miss, render_csv
 from searchaudit.gap.sample import stratified
 
@@ -37,6 +44,79 @@ def test_row_from_turn_keeps_the_five_columns_and_the_trace_dollars():
     assert row["queries"] == ["committee draft decision 2026"]
     assert row["class"] == "fact lookup"
     assert row["urls"][0]["url"] == "https://example.com/a"
+
+
+def _turn(thread_id="t1", query="What did the committee decide", cost_mc=500000):
+    return {
+        "_id": "run-1", "thread_id": thread_id, "query": query,
+        "cost_mc": cost_mc, "is_current_events": False,
+        "turn_started_at": "2026-06-15T16:06:11",
+    }
+
+
+def _assistant_message():
+    return {"role": "assistant", "message": {
+        "answer": {"text": "They adopted it."},
+        "steps": [
+            {"kind": "tool", "label": "Searching the web for committee draft decision",
+             "icon": "globe", "arguments": {"query": "committee draft decision 2026"}},
+        ],
+        "search_context": json.dumps({"sources": [{"url": "https://example.com/a", "title": "Committee adopts draft"}]}),
+    }}
+
+
+def test_row_from_turn_skips_a_non_dict_message_in_the_outer_loop():
+    turn = _turn()
+    thread = {"messages": [
+        None,  # non-dict entry encountered by the outer loop
+        {"role": "user", "message": {"query": "What did the committee decide about the draft"}},
+        _assistant_message(),
+    ]}
+    row = row_from_turn(turn, thread)
+    require_columns(row)
+    assert row["queries"] == ["committee draft decision 2026"]
+    assert row["urls"][0]["url"] == "https://example.com/a"
+
+
+def test_assistant_for_skips_a_non_dict_message_between_user_and_assistant():
+    thread = {"messages": [
+        {"role": "user", "message": {"query": "What did the committee decide about the draft"}},
+        None,  # non-dict between the user message and the assistant message
+        "stray",  # also non-dict
+        _assistant_message(),
+    ]}
+    text, assistant = _assistant_for(thread, "What did the committee decide")
+    assert text.startswith("What did the committee decide")
+    assert assistant["answer"]["text"] == "They adopted it."
+
+
+def test_export_loop_proceeds_past_a_thread_with_non_dict_messages(tmp_path):
+    bad_thread = {"messages": [None]}
+    good_thread = {"messages": [
+        {"role": "user", "message": {"query": "What did the committee decide about the draft"}},
+        _assistant_message(),
+    ]}
+    threads = {"t1": bad_thread, "t2": good_thread}
+    turns = [
+        _turn(thread_id="t1"),
+        _turn(thread_id="t2"),
+        _turn(thread_id="t1"),
+    ]
+    rows = []
+    for t in turns:  # mirrors export_diplomat.export_log's plain for-loop
+        row = row_from_turn(t, threads.get(str(t["thread_id"])))
+        if row:
+            rows.append(row)
+    # The two bad-thread turns are dropped; the one good-thread turn exports.
+    assert len(rows) == 1
+    assert rows[0]["queries"] == ["committee draft decision 2026"]
+    # write_jsonl is reached (the bug aborted before this); the file is created and readable.
+    dest = tmp_path / "log.jsonl"
+    assert write_jsonl(dest, rows) is None
+    assert dest.exists()
+    lines = [json.loads(line) for line in dest.read_text().splitlines() if line.strip()]
+    assert len(lines) == 1
+    assert lines[0]["queries"] == ["committee draft decision 2026"]
 
 
 def test_tag_class_covers_the_six():
