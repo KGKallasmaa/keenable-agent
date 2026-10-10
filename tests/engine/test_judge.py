@@ -1,9 +1,12 @@
+import json
+
 import httpx
 
 from searchaudit.judge import (
     INJECTION_WARNING,
     JudgeBundle,
     apply_rules,
+    judge_checklist,
     judge_messages,
     judge_run,
     parse_judgment,
@@ -17,6 +20,18 @@ PROMPT = Prompt(id=3, text="List StackAI's SOC 2 status", type="domain", referen
 
 def judgment(grade="p", mode="incomplete") -> Judgment:
     return Judgment(prompt_id=3, provider="keen", grade=grade, checks=[True, True, False, True], failure_mode=mode)
+
+
+def checklist(levels: list[str]) -> dict:
+    return {"prompt_id": 3, "reference": "x", "model": "judge/m",
+            "facts": [{"id": i + 1, "fact": f"fact {i + 1}", "level": lvl} for i, lvl in enumerate(levels)],
+            "traps": []}
+
+
+def verdict(facts: list[dict], failure_mode: str | None = None, *,
+            traps: list[dict] | None = None, sources_support: bool = True, note: str = "n") -> str:
+    return json.dumps({"facts": facts, "traps": traps or [], "sources_support": sources_support,
+                       "failure_mode": failure_mode, "note": note})
 
 
 def test_error_or_empty_answer_is_wrong_with_error_mode():
@@ -74,3 +89,32 @@ async def test_judge_run_calls_model_at_temperature_zero_and_skips_failed_runs()
     assert fake.requests[0]["response_format"]["type"] == "json_schema"
     assert failed.grade == "w" and failed.failure_mode == "error" and free == 0.0
     assert len(fake.requests) == 1
+
+
+def test_over_search_overrides_incomplete_fallback():
+    # judge_checklist substitutes "incomplete" for a null failure_mode on non-c grades; the
+    # deterministic override must still stamp over_search on an over-searching run, and a calm
+    # run must keep the fallback "incomplete".
+    busy = Run(prompt_id=3, provider="keen", answer="a", searches=12)
+    assert apply_rules(busy, judgment("w", "incomplete")).failure_mode == "over_search"
+    calm = Run(prompt_id=3, provider="keen", answer="a", searches=4)
+    assert apply_rules(calm, judgment("w", "incomplete")).failure_mode == "incomplete"
+    # an explicit, non-fallback judge mode is never overridden by over_search
+    assert apply_rules(busy, judgment("w", "unsupported")).failure_mode == "unsupported"
+
+
+async def test_judge_checklist_over_search_when_judge_returns_null():
+    # The production cmd_judge path: an over-searching run whose judge verdict is
+    # failure_mode: null (a wrong answer) must end up over_search, not "incomplete".
+    chk = checklist(["core"])
+    response = verdict(facts=[{"id": 1, "status": "missing"}], failure_mode=None, note="core fact missing")
+    fake = FakeOpenRouter([completion(response), completion(response)])
+    async with httpx.AsyncClient(transport=transport(fake)) as http:
+        client = context(http).openrouter
+        bundle = JudgeBundle("anthropic/claude-sonnet-5.5")
+        busy = Run(prompt_id=3, provider="keen", answer="partial", searches=12)
+        calm = Run(prompt_id=3, provider="keen", answer="partial", searches=5)
+        busy_out, _ = await judge_checklist(client, bundle, PROMPT, busy, [], chk)
+        calm_out, _ = await judge_checklist(client, bundle, PROMPT, calm, [], chk)
+    assert busy_out.grade == "w" and busy_out.failure_mode == "over_search"
+    assert calm_out.grade == "w" and calm_out.failure_mode == "incomplete"
