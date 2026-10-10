@@ -157,7 +157,7 @@ def parse_fetch(body: dict) -> dict:
         raise ValueError(body.get("error") or "empty page")
     return {
         "url": body.get("url") or "",
-        "title": body.get("title") or "",
+        "title": clean_title(body.get("title") or ""),
         "content": body.get("content") or "",
         "published_at": str(body.get("published_at") or ""),
     }
