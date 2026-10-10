@@ -105,7 +105,7 @@ def _parse_decision(response: httpx.Response) -> dict:
     if response.status_code >= 400 or "answers" not in body:
         error = body.get("error") or {}
         message = error.get("message") if isinstance(error, dict) else str(error or response.text[:200])
-        raise OpenRouterError(f"HTTP {response.status_code}: {message}", body=body)
+        raise OpenRouterError(f"HTTP {response.status_code}: {message or response.text[:200]}", body=body)
     return body
 
 
