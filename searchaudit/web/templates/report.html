@@ -49,12 +49,12 @@
   {% for id in vm.shown %}{% set s = vm.summary[id] %}
   <tr>
     <td>{{ pv(vm.provider[id]) }}</td>
-    <td class="r num">{{ s.per_prompt | money(4, false) }}</td>
-    <td class="r num">{{ s.search_per_prompt | money(4, false) }}</td>
-    <td class="r num">{{ s.model_per_prompt | money(4, false) }}</td>
+    <td class="r num">{{ s.per_prompt | money(4, s.est) }}</td>
+    <td class="r num">{{ s.search_per_prompt | money(4, s.est) }}</td>
+    <td class="r num">{{ s.model_per_prompt | money(4, s.est) }}</td>
     <td class="r num">{{ s.failed_calls }}</td>
-    <td class="r num">{{ s.cost_max | money(3, false) }}</td>
-    <td class="r num">{% if s.per_correct is not none %}{% if id in vm.leaders.per_correct %}<span class="best">{% endif %}{{ s.per_correct | money(4, false) }}{% if id in vm.leaders.per_correct %}</span>{% endif %}{% else %}—{% endif %}</td>
+    <td class="r num">{{ s.cost_max | money(3, s.est) }}</td>
+    <td class="r num">{% if s.per_correct is not none %}{% if id in vm.leaders.per_correct %}<span class="best">{% endif %}{{ s.per_correct | money(4, s.est) }}{% if id in vm.leaders.per_correct %}</span>{% endif %}{% else %}—{% endif %}</td>
   </tr>
   {% endfor %}
   </tbody></table></div>
@@ -179,7 +179,7 @@
     <details id="p{{ p.id }}" data-id="{{ p.id }}" data-text="{{ p.text }}" data-type="{{ p.type }}" data-disagree="{{ 1 if p.disagree else 0 }}" data-nobody="{{ 1 if p.nobody else 0 }}"{% for id in vm.shown %} data-g{{ id }}="{{ {'c': 2, 'p': 1, 'w': 0}[p.cells[id].grade] }}" data-c{{ id }}="{{ p.cells[id].cost }}" data-s{{ id }}="{{ p.cells[id].seconds }}"{% endfor %}{% if not p.disagree %} hidden{% endif %}>
       <summary><span class="num hint idx">{{ p.id }}</span><span class="pt">{{ p.text }}</span><span><span class="pill">{{ p.type_name }}</span></span>
         {% for id in vm.shown %}{% set c = p.cells[id] %}
-        <span class="pcell"><span class="pname">{{ vm.provider[id].short }}</span>{{ gicon(c.grade, vm.labels[id]) }}<span class="num">{{ c.cost | money(3, false) }}</span><span class="num hint">{{ c.seconds | secs }}</span></span>
+        <span class="pcell"><span class="pname">{{ vm.provider[id].short }}</span>{{ gicon(c.grade, vm.labels[id]) }}<span class="num">{{ c.cost | money(3, c.est) }}</span><span class="num hint">{{ c.seconds | secs }}</span></span>
         {% endfor %}
         <span class="car" aria-hidden="true">›</span></summary>
       <div class="pbody">
