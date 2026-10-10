@@ -4,6 +4,9 @@
 {% from "_full.html" import cover_note, every_prompt %}
 {% block title %}{{ vm.meta.company }} · Search Audit{% endblock %}
 {% block main %}
+{% if pitch %}
+{% include "_spacex_frame.html" %}
+{% else %}
 {% set m = vm.meta %}
 <div class="cover">
   <div class="rhead" style="margin-bottom:6px"><span class="co">{{ fav(None, m.company) }}{{ m.company }}</span><span class="pill">{{ m.category }}</span>
@@ -24,7 +27,7 @@
 
 <section class="psec">
   <h2>Prompts</h2>
-  <p class="sub">All {{ vm.n }} prompts. ✓ correct · ◐ partly · ✗ wrong. Best value = highest value score on that prompt at the default weights. {% if full %}Click a prompt to jump to it in full, with every answer, at the end.{% else %}Prompts where providers disagree are detailed in the next section.{% endif %}</p>
+  <p class="sub">All {{ vm.n }} prompts. ✓ correct · ◐ partly · ✗ wrong. Best value = highest value score on that prompt at the default weights; — = no provider was fully correct.{% if vm.judge.missing_cells %} ✗ also marks the {{ vm.judge.missing }} router cell{{ "s" if vm.judge.missing != 1 }} with no run (see Judge).{% endif %} {% if full %}Click a prompt to jump to it in full, with every answer, at the end.{% else %}Prompts where providers disagree are detailed in the next section.{% endif %}</p>
   <table class="compact"><thead><tr><th>#</th><th>Prompt</th><th>Type</th>{% for p in vm.providers %}<th class="c">{{ hfav(p) }}</th>{% endfor %}<th class="c">Best value</th></tr></thead><tbody>
   {% for p in vm.prompts %}
   <tr><td class="num hint">{{ p.id }}</td><td>{% if full %}<a class="qlink" href="#q-{{ p.id }}">{{ p.text }}</a>{% else %}{{ p.text }}{% endif %}</td><td><span class="pill">{{ p.type_name }}</span></td>{% for id in vm.ids %}<td class="c">{{ gicon(p.cells[id].grade, vm.labels[id]) }}</td>{% endfor %}<td class="c">{% if p.best_value %}<span style="color:{{ vm.provider[p.best_value].hex }};font-weight:600">{{ vm.provider[p.best_value].short }}</span>{% else %}<span class="hint">—</span>{% endif %}</td></tr>
@@ -35,7 +38,7 @@
 {% if not full %}
 <section class="psec">
   <h2>Where providers disagree <span class="hint num">{{ vm.counts.disagree }}</span></h2>
-  <p class="sub">One row per provider: result, the four judge checks ({{ vm.rubric | join(" · ") }}), failure mode, value score, time, cost and searches. The judge's note is shown under every answer that was not fully correct, in the judge model's own words: "DATA" means the pages the agent retrieved, and "fact n" or "trap n" point at items on that prompt's checklist. Full answers and tool traces are in the online report, one page per prompt.</p>
+  <p class="sub">One row per provider: result, the four judge checks ({{ vm.rubric | join(" · ") }}), failure mode, value score, time, cost and the number of search calls. The judge's note is shown under every answer that was not fully correct, in the judge model's own words: "DATA" means the pages the agent retrieved, and "fact n" or "trap n" point at items on that prompt's checklist. Full answers and tool traces are in the online report, one page per prompt.</p>
   {% for p in vm.prompts if p.disagree %}
   <div class="qblock" id="p{{ p.id }}">
     <p class="qh"><span class="num hint">{{ p.id }}</span><span>{{ p.text }}</span><span class="pill">{{ p.type_name }}</span></p>
@@ -59,7 +62,7 @@
   {{ h2h_pair(vm, pair, vm.prompts) }}
 </section>
 {% if vm.h2h_spotlight %}{% set spot = vm.h2h[vm.h2h_spotlight | join("|")] %}
-<section class="psec"><h2>Where {{ vm.labels[spot.a] }} differs: vs {{ vm.labels[spot.b] }}</h2>
+<section class="psec"><h2>{{ vm.labels[spot.a] }} vs {{ vm.labels[spot.b] }}: where it differs</h2>
   <p class="sub">The Keenable arm with the most prompts that only it got right, against {% if vm.provider[spot.b].uses_today %}what {{ m.company }} uses today{% else %}{{ vm.labels[spot.b] }}{% endif %}, by prompt type. The prompts only it got right are listed below.</p>
   {{ h2h_pair(vm, spot, vm.prompts) }}
 </section>
@@ -68,4 +71,5 @@
 <section class="psec"><h2>Implementation guide</h2>{{ guide(vm) }}</section>
 <section class="psec"><h2>Judge</h2>{{ judge(vm) }}</section>
 {% if full %}{{ every_prompt(vm) }}{% endif %}
+{% endif %}
 {% endblock %}

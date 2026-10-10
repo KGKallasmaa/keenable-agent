@@ -9,6 +9,7 @@ W, H = 460, 300
 LEFT, BOTTOM, TOP, RIGHT = 46, 36, 14, 78
 LABEL_GAP = 14  # min vertical px between two labels
 LABEL_WIDTH = 64  # labels closer than this horizontally can collide
+CAP_H = 8.5  # IBM Plex Sans cap height at 12px (706/1000 em); .chart .lbl sits above the baseline
 
 
 def pareto_chart(
@@ -240,7 +241,7 @@ def _spread_labels(dots: list[dict[str, Any]]) -> None:
             if any(abs(lx - px) < LABEL_WIDTH and abs(ly - py) < LABEL_GAP for px, py in placed):
                 return True
             return any(
-                other is not d and abs(lx - other["cx"]) < 28 and abs(ly - other["cy"]) < 14
+                other is not d and abs(lx - other["cx"]) < 28 and abs(ly - other["cy"]) < 14 + CAP_H
                 for other in dots
             )
 

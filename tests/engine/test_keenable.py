@@ -1,16 +1,24 @@
+import json
+
 import httpx
 
+from searchaudit.agent import AgentSettings, run_agent
 from searchaudit.config import Settings
-from searchaudit.providers.base import ToolOutcome
+from searchaudit.models import Prompt
+from searchaudit.providers.base import ToolOutcome, timed_call
 from searchaudit.providers.keenable import (
+    PAGE_CHARS,
+    TITLE_CHARS,
     KeenableAPI,
+    KeenableSearchProvider,
     KeenableSearchSession,
+    KeenableTools,
     format_hits,
     parse_fetch,
     parse_search,
 )
 
-from .fakes import fixture, transport
+from .fakes import MODELS, FakeOpenRouter, completion, context, fixture, tool_call, transport
 
 
 def test_parse_search_snapshot():
@@ -123,3 +131,143 @@ def test_huge_titles_are_capped():
     hits = parse_search({"results": [{"url": "https://x.gov/a.pdf", "title": "T" * 1_000_000, "snippet": "s"}]})
     assert len(hits[0]["title"]) == TITLE_CHARS
     assert len(format_hits(hits)) < 1000
+
+
+async def test_fetch_huge_title_is_capped_in_text_and_citation():
+    giant = "T" * 1_100_000
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200, json={"url": "https://x.gov/a.pdf", "title": giant, "content": "Normal page content here."}
+        )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http:
+        api = KeenableAPI(http, "secret", sleep=_no_sleep)
+        tools = KeenableTools(api, usd_per_request=0.0)
+        outcome = await tools.fetch("https://x.gov/a.pdf")
+
+    bound = TITLE_CHARS + PAGE_CHARS + 200
+    assert len(outcome.text) <= bound, f"len={len(outcome.text)} bound={bound}"
+    assert outcome.text.startswith("T" * TITLE_CHARS)
+    assert outcome.text.endswith("Normal page content here.")
+    assert outcome.fetches == 1
+    assert outcome.calls[0].ok
+    assert outcome.citations and len(outcome.citations[0].title) == TITLE_CHARS
+    assert outcome.citations[0].url == "https://x.gov/a.pdf"
+
+
+# --- timed_call wraps every exception into ToolCall(ok=False) -----------------
+
+async def test_timed_call_wraps_any_exception_as_failed_tool_call():
+    """Per the docstring, every exception becomes ok=False, not just the original three."""
+    async def work():
+        raise RuntimeError("unexpected boom")
+
+    text, call = await timed_call("fetch", {"url": "u"}, work())
+    assert text.startswith("ERROR: RuntimeError")
+    assert call.ok is False
+    assert call.error.startswith("RuntimeError:")
+
+
+# --- Keenable provider: non-dict 200 body through the real code path -----------
+
+async def test_non_dict_search_body_becomes_failed_tool_call():
+    """A 200 with valid JSON that is a list makes parse_search raise AttributeError.
+    KeenableTools.search must return a ToolOutcome whose ToolCall(ok=False) carries the error."""
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=["unexpected", "format"])
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http:
+        api = KeenableAPI(http, "secret", sleep=_no_sleep)
+        tools = KeenableTools(api, 0.004)
+        outcome = await tools.search("StackAI")
+    assert outcome.text.startswith("ERROR: AttributeError")
+    assert len(outcome.calls) == 1
+    call = outcome.calls[0]
+    assert call.ok is False
+    assert "AttributeError" in call.error
+    assert outcome.searches == 1
+    assert outcome.citations == []
+
+
+# --- Full agent loop: a failed tool call does not kill the run -----------------
+
+_P = Prompt(id=1, text="Who acquired StackAI?", type="lookup", reference="Asana, May 2026")
+
+
+def _agent_transport(fake: FakeOpenRouter, keen_search) -> httpx.MockTransport:
+    """Mock transport: scripted OpenRouter + a callable returning each Keenable search response."""
+    def handler(request: httpx.Request) -> httpx.Response:
+        host, path = request.url.host, request.url.path
+        if host == "openrouter.ai" and path.endswith("/models"):
+            return httpx.Response(200, json=MODELS)
+        if host == "openrouter.ai" and path.endswith("/decisions"):
+            return httpx.Response(200, json={
+                "model": "typesafe/jev-1.13",
+                "answers": {"tool": {"type": "choice", "choice": fake.decision,
+                                     "confidence": 0.9, "probabilities": {"search": 0.1, "select": 0.9}}},
+                "usage": {"input_tokens": 20, "output_tokens": 0, "cost": 0.00001},
+            })
+        if host == "openrouter.ai" and fake is not None:
+            return httpx.Response(200, json=fake(json.loads(request.content)))
+        if host == "api.keenable.ai" and "/search" in path:
+            return keen_search(request)
+        if host == "api.keenable.ai":
+            return httpx.Response(200, json=fixture("keenable_fetch_public.json"))
+        return httpx.Response(404, json={"error": "unexpected request"})
+    return httpx.MockTransport(handler)
+
+
+async def test_non_dict_json_search_keeps_run_alive():
+    """When Keenable returns a 200 JSON array, the agent records a failed tool call
+    (not a run error) and can still answer from the error / prior results."""
+    fake = FakeOpenRouter([
+        completion(None, [tool_call("search", {"query": "StackAI"})]),
+        completion("Tool error, answer from prior state."),
+    ])
+
+    def keen_search(_request):
+        return httpx.Response(200, json=["unexpected", "list"])
+
+    async with httpx.AsyncClient(transport=_agent_transport(fake, keen_search)) as http:
+        ctx = context(http)
+        async with KeenableSearchProvider().open(ctx) as session:
+            result = await run_agent(_P, "keen", session, ctx.openrouter, AgentSettings(model="m"))
+    run = result.run
+    assert run.error == ""
+    assert len(run.tool_calls) == 1
+    assert run.tool_calls[0].ok is False
+    assert "AttributeError" in run.tool_calls[0].error
+    assert run.searches == 1
+    assert run.answer == "Tool error, answer from prior state."
+    # the model received the error as a tool result it can react to
+    assert fake.requests[1]["messages"][-1]["content"].startswith("ERROR")
+
+
+async def test_non_dict_json_on_later_search_preserves_earlier_calls():
+    """A later tool call failing must not discard earlier successful tool calls."""
+    fake = FakeOpenRouter([
+        completion(None, [tool_call("search", {"query": "StackAI"}, "call_1")]),
+        completion(None, [tool_call("search", {"query": "StackAI acquisition"}, "call_2")]),
+        completion("Answer from first search."),
+    ])
+    seen: list[int] = []
+
+    def keen_search(_request):
+        seen.append(1)
+        if len(seen) == 1:
+            return httpx.Response(200, json=fixture("keenable_search_public.json"))
+        return httpx.Response(200, json=["unexpected", "list"])
+
+    async with httpx.AsyncClient(transport=_agent_transport(fake, keen_search)) as http:
+        ctx = context(http)
+        async with KeenableSearchProvider().open(ctx) as session:
+            result = await run_agent(_P, "keen", session, ctx.openrouter, AgentSettings(model="m"))
+    run = result.run
+    assert run.error == ""
+    assert len(run.tool_calls) == 2
+    assert run.tool_calls[0].ok is True
+    assert run.tool_calls[1].ok is False
+    assert "AttributeError" in run.tool_calls[1].error
+    assert run.searches == 2
+    assert run.answer == "Answer from first search."

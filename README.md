@@ -43,8 +43,6 @@ It adds a **Search added** fact (prompts the best provider got right that no-sea
 whether that gain is within chance) and a **Search lift** line per provider (split by routine/hard when
 both tiers exist). If no-search scores like the providers, the prompt set measures the model, not search.
 
-The design is in `docs/designs/search-audit.md`, and the approved report UI is in
-`docs/prototype/index.html`.
 
 ## Layout
 
@@ -137,7 +135,7 @@ Research and verification use OpenRouter's `openrouter:web_search` with engine `
 provider's own search, Anthropic's for the default `anthropic/claude-sonnet-5.5`), so the prompt set is
 not biased toward an audited provider; `exa` and `parallel` are refused as `querygen.search_engine`.
 Settings live under `querygen:` in `audit.yaml` (`model`, `search_engine`, `oversample`,
-`routine_share`, `fresh_days`, `max_usd`, `concurrency`); see `audits/demo-querygen/audit.yaml`.
+`routine_share`, `fresh_days`, `max_usd`, `concurrency`).
 
 ## Serving the report locally
 

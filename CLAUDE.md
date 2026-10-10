@@ -7,8 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Search Audit (`searchaudit` package): runs one company's prompts through several web-search providers
 with the same pinned agent model, system prompt and budget, has a judge model grade each answer against
 a reference, and serves the result as a report (FastAPI + Jinja). `README.md` is the operator manual
-(audit steps, querygen stages, routes, deploy); `docs/designs/search-audit.md` is the design, and
-`docs/prototype/index.html` is the approved report UI.
+(audit steps, querygen stages, routes, deploy).
 
 ## Commands
 

@@ -40,6 +40,12 @@
     <div class="body">{{ p.reference | answer_html }}</div>
   </div>
   {% for id in vm.ids %}{% set c = p.cells[id] %}{% set pr = vm.provider[id] %}
+  {% if c.missing %}
+  <div class="ans g-w">
+    <div class="ahead">{{ pv(pr) }}<span class="grade">{{ gicon("w") }} No run</span></div>
+    <p class="jnote">This provider never ran on this prompt. It counts as wrong in the ranking (see Judge).</p>
+  </div>
+  {% else %}
   <div class="ans g-{{ c.grade }}">
     <div class="ahead">
       {{ pv(pr) }}{% if c.via %} <span class="hint small">→ {{ vm.provider[c.via].short }}</span>{% endif %}
@@ -57,6 +63,7 @@
       {% for s in c.sources | unique(attribute="url") %}<a href="{{ s.url }}">{{ loop.index }}. {{ s.domain }}</a>{{ " · " if not loop.last }}{% endfor %}</p>
     {% else %}<p class="cites">No sources cited.</p>{% endif %}
   </div>
+  {% endif %}
   {% endfor %}
 </article>
 {% endfor %}

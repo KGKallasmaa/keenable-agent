@@ -34,7 +34,7 @@ FAILURE_MODES: dict[str, tuple[str, str]] = {
     "unsupported": ("Claim not in sources", "Stated something the cited pages don't say."),
     "wrong_tool": ("Wrong tool for the job", "Built a table for a single-fact prompt."),
     "over_search": ("Over-searching", "Used more than 10 searches before answering."),
-    "error": ("Tool error / timeout", "The provider errored or the agent hit its time limit."),
+    "error": ("Tool error / timeout", "The provider errored, the agent hit its time limit, or no usable answer came back."),
 }
 
 
@@ -133,7 +133,10 @@ class AuditMeta(BaseModel):
 
 class AuditResults(BaseModel):
     meta: AuditMeta
-    providers: list[ProviderInfo]
-    prompts: list[Prompt]
+    # build_view_model assumes at least one provider and one prompt; empty lists crash it
+    # (IndexError / ZeroDivisionError / StopIteration), so they are rejected up front as a
+    # ValidationError (a ValueError subclass) that the store's graceful-skip guard already catches.
+    providers: list[ProviderInfo] = Field(min_length=1)
+    prompts: list[Prompt] = Field(min_length=1)
     runs: list[Run]
     judgments: list[Judgment]

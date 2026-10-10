@@ -222,6 +222,28 @@ def test_search_lift_counts_prompts_baseline_missed():
     assert all("none" not in t["tied"] and t["value_winner"] != "none" for t in vm["tiers"])
 
 
+def test_lift_flags_cover_every_quadrant():
+    # Not significant (p >= ALPHA): within chance, not significantly worse.
+    res = _with_baseline({"exa": "c", "keen": "ccw", "select": "w"}, base="c")
+    lift = build_view_model(res)["lift"]
+    assert lift["within_chance"] is True
+    assert lift["significantly_worse"] is False
+    assert "within chance" in lift["facts"][0]["detail"]
+    # Significantly better (gained > lost, p < ALPHA): not within chance, not worse.
+    res = _with_baseline({"exa": "c", "keen": "ccw", "select": "w"}, base="w", tiers=True)
+    lift = build_view_model(res)["lift"]
+    assert lift["within_chance"] is False
+    assert lift["significantly_worse"] is False
+    assert "significantly better" in lift["facts"][0]["detail"]
+    # Significantly worse (gained < lost, p < ALPHA): not within chance, is worse.
+    res = _with_baseline({"exa": "w", "keen": "wwwc", "select": "w"}, base="c")
+    lift = build_view_model(res)["lift"]
+    assert lift["p"] < stats.ALPHA
+    assert lift["within_chance"] is False
+    assert lift["significantly_worse"] is True
+    assert "significantly worse" in lift["facts"][0]["detail"]
+
+
 def test_baseline_does_not_change_other_providers_scores():
     plain = build_view_model(_with_baseline({"exa": "c", "keen": "ccw", "select": "w"}, base="c"))
     from .conftest import make_results

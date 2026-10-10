@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import shutil
 
 import pytest
@@ -159,6 +160,86 @@ def test_full_print_has_every_answer(client):
     assert str(answer_html(answer))[:60] in html
 
 
+def test_estimated_costs_carry_tilde_across_all_sections(client, fixture_results):
+    """Estimated costs must be prefixed with ~ in every report section — the Cost
+    metric table, the prompt list, the prompt drill-down, and the print view — not
+    just the h2h prose. Regression test for the hardcoded ``false`` at
+    report.html:52-57,182 and _prompt.html:93 that dropped the ~ marker."""
+    from searchaudit.report.format import money
+    from searchaudit.report.model import build_view_model
+
+    vm = build_view_model(fixture_results)
+    report = client.get("/r/fixture").text
+    ink = client.get("/r/fixture/print").text
+
+    # ---- Cost metric table (report.html:52-57) ----
+    # exa is estimated on every run → vm.summary['exa']['est'] is True.
+    exa = vm["summary"]["exa"]
+    assert exa["est"] is True
+    for digits, field in [
+        (4, "per_prompt"),
+        (4, "search_per_prompt"),
+        (4, "model_per_prompt"),
+        (3, "cost_max"),
+        (4, "per_correct"),
+    ]:
+        if exa[field] is None:
+            continue
+        expected = money(exa[field], digits, exa["est"])
+        bare = money(exa[field], digits, False)
+        assert expected in report, f"exa {field}: {expected} missing from Cost metric tab"
+        assert not re.findall(r"(?<!~)" + re.escape(bare), report), \
+            f"exa {field}: bare {bare} still present (tilde dropped by hardcoded false)"
+
+    # h2h prose (already passing s.est before this fix) shows ~ too — consistency.
+    assert "~" + money(exa["per_prompt"], 3, False) in report
+
+    # ---- Prompt list (report.html:182) & print view (print.html:42) agree ----
+    # Prompt 1 is a disagree prompt; exa cost = 0.077769 → 3 dp ~$0.078.
+    p1_exa = vm["prompts"][0]["cells"]["exa"]
+    assert p1_exa["est"] is True
+    cell = money(p1_exa["cost"], 3, p1_exa["est"])
+    assert cell in report, "exa prompt-1 cost must carry ~ in the prompt list"
+    assert cell in ink, "exa prompt-1 cost must carry ~ in the print view"
+
+    # ---- Prompt page drill-down (_prompt.html:93) ----
+    q = client.get("/r/fixture/q/1").text
+    assert cell in q, "exa prompt-1 cost must carry ~ in the drill-down"
+
+
+def test_non_estimated_costs_do_not_carry_tilde(client, fixture_results):
+    """Non-estimated provider costs must NOT be prefixed with ~. Guards against
+    over-correcting the fix."""
+    from searchaudit.report.format import money
+    from searchaudit.report.model import build_view_model
+
+    vm = build_view_model(fixture_results)
+    report = client.get("/r/fixture").text
+
+    keen = vm["summary"]["keen"]
+    assert keen["est"] is False
+    for digits, field in [
+        (4, "per_prompt"),
+        (4, "search_per_prompt"),
+        (4, "model_per_prompt"),
+        (3, "cost_max"),
+    ]:
+        if keen[field] is None:
+            continue
+        # ~ must not precede the non-estimated value as a complete money value —
+        # a digit after it would mean it's a longer-precision value, not this one.
+        bare = money(keen[field], digits, False)
+        assert not re.findall(r"~" + re.escape(bare) + r"(?!\d)", report), \
+            f"keen {field}: must not carry ~ (not estimated)"
+
+    # Per-cell cost for keen also must not carry ~.
+    p1_keen = vm["prompts"][0]["cells"]["keen"]
+    assert p1_keen["est"] is False
+    bare_cell = money(p1_keen["cost"], 3, False)
+    assert not re.findall(r"~" + re.escape(bare_cell) + r"(?!\d)", report), \
+        "keen per-cell cost must not carry ~"
+
+
 def test_results_json_download(client, fixture_results):
     r = client.get("/r/fixture/results.json")
     assert r.status_code == 200 and r.headers["content-type"] == "application/json"
@@ -219,6 +300,27 @@ def test_report_with_no_search_baseline_renders_lift(audits):
     assert 'class="mono-badge"' in html  # no domain -> monogram
     h1 = html.split('id="headline"', 1)[1].split("</h1>", 1)[0]
     assert "No search" not in h1
+
+
+def test_print_view_significantly_worse_is_not_within_chance(audits):
+    from .test_model import _with_baseline
+
+    (audits / "worse").mkdir()
+    (audits / "worse" / "results.json").write_text(
+        _with_baseline({"exa": "w", "keen": "wwwc", "select": "w"}, base="c").model_dump_json()
+    )
+    c = TestClient(create_app(audits, show_fixture=False))
+    # The print view renders the lift sentence; a significant-better-baseline result
+    # must not claim "within chance".
+    html = c.get("/r/worse/print").text
+    lift_p = html.split('class="hint lift"', 1)[1].split("</p>", 1)[0]
+    assert "Search lift" in lift_p
+    assert "The best provider's gain over the model's memory is within chance." not in lift_p
+    assert "Search is significantly worse than the model's memory" in lift_p
+    # The web report does not render the lift section at all.
+    web = c.get("/r/worse").text
+    assert "Search lift" not in web
+    assert "The best provider's gain over the model's memory is within chance." not in web
 
 
 def test_spacex_pitch_print_view_shows_every_panel(client):

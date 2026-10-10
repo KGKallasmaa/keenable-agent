@@ -173,7 +173,7 @@ async def run_agent(
 
 
 def _payload(settings: AgentSettings, messages: list[dict], session: ProviderSession, final: bool) -> dict:
-    payload: dict = {"model": settings.model, "temperature": settings.temperature, "messages": messages}
+    payload: dict = {"model": settings.model, "temperature": settings.temperature, "messages": list(messages)}
     functions = session.function_tools()
     tools = functions if final else [*session.server_tools(), *functions]
     if tools:

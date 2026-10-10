@@ -3,7 +3,7 @@
     "slug": "spacex-jobs",
     "company": "SpaceX",
     "category": "Compliance: licenses, spectrum, insurance, and non-English primary law",
-    "created_at": "2026-10-09T22:36:52+00:00",
+    "created_at": "2026-10-09T22:58:27+00:00",
     "agent_model": "x-ai/grok-4.7",
     "agent_model_note": "pinned in the audit config",
     "judge_model": "anthropic/claude-sonnet-5.5",
@@ -997,7 +997,7 @@
       "domain": "keenable.ai",
       "hex": "#7c3aed",
       "uses_today": false,
-      "via": "Jev answers one choice, search or select. The agent then has only that tool",
+      "via": "Jev, the router model, answers one choice, search or select. The agent then has only that tool",
       "price_note": "$0.004 per request (Keenable list price)"
     }
   ],

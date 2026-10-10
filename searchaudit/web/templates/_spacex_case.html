@@ -43,7 +43,7 @@
 
   <h2 id="method">How I'm comparing them</h2>
   <p>Inside Grok or Claude, search is one tool among many, so a bad answer is hard to blame on search. Here the search tool is the only thing that changes. Every column runs <span class="mono">x-ai/grok-4.7</span> with the same instructions (find sources, read the pages, answer, cite the URLs, say what you could not verify) and the same budget of {% if study and study.budget %}{{ study.budget.max_tool_calls }} tool calls and {{ study.budget.max_seconds | int }} seconds{% else %}30 tool calls and 600 seconds{% endif %}. A run that hits the budget is made to answer, and that answer is graded like any other.</p>
-  <p>Two exceptions. SELECT gets a short note on how to write its SQL, because that is how SELECT is meant to be used. The router, Jev (<span class="mono">typesafe/jev-1.13</span>), picks search or SELECT once per question, and then the agent has only that tool.</p>
+  <p>Two exceptions. SELECT gets a short note on how to write its SQL, because that is how SELECT is meant to be used. The router, Jev (<span class="mono">typesafe/jev-1.13</span>), picks search or SELECT once per question, and then the agent has only that tool. The router column is a replay: Jev's pick decides which of the two Keenable runs is scored, with that run's answer, time and cost, plus the routing call itself.</p>
   <div class="tablewrap"><table class="plainrank">
     <thead><tr><th>Column</th><th>What it is</th></tr></thead>
     <tbody>

@@ -161,7 +161,7 @@ class RoutedSession(ProviderSession):
 
 class RoutedProvider(KeenablePriced):
     id = "routed"
-    via = ("Jev answers one choice, search or select. The agent then has only that tool")
+    via = ("Jev, the router model, answers one choice, search or select. The agent then has only that tool")
 
     def __init__(self, connect: Connect = connect_select) -> None:
         self.connect = connect

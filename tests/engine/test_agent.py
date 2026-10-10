@@ -48,6 +48,20 @@ async def test_loop_runs_tools_then_answers():
     assert result.archive["tools"][0]["raw"]["results"]
     assert result.archive["tools"][1]["name"] == "fetch"
     assert result.archive["tools"][1]["raw"]["content"]
+    # the archived request["messages"] must record the per-turn conversation, not the final growing list
+    completions = result.archive["completions"]
+    assert len(completions[0]["request"]["messages"]) == 2  # [system, user]
+    assert len(completions[1]["request"]["messages"]) == 4  # + assistant, tool
+    assert len(completions[-1]["request"]["messages"]) == 6  # + assistant, tool
+    assert completions[0]["request"]["messages"] is not completions[-1]["request"]["messages"]
+    # each archived snapshot must match what was actually sent on that turn
+    assert [m["role"] for m in completions[0]["request"]["messages"]] == ["system", "user"]
+    assert [m["role"] for m in completions[1]["request"]["messages"]] == ["system", "user", "assistant", "tool"]
+    assert [m["role"] for m in completions[-1]["request"]["messages"]] == [
+        "system", "user", "assistant", "tool", "assistant", "tool"
+    ]
+    for archived, wire in zip(completions, fake.requests, strict=True):
+        assert [m["role"] for m in archived["request"]["messages"]] == [m["role"] for m in wire["messages"]]
     # same model, temperature and tools for every request; tool results go back with their call id
     assert {r["model"] for r in fake.requests} == {"m/pinned"}
     assert fake.requests[1]["messages"][-1]["role"] == "tool"
@@ -110,3 +124,37 @@ async def test_bad_tool_arguments_are_reported_to_the_model():
     result, fake = await run_keen(script)
     assert result.run.tool_calls[0].ok is False
     assert fake.requests[1]["messages"][-1]["content"].startswith("ERROR")
+
+
+async def test_archive_snapshots_per_turn_request_before_error_turn():
+    """A successful turn before a failing one keeps its own per-turn snapshot (not the grown list)."""
+    from searchaudit.providers.openrouter import OpenRouterError
+
+    success = [completion(None, [tool_call("search", {"query": "x"})])]
+    calls = 0
+
+    async def chat(_payload, timeout=120.0):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            return success.pop()
+        raise OpenRouterError("HTTP 503: down", body={"error": {"message": "overloaded"}})
+
+    fake = FakeOpenRouter([])
+    async with httpx.AsyncClient(transport=transport(fake)) as http:
+        ctx = context(http)
+        ctx.openrouter.chat = chat
+        async with KeenableSearchProvider().open(ctx) as session:
+            result = await run_agent(PROMPT, "keen", session, ctx.openrouter, AgentSettings(model="m/pinned"))
+    completions = result.archive["completions"]
+    assert result.run.error and "503" in result.run.error
+    assert len(completions) == 2
+    # turn 1 (success) archived the 2-message request it actually sent, not the grown live list
+    assert len(completions[0]["request"]["messages"]) == 2
+    assert [m["role"] for m in completions[0]["request"]["messages"]] == ["system", "user"]
+    assert "error" not in completions[0]
+    # turn 2 (error) archived the 4-message request sent on the failing turn
+    assert len(completions[1]["request"]["messages"]) == 4
+    assert [m["role"] for m in completions[1]["request"]["messages"]] == ["system", "user", "assistant", "tool"]
+    assert completions[1]["error"]
+    assert completions[0]["request"]["messages"] is not completions[1]["request"]["messages"]
