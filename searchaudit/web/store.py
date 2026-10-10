@@ -59,10 +59,15 @@ class AuditStore:
             return cached
         try:
             results = AuditResults.model_validate_json(path.read_text())
+            audit = Audit(slug, path.parent, results, build_view_model(results), mtime)
         except (OSError, ValueError) as exc:  # pydantic's ValidationError is a ValueError
             log.warning("skipping unreadable audit %s: %s", slug, str(exc).splitlines()[0])
             return None
-        audit = Audit(slug, path.parent, results, build_view_model(results), mtime)
+        except (IndexError, ZeroDivisionError, StopIteration) as exc:
+            # StopIteration carries no message, so fall back to the type name.
+            log.warning("skipping degenerate audit %s: %s",
+                        slug, str(exc).splitlines()[0] if str(exc) else type(exc).__name__)
+            return None
         self._cache[slug] = audit
         return audit
 
