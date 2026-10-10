@@ -7,6 +7,8 @@ from searchaudit.config import Settings
 from searchaudit.models import Prompt
 from searchaudit.providers.base import ToolOutcome, timed_call
 from searchaudit.providers.keenable import (
+    PAGE_CHARS,
+    TITLE_CHARS,
     KeenableAPI,
     KeenableSearchProvider,
     KeenableSearchSession,
@@ -129,6 +131,29 @@ def test_huge_titles_are_capped():
     hits = parse_search({"results": [{"url": "https://x.gov/a.pdf", "title": "T" * 1_000_000, "snippet": "s"}]})
     assert len(hits[0]["title"]) == TITLE_CHARS
     assert len(format_hits(hits)) < 1000
+
+
+async def test_fetch_huge_title_is_capped_in_text_and_citation():
+    giant = "T" * 1_100_000
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200, json={"url": "https://x.gov/a.pdf", "title": giant, "content": "Normal page content here."}
+        )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http:
+        api = KeenableAPI(http, "secret", sleep=_no_sleep)
+        tools = KeenableTools(api, usd_per_request=0.0)
+        outcome = await tools.fetch("https://x.gov/a.pdf")
+
+    bound = TITLE_CHARS + PAGE_CHARS + 200
+    assert len(outcome.text) <= bound, f"len={len(outcome.text)} bound={bound}"
+    assert outcome.text.startswith("T" * TITLE_CHARS)
+    assert outcome.text.endswith("Normal page content here.")
+    assert outcome.fetches == 1
+    assert outcome.calls[0].ok
+    assert outcome.citations and len(outcome.citations[0].title) == TITLE_CHARS
+    assert outcome.citations[0].url == "https://x.gov/a.pdf"
 
 
 # --- timed_call wraps every exception into ToolCall(ok=False) -----------------
