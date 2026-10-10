@@ -128,7 +128,7 @@ async def timed_call(tool: str, args: dict, work: Awaitable[tuple[str, list[str]
     started = time.perf_counter()
     try:
         text, urls, cost = await work
-    except (httpx.HTTPError, ValueError, KeyError) as exc:
+    except Exception as exc:  # noqa: BLE001 - docstring promise: every error becomes ok=False, not a run-ending crash
         error = f"{type(exc).__name__}: {exc}"[:300]
         call = ToolCall(tool=tool, args=args, ok=False, error=error, latency_ms=_ms(started))
         return f"ERROR: {error}", call

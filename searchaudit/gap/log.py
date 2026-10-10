@@ -52,16 +52,22 @@ def micro_cents_to_usd(cost_mc: int | None) -> float | None:
     return round(int(cost_mc) / 1_000_000, 6)
 
 
+_NEWS = re.compile(r"\b(latest|today|this week|breaking|just announced)\b")
+_HOWTO = re.compile(r"\b(how to|how do i|how do you|how can|steps to)\b")
+_LIST = re.compile(r"\b(compare|versus|list of|list the|all the|which of)\b|\bvs\b")
+_PROFILE = re.compile(r"\b(who is|profile of|background of|biography)\b")
+
+
 def tag_class(task: str, *, current_events: bool = False) -> str:
     """One of the six classes. Rules, so a spot-check of 30 can correct them before rates are trusted."""
     text = " ".join(task.lower().split())
-    if current_events or any(w in text for w in ("latest", "today", "this week", "breaking", "just announced")):
+    if current_events or _NEWS.search(text):
         return "news/recency"
-    if any(w in text for w in ("how to", "how do i", "how do you", "how can", "steps to")):
+    if _HOWTO.search(text):
         return "how-to"
-    if any(w in text for w in ("compare", " vs ", "versus", "list of", "list the", "all the", "which of")):
+    if _LIST.search(text):
         return "list/compare"
-    if any(w in text for w in ("who is", "profile of", "background of", "biography")):
+    if _PROFILE.search(text):
         return "entity profile"
     words = text.split()
     if len(words) <= 14 and any(text.startswith(w) for w in ("what", "when", "where", "who", "which")):
@@ -122,12 +128,14 @@ def _assistant_for(thread: dict, query: str) -> tuple[str, dict] | None:
         return None
     messages = thread.get("messages") or []
     for index, message in enumerate(messages):
-        if message.get("role") != "user":
+        if not isinstance(message, dict) or message.get("role") != "user":
             continue
         text = " ".join((((message.get("message") or {}).get("query")) or "").split())
         if not text or not (text == needle or text.startswith(needle) or needle.startswith(text[:80])):
             continue
         for later in messages[index + 1:]:
+            if not isinstance(later, dict):
+                continue
             if later.get("role") == "user":
                 break
             if later.get("role") == "assistant":

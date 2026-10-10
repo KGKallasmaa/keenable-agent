@@ -1,5 +1,6 @@
 """The SpaceX walkthrough stays empty until every required cell is judged."""
 
+import json
 from pathlib import Path
 
 from searchaudit.config import load_config, load_prompts
@@ -131,6 +132,50 @@ def test_hypothesis_stays_quiet_on_a_tie():
     assert text.startswith("This run does not show")
 
 
+def test_hypothesis_does_not_name_unavailable_rival():
+    results = _results({"keen": "c", "select": "c", "routed": "c", "parallel": "w", "grok": "w"},
+                       ["lookup", "wide"])
+    grades = {(j.prompt_id, j.provider): j.grade for j in results.judgments}
+    text = _hypothesis(results, grades, ["keen", "select", "routed", "parallel", "grok"])
+    assert "Exa" not in text
+    assert "more correct answers than Parallel and Grok native." in text
+
+
+def test_hypothesis_does_not_name_unavailable_parallel():
+    results = _results({"keen": "c", "select": "c", "routed": "c", "exa": "w", "grok": "w"},
+                       ["lookup", "wide"])
+    grades = {(j.prompt_id, j.provider): j.grade for j in results.judgments}
+    text = _hypothesis(results, grades, ["keen", "select", "routed", "exa", "grok"])
+    assert "Parallel" not in text
+    assert "more correct answers than Exa and Grok native." in text
+
+
+def test_hypothesis_names_all_three_when_every_rival_is_compared():
+    results = _results({"keen": "c", "select": "c", "routed": "c", "exa": "w", "parallel": "w", "grok": "w"},
+                       ["lookup", "wide"])
+    grades = {(j.prompt_id, j.provider): j.grade for j in results.judgments}
+    text = _hypothesis(results, grades, ["keen", "select", "routed", "exa", "parallel", "grok"])
+    assert text == ("On this run, Keenable search, SELECT, and the router each have more correct answers "
+                    "than Exa, Parallel, and Grok native.")
+
+
+def test_hypothesis_with_unavailable_exa_end_to_end(tmp_path):
+    providers = ["exa", "parallel", "keen", "select", "grok", "routed"]
+    grades = {pid: "c" if pid in {"keen", "select", "routed"} else "w" for pid in providers}
+    results = _results(grades, ["lookup", "wide"])
+    directory = tmp_path / "spacex-jobs"
+    directory.mkdir()
+    (directory / "results.json").write_text(results.model_dump_json())
+    (directory / "unavailable.json").write_text(json.dumps({"exa": "Exa API down for maintenance"}))
+    pitch = build_pitch(tmp_path)
+    block = pitch["jobs"]
+    assert block["status"] == "complete"
+    assert [row["id"] for row in block["unavailable"]] == ["exa"]
+    assert [row["id"] for row in block["counts"]] == ["parallel", "keen", "select", "grok", "routed"]
+    assert "Exa" not in block["hypothesis"]
+    assert "more correct answers than Parallel and Grok native." in block["hypothesis"]
+
+
 def test_median_seconds_axis_stays_in_seconds():
     assert _tick(0, "seconds") == "0.0s"
     assert _tick(312, "seconds") == "312.0s"
@@ -254,3 +299,25 @@ def test_pair_tests_are_paired_and_holm_corrected(tmp_path):
     assert first["verdict"] == "Exa ahead"
     exa = next(row for row in study["rows"] if row["id"] == "exa")
     assert exa["ci_low"] < 100 and round(exa["ci_high"]) == 100
+
+
+def test_disabled_provider_in_unavailable_avoids_empty_report(tmp_path):
+    """A config-disabled provider recorded in unavailable.json is excluded from required,
+    so the audit shows 'complete' instead of 'empty'."""
+    directory = tmp_path / "spacex-jobs"
+    directory.mkdir()
+    results = _results({"exa": "c", "parallel": "c", "keen": "c", "grok": "c"}, ["lookup", "wide"])
+    (directory / "results.json").write_text(results.model_dump_json())
+
+    # Without unavailable.json: select and routed are in COLUMNS but have no judgments;
+    # 2 prompts × 2 missing providers = 4 missing cells > MAX_MISSING(3) → empty.
+    assert build_pitch(tmp_path)["jobs"]["status"] == "empty"
+
+    # With unavailable.json: select and routed are excluded from required → complete.
+    (directory / "unavailable.json").write_text(
+        json.dumps({"select": "disabled in config", "routed": "disabled in config"}))
+    block = build_pitch(tmp_path)["jobs"]
+    assert block["status"] == "complete"
+    assert {u["id"] for u in block["unavailable"]} == {"select", "routed"}
+    assert "select" not in {c["id"] for c in block["counts"]}
+    assert "routed" not in {c["id"] for c in block["counts"]}

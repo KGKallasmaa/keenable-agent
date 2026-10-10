@@ -3,6 +3,9 @@
 {% from "_sections.html" import ranking, chart, facts, tiers, econ, measured, failures, h2h_pair, guide, judge %}
 {% block title %}{{ vm.meta.company }} · Search Audit{% endblock %}
 {% block main %}
+{% if pitch %}
+{% include "_spacex_frame.html" %}
+{% else %}
 {% set m = vm.meta %}
 <div class="cover">
   <div class="rhead" style="margin-bottom:6px"><span class="co">{{ fav(None, m.company) }}{{ m.company }}</span><span class="pill">{{ m.category }}</span>
@@ -63,4 +66,5 @@
 
 <section class="psec"><h2>Implementation guide</h2>{{ guide(vm) }}</section>
 <section class="psec"><h2>Judge</h2>{{ judge(vm) }}</section>
+{% endif %}
 {% endblock %}

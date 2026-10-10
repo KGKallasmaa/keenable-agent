@@ -10,6 +10,7 @@ from mcp.client.streamable_http import streamable_http_client
 from mcp.shared._httpx_utils import create_mcp_http_client
 from mcp.shared.exceptions import MCPError
 
+from searchaudit.models import Citation
 from searchaudit.providers.base import (
     ProviderContext,
     ProviderSession,
@@ -70,6 +71,56 @@ def result_raw(result: Any) -> dict | str:
     return result_text(result)
 
 
+def _table_rows(text: str) -> list[list[str]]:
+    """Split a markdown-pipe table into rows of whitespace-trimmed cells."""
+    rows = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("|") and stripped.endswith("|") and len(stripped) > 2:
+            rows.append([c.strip() for c in stripped[1:-1].split("|")])
+    return rows
+
+
+def _find_col(header: list[str], name: str) -> int | None:
+    target = name.lower()
+    for i, cell in enumerate(header):
+        if cell.lower() == target:
+            return i
+    return None
+
+
+def _is_separator(cells: list[str]) -> bool:
+    return bool(cells) and all(c and set(c) <= {"-", ":"} for c in cells)
+
+
+def _select_table_citations(text: str, urls: list[str]) -> list[Citation]:
+    """Parse a SELECT markdown table for (url, title) pairs.
+
+    When the agent's SQL selected a ``title`` column alongside ``url``, each row
+    carries the URL and its title side by side; we recover the title. When the
+    SQL did not select ``title`` (no ``title`` column in the output table), every
+    URL gets ``title=""`` — exactly the blank titles the old code produced, so
+    SELECT-without-title is not a regression.
+    """
+    rows = _table_rows(text)
+    if len(rows) < 2:
+        return [Citation(url=u) for u in urls]
+    header = rows[0]
+    url_col = _find_col(header, "url")
+    title_col = _find_col(header, "title")
+    if url_col is None or title_col is None:
+        return [Citation(url=u) for u in urls]
+    titles: dict[str, str] = {}
+    for row in rows[1:]:
+        if _is_separator(row):
+            continue
+        if url_col < len(row) and title_col < len(row):
+            url = row[url_col]
+            if URL_RE.fullmatch(url) and url not in titles:
+                titles[url] = row[title_col]
+    return [Citation(url=u, title=titles.get(u, "")) for u in urls]
+
+
 SELECT_GUIDANCE = RESEARCH_SKILL
 
 
@@ -118,7 +169,7 @@ class SelectSession(ProviderSession):
         raise KeyError(f"unknown tool: {name}")
 
     async def call_select(self, name: str, args: dict, label: str = "select") -> ToolOutcome:
-        held: dict[str, dict | str] = {}
+        held: dict[str, Any] = {}
 
         async def work() -> tuple[str, list[str], float]:
             try:
@@ -129,11 +180,14 @@ class SelectSession(ProviderSession):
             held["raw"] = result_raw(result)
             if result.is_error:
                 raise ValueError(text[:300] or "tool returned an error")
-            return text[:RESULT_CHARS], list(dict.fromkeys(URL_RE.findall(text))), self.usd
+            urls = list(dict.fromkeys(URL_RE.findall(text)))
+            held["citations"] = _select_table_citations(text, urls)
+            return text[:RESULT_CHARS], urls, self.usd
 
         text, call = await timed_call(label, {"tool": name, **args}, work())
         return ToolOutcome(text=text, calls=[call], searches=1, cost_estimated=True,
                            evidence=[text[:EVIDENCE_CHARS]] if call.ok else [],
+                           citations=held.get("citations", []),
                            raw=held.get("raw"))
 
 

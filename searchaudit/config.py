@@ -1,6 +1,7 @@
 """Audit configuration (audits/<slug>/audit.yaml) and runtime settings from the environment."""
 
 import json
+import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -9,6 +10,8 @@ import yaml
 from pydantic import BaseModel, Field, model_validator
 
 from searchaudit.models import Prompt, ProviderId, ProviderInfo
+
+log = logging.getLogger(__name__)
 
 DEFAULT_AGENT_MODEL = "~google/gemini-pro-latest"
 DEFAULT_JUDGE_MODEL = "anthropic/claude-sonnet-5.5"
@@ -93,6 +96,12 @@ class AuditConfig(BaseModel):
             unknown = set(only) - {p.id for p in self.providers}
             if unknown:
                 raise ValueError(f"unknown provider(s): {', '.join(sorted(unknown))}")
+            disabled = set(only) - {p.id for p in chosen}
+            if disabled:
+                log.warning(
+                    "provider(s) disabled in config, skipping: %s",
+                    ", ".join(sorted(disabled)),
+                )
             chosen = [p for p in chosen if p.id in only]
         return chosen
 

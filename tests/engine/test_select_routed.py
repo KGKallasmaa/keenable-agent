@@ -7,7 +7,7 @@ import httpx
 from mcp import types
 
 from searchaudit.config import Settings
-from searchaudit.models import Run
+from searchaudit.models import Citation, Run
 from searchaudit.providers.routed import (
     CONFIDENCE_FLOOR,
     ROUTE_QUESTION,
@@ -15,7 +15,7 @@ from searchaudit.providers.routed import (
     pick_arm,
     route_state,
 )
-from searchaudit.providers.select import SelectProvider
+from searchaudit.providers.select import URL_RE, SelectProvider, _select_table_citations
 
 from .fakes import FakeOpenRouter, completion, context, tool_call, transport
 
@@ -29,17 +29,20 @@ HIDDEN = [types.Tool(name=n, description="x", input_schema={"type": "object", "p
 
 
 class FakeMCP:
-    def __init__(self, error: bool = False) -> None:
+    DEFAULT_TEXT = "| url | title |\n| https://a.test/x | A |"
+
+    def __init__(self, error: bool = False, *, text: str | None = None) -> None:
         self.calls: list[tuple[str, dict]] = []
         self.error = error
+        self.text = text if text is not None else self.DEFAULT_TEXT
 
     async def list_tools(self):
         return SimpleNamespace(tools=[SELECT_TOOL, *HIDDEN])
 
     async def call_tool(self, name: str, args: dict):
         self.calls.append((name, args))
-        text = "boom: bad SQL" if self.error else "| url | title |\n| https://a.test/x | A |"
-        return types.CallToolResult(content=[types.TextContent(type="text", text=text)], is_error=self.error)
+        out = "boom: bad SQL" if self.error else self.text
+        return types.CallToolResult(content=[types.TextContent(type="text", text=out)], is_error=self.error)
 
 
 def connector(mcp: FakeMCP):
@@ -68,6 +71,7 @@ async def test_select_exposes_discovered_tools_minus_report_tools_plus_fetch():
     assert mcp.calls == [("select", {"query": sql, "show_preview": False})]
     assert outcome.calls[0].tool == "select" and outcome.calls[0].urls == ["https://a.test/x"]
     assert outcome.searches == 1 and outcome.calls[0].cost_usd == 0.004
+    assert outcome.citations == [Citation(url="https://a.test/x", title="A")]
 
 
 async def test_select_tool_error_is_a_failed_call():
@@ -77,6 +81,7 @@ async def test_select_tool_error_is_a_failed_call():
             outcome = await session.call_tool("select", {"query": "bad"})
     assert not outcome.calls[0].ok and "bad SQL" in outcome.calls[0].error
     assert outcome.text.startswith("ERROR")
+    assert outcome.citations == []
 
 
 def test_select_disabled_without_key():
@@ -206,3 +211,83 @@ def test_select_without_a_query_tool_has_no_sql_guidance() -> None:
 
     session = SelectSession(client=None, tools=[], keenable=type("K", (), {"usd": 0.004})())
     assert session.instructions() == ""
+
+
+# --- SELECT citation parsing ------------------------------------------------------
+
+
+def test_select_table_citations_recovers_title_from_fixture_table() -> None:
+    text = "| url | title |\n| https://a.test/x | A |"
+    assert _select_table_citations(text, list(URL_RE.findall(text))) == [
+        Citation(url="https://a.test/x", title="A"),
+    ]
+
+
+def test_select_table_citations_blank_title_when_no_title_column() -> None:
+    """SELECT url FROM WEB_SEARCH(...) — no title column → blank titles, no regression."""
+    text = "| url |\n| https://a.test/x |"
+    assert _select_table_citations(text, list(URL_RE.findall(text))) == [
+        Citation(url="https://a.test/x", title=""),
+    ]
+
+
+def test_select_table_citations_handles_separator_row() -> None:
+    text = "| url | title |\n| --- | --- |\n| https://a.test/x | A |"
+    assert _select_table_citations(text, list(URL_RE.findall(text))) == [
+        Citation(url="https://a.test/x", title="A"),
+    ]
+
+
+def test_select_table_citations_handles_reversed_column_order() -> None:
+    text = "| title | url |\n| A | https://a.test/x |"
+    assert _select_table_citations(text, list(URL_RE.findall(text))) == [
+        Citation(url="https://a.test/x", title="A"),
+    ]
+
+
+def test_select_table_citations_handles_extra_columns() -> None:
+    text = "| url | title | published_at |\n| https://a.test/x | A | 2026-01-01 |"
+    assert _select_table_citations(text, list(URL_RE.findall(text))) == [
+        Citation(url="https://a.test/x", title="A"),
+    ]
+
+
+def test_select_table_citations_follows_url_order_not_table_order() -> None:
+    text = "| url | title |\n| https://b.test/2 | Two |\n| https://a.test/1 | One |"
+    urls = list(URL_RE.findall(text))  # b first, a second
+    citations = _select_table_citations(text, urls)
+    assert [c.url for c in citations] == ["https://b.test/2", "https://a.test/1"]
+    assert citations[0].title == "Two"
+    assert citations[1].title == "One"
+
+
+def test_select_table_citations_duplicate_url_keeps_first_title() -> None:
+    text = "| url | title |\n| https://a.test/x | First |\n| https://a.test/x | Second |"
+    urls = list(dict.fromkeys(URL_RE.findall(text)))
+    assert _select_table_citations(text, urls) == [
+        Citation(url="https://a.test/x", title="First"),
+    ]
+
+
+async def test_select_populates_citations_through_full_path() -> None:
+    """The tool outcome from call_select carries titles the SQL selected."""
+    mcp = FakeMCP()
+    async with httpx.AsyncClient(transport=transport()) as http:
+        ctx = context(http, KEYED)
+        async with SelectProvider(connector(mcp)).open(ctx) as session:
+            outcome = await session.call_tool("select", {"query": "SELECT url, title FROM WEB_SEARCH('x')"})
+    assert outcome.citations == [Citation(url="https://a.test/x", title="A")]
+    assert outcome.calls[0].urls == ["https://a.test/x"]
+
+
+async def test_routed_select_passes_citations_through() -> None:
+    """Routed path delegates to call_select, so citations propagate to routed outcomes too."""
+    mcp = FakeMCP()
+    fake = FakeOpenRouter([])
+    fake.decision = "select"
+    async with httpx.AsyncClient(transport=transport(fake)) as http:
+        ctx = context(http, KEYED)
+        async with RoutedProvider(connector(mcp)).open(ctx) as session:
+            await session.prepare("List every orbital launch in September")
+            outcome = await session.call_tool("select", {"query": "SELECT url, title FROM WEB_SEARCH('x')"})
+    assert outcome.citations == [Citation(url="https://a.test/x", title="A")]
