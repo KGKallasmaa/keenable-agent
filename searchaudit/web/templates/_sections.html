@@ -88,7 +88,7 @@
 {% if vm.lift.available %}{% set L = vm.lift %}
 <p class="hint lift" style="margin:10px 0 0"><b>Search lift</b> (prompts right that {{ vm.labels[L.id] }}, {{ L.k }}/{{ L.n }} correct, got wrong):
 {% for r in L.rows %}{{ vm.provider[r.id].short }} <span class="num">+{{ r.gained }}</span>{% if r.tiers %} <span class="small">({% for t, x in r.tiers.items() %}{{ t }} +{{ x }}{{ ", " if not loop.last }}{% endfor %})</span>{% endif %}{{ " · " if not loop.last }}{% endfor %}.
-{% if L.within_chance %}The best provider's gain over the model's memory is within chance.{% endif %}</p>
+{% if L.within_chance %}The best provider's gain over the model's memory is within chance.{% elif L.significantly_worse %}Search is significantly worse than the model's memory (McNemar p {{ L.p | pvalue }}).{% endif %}</p>
 {% endif %}
 </div>
 {% endif %}

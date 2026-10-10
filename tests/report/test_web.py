@@ -287,6 +287,27 @@ def test_report_with_no_search_baseline_renders_lift(audits):
     assert "No search" not in h1
 
 
+def test_print_view_significantly_worse_is_not_within_chance(audits):
+    from .test_model import _with_baseline
+
+    (audits / "worse").mkdir()
+    (audits / "worse" / "results.json").write_text(
+        _with_baseline({"exa": "w", "keen": "wwwc", "select": "w"}, base="c").model_dump_json()
+    )
+    c = TestClient(create_app(audits, show_fixture=False))
+    # The print view renders the lift sentence; a significant-better-baseline result
+    # must not claim "within chance".
+    html = c.get("/r/worse/print").text
+    lift_p = html.split('class="hint lift"', 1)[1].split("</p>", 1)[0]
+    assert "Search lift" in lift_p
+    assert "The best provider's gain over the model's memory is within chance." not in lift_p
+    assert "Search is significantly worse than the model's memory" in lift_p
+    # The web report does not render the lift section at all.
+    web = c.get("/r/worse").text
+    assert "Search lift" not in web
+    assert "The best provider's gain over the model's memory is within chance." not in web
+
+
 def test_spacex_pitch_print_view_shows_every_panel(client):
     resp = client.get("/r/spacex/print")
     assert resp.status_code == 200
