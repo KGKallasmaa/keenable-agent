@@ -122,12 +122,14 @@ def _assistant_for(thread: dict, query: str) -> tuple[str, dict] | None:
         return None
     messages = thread.get("messages") or []
     for index, message in enumerate(messages):
-        if message.get("role") != "user":
+        if not isinstance(message, dict) or message.get("role") != "user":
             continue
         text = " ".join((((message.get("message") or {}).get("query")) or "").split())
         if not text or not (text == needle or text.startswith(needle) or needle.startswith(text[:80])):
             continue
         for later in messages[index + 1:]:
+            if not isinstance(later, dict):
+                continue
             if later.get("role") == "user":
                 break
             if later.get("role") == "assistant":
