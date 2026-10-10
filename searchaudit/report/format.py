@@ -66,6 +66,24 @@ def _table(m: re.Match[str]) -> str:
     return f'<table class="mdt"><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>'
 
 
+def collapse_repeats(text: str, keep: int = 3) -> str:
+    """Fold a run of more than `keep` identical lines (degenerate model output) into a counted note."""
+    out: list[str] = []
+    lines = (text or "").split("\n")
+    i = 0
+    while i < len(lines):
+        j = i
+        while j < len(lines) and lines[j] == lines[i]:
+            j += 1
+        run = j - i
+        if run > keep and lines[i].strip():
+            out += lines[i:i + keep] + [f"[the line above repeats {run - keep} more times]"]
+        else:
+            out += lines[i:j]
+        i = j
+    return "\n".join(out)
+
+
 def answer_html(text: str) -> Markup:
     """Escape an answer, then render the small markdown subset models actually emit."""
     safe = html.escape(text or "")
@@ -85,4 +103,5 @@ FILTERS = {
     "volume": volume,
     "pvalue": pvalue,
     "answer_html": answer_html,
+    "collapse_repeats": collapse_repeats,
 }

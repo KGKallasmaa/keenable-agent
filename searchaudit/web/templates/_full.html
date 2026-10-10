@@ -57,7 +57,7 @@
     <p class="jnote"><b>Judge:</b> {{ c.note }}</p>
     {% if c.error %}<p class="hint">Run error: {{ c.error }}</p>{% endif %}
     {% if c.budget_hit %}<p class="hint">Hit its tool-call or time budget and was forced to answer.</p>{% endif %}
-    <div class="body">{{ (c.answer or "(no answer)") | answer_html }}</div>
+    <div class="body">{{ (c.answer or "(no answer)") | collapse_repeats | answer_html }}</div>
     {% if c.sources %}
     <p class="cites"><b>Cited:</b>
       {% for s in c.sources | unique(attribute="url") %}<a href="{{ s.url }}">{{ loop.index }}. {{ s.domain }}</a>{{ " · " if not loop.last }}{% endfor %}</p>

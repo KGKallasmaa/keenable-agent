@@ -3,7 +3,7 @@ import json
 import pytest
 
 from searchaudit import stats
-from searchaudit.report.format import answer_html
+from searchaudit.report.format import answer_html, collapse_repeats
 from searchaudit.report.model import build_view_model
 
 
@@ -276,3 +276,9 @@ def test_economics_break_even_against_uses_today() -> None:
     for r in e["rows"].values():
         if r["price_ratio"] and r["request_ratio"]:
             assert r["cheaper"] == (r["request_ratio"] < r["price_ratio"])
+
+
+def test_collapse_repeats_folds_degenerate_runs_only():
+    assert collapse_repeats("Intro\n" + "**\n" * 2000 + "End") == (
+        "Intro\n**\n**\n**\n[the line above repeats 1997 more times]\nEnd")
+    assert collapse_repeats("a\na\na\nb\n\n\n\n\nc") == "a\na\na\nb\n\n\n\n\nc"
