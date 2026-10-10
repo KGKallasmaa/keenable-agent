@@ -61,6 +61,8 @@ class _Static(StaticFiles):
 def create_app(audits_dir: Path | None = None, show_fixture: bool | None = None) -> FastAPI:
     root = audits_dir or Path(os.environ.get("AUDITS_DIR", "audits"))
     show = os.environ.get("SHOW_FIXTURE") == "1" if show_fixture is None else show_fixture
+    # Public address of this site, printed in the PDF where it points at the online report.
+    site_url = os.environ.get("SITE_URL", "https://search-audit-production.up.railway.app").rstrip("/")
     store = AuditStore(root, show)
     templates = _templates()
     app = FastAPI(title="Search Audit", docs_url=None, redoc_url=None)
@@ -74,7 +76,7 @@ def create_app(audits_dir: Path | None = None, show_fixture: bool | None = None)
         return audit
 
     def page(request: Request, name: str, **ctx: Any) -> HTMLResponse:
-        return templates.TemplateResponse(request, name, ctx)
+        return templates.TemplateResponse(request, name, {"site_url": site_url, **ctx})
 
     def report_ctx(audit: Audit) -> dict[str, Any]:
         pitch = build_pitch(root, audit.vm) if audit.slug == "spacex" else None

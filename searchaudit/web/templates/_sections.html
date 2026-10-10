@@ -122,7 +122,7 @@
 {% endif %}
 <div class="panel pad" style="margin-top:18px">
 <p class="ptitle">Sources each provider's answers cite</p>
-<p class="hint" style="margin:0 0 10px">Domains cited in final answers. "Only here" = domains no other provider cited anywhere in this audit, a rough measure of index coverage. "Uncited answers" = answers with no source, out of the runs that produced an answer (runs with no run, no answer, or a tool-error tag are excluded). "Wrong, uncited" = wrong answers with no source at all (often answered from memory after search failed).</p>
+<p class="hint" style="margin:0 0 10px">Domains cited in final answers. "Only here" = domains no other provider cited anywhere in this audit, a rough measure of index coverage. "Uncited answers" = answers with no source, out of the runs that produced an answer (runs that failed, returned no answer, or carry a tool-error tag are excluded). "Wrong, uncited" = wrong answers with no source at all (often answered from memory after search failed).</p>
 <div class="tablewrap"><table><thead><tr><th>Provider</th><th class="r">Sources / answer</th><th class="r">Distinct domains</th><th class="r">Only here</th><th class="r">Uncited answers</th><th class="r">Wrong, uncited</th><th>Most cited</th></tr></thead><tbody>
 {% for id in vm.ids if id in vm.shown %}{% set s = vm.sources_view[id] %}
 <tr><td>{{ pv(vm.provider[id]) }}</td>

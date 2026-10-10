@@ -38,7 +38,7 @@
 {% if not full %}
 <section class="psec">
   <h2>Where providers disagree <span class="hint num">{{ vm.counts.disagree }}</span></h2>
-  <p class="sub">One row per provider: result, the four judge checks ({{ vm.rubric | join(" · ") }}), failure mode, value score, time, cost and the number of search calls. The judge's note is shown under every answer that was not fully correct, in the judge model's own words: "DATA" means the pages the agent retrieved, and "fact n" or "trap n" point at items on that prompt's checklist. Full answers and tool traces are in the online report, one page per prompt.</p>
+  <p class="sub">One row per provider: result, the four judge checks ({{ vm.rubric | join(" · ") }}), failure mode, value score, time, cost and the number of search calls. The judge's note is shown under every answer that was not fully correct, in the judge model's own words: "DATA" means the pages the agent retrieved, and "fact n" or "trap n" point at items on that prompt's checklist. Full answers and tool traces are in the online report at {{ site_url }}/r/{{ m.slug }}, one page per prompt.</p>
   {% for p in vm.prompts if p.disagree %}
   <div class="qblock" id="p{{ p.id }}">
     <p class="qh"><span class="num hint">{{ p.id }}</span><span>{{ p.text }}</span><span class="pill">{{ p.type_name }}</span></p>
@@ -58,7 +58,7 @@
 
 {% set pair = vm.h2h[vm.h2h_default | join("|")] %}
 <section class="psec"><h2>Head-to-head: {{ vm.labels[pair.a] }} vs {{ vm.labels[pair.b] }}</h2>
-  <p class="sub">The best-value provider against {% if vm.provider[pair.b].uses_today %}what {{ m.company }} uses today{% else %}the next most accurate provider{% endif %}. Every other pair is in the online report.</p>
+  <p class="sub">The best-value provider against {% if vm.provider[pair.b].uses_today %}what {{ m.company }} uses today{% else %}the next most accurate provider{% endif %}. Every other pair is in the online report at {{ site_url }}/r/{{ m.slug }}.</p>
   {{ h2h_pair(vm, pair, vm.prompts) }}
 </section>
 {% if vm.h2h_spotlight %}{% set spot = vm.h2h[vm.h2h_spotlight | join("|")] %}
