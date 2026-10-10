@@ -125,7 +125,7 @@ def apply_rules(run: Run, judgment: Judgment) -> Judgment:
         })
     if judgment.grade == "c":
         return judgment.model_copy(update={"failure_mode": None})
-    if run.searches > OVER_SEARCH_THRESHOLD and judgment.failure_mode is None:
+    if run.searches > OVER_SEARCH_THRESHOLD and judgment.failure_mode in (None, "incomplete"):
         return judgment.model_copy(update={"failure_mode": "over_search"})
     if judgment.failure_mode == "over_search" and run.searches <= OVER_SEARCH_THRESHOLD:
         return judgment.model_copy(update={"failure_mode": None})
