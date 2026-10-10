@@ -48,6 +48,19 @@ def test_tag_class_covers_the_six():
     assert tag_class("the obscure subcommittee footnote about annex III implementation details in the working group") == "long-tail"
 
 
+def test_tag_class_ignores_substring_collisions():
+    assert tag_class("show top performers this quarter") != "how-to"
+    assert tag_class("explain how tools work in this system") != "how-to"
+    assert tag_class("show to the team the quarterly revenue breakdown") != "how-to"
+    assert tag_class("recall the settings from yesterday") != "list/compare"
+    assert tag_class("overall the results were positive for the quarter") != "list/compare"
+    assert tag_class("groundbreaking research in quantum computing") != "news/recency"
+    assert tag_class("how to make sourdough") == "how-to"
+    assert tag_class("list all the k8s CRDs in this cluster") == "list/compare"
+    assert tag_class("breaking: polity shifts in the new term") == "news/recency"
+    assert tag_class("who is the rapporteur for the committee") == "entity profile"
+
+
 def test_a_followup_joined_to_another_search_is_not_a_row():
     from searchaudit.gap.log import coherent
 
